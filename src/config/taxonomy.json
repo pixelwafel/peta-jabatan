@@ -1,0 +1,48 @@
+{
+  "configVersion": "2026.1",
+  "kategori": [
+    {
+      "id": "struktural",
+      "nama": "Struktural",
+      "warna": "#1e40af",
+      "punyaRumpun": false,
+      "jenjang": [
+        { "id": "jpt_pratama", "nama": "JPT Pratama", "singkatan": "JPT" },
+        { "id": "administrator", "nama": "Administrator", "singkatan": "Adm" },
+        { "id": "pengawas", "nama": "Pengawas", "singkatan": "Pgw" }
+      ]
+    },
+    {
+      "id": "fungsional",
+      "nama": "Fungsional",
+      "warna": "#047857",
+      "punyaRumpun": true,
+      "rumpun": {
+        "keahlian": [
+          { "id": "ahli_utama", "nama": "Ahli Utama", "singkatan": "AU" },
+          { "id": "ahli_madya", "nama": "Ahli Madya", "singkatan": "AMd" },
+          { "id": "ahli_muda", "nama": "Ahli Muda", "singkatan": "AMu" },
+          { "id": "ahli_pertama", "nama": "Ahli Pertama", "singkatan": "AP" }
+        ],
+        "keterampilan": [
+          { "id": "penyelia", "nama": "Penyelia", "singkatan": "Pny" },
+          { "id": "mahir", "nama": "Mahir", "singkatan": "Mhr" },
+          { "id": "terampil", "nama": "Terampil", "singkatan": "Trm" },
+          { "id": "pemula", "nama": "Pemula", "singkatan": "Pml" }
+        ]
+      }
+    },
+    {
+      "id": "pelaksana",
+      "nama": "Pelaksana",
+      "warna": "#b45309",
+      "punyaRumpun": false,
+      "jenjang": []
+    }
+  ],
+  "unitWarna": "#475569",
+  "labels": {
+    "unit": "Unit Organisasi",
+    "jabatan": "Jabatan"
+  }
+}
