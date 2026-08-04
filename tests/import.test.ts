@@ -3,7 +3,7 @@ import { mapColumns } from '../src/import/columnMapper';
 import { coerceInt, parseRows } from '../src/import/rowParser';
 import { groupRows } from '../src/import/groupRows';
 import { buildStructure } from '../src/import/buildStructure';
-import { exportXlsx } from '../src/export/xlsxExporter';
+import { exportXlsx, exportXlsxTemplate } from '../src/export/xlsxExporter';
 import { processXlsxImport } from '../src/import/xlsxImporter';
 import { Project } from '../src/models/project';
 import { OrgNode } from '../src/models/node';
@@ -182,5 +182,22 @@ describe('Import & Round-Trip Pipeline (Doc 08 Exit Criteria)', () => {
     expect(preview.built.nodes.length).toBe(100);
     expect(preview.built.edges.length).toBe(99);
     expect(preview.summary.totalKebutuhan).toBe(recap.total.kebutuhan);
+  });
+
+  it('exportXlsxTemplate produces a blank starter workbook that imports cleanly', async () => {
+    const blob = exportXlsxTemplate();
+    const file = new File([blob], 'template_peta_jabatan.xlsx');
+    const preview = await processXlsxImport(file);
+
+    expect(preview.canCommit).toBe(true);
+    expect(preview.findings.filter(f => f.severity === 'error')).toHaveLength(0);
+    expect(preview.summary.nodeCount).toBeGreaterThan(0);
+    expect(preview.summary.unitCount).toBeGreaterThan(0);
+    expect(preview.summary.jabatanCount).toBeGreaterThan(0);
+
+    // Kategori & jenjang di baris contoh harus dikenali (bukan string mentah yang gagal resolve)
+    const fungsional = preview.built.nodes.find(n => n.nama === 'Analis Kebijakan');
+    expect(fungsional?.kategoriId).toBe('fungsional');
+    expect(fungsional?.rincian[0]?.jenjangId).toBe('ahli_muda');
   });
 });

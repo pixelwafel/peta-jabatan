@@ -6,6 +6,7 @@ import { useHistoryStore } from '@/store/historyStore';
 import { computeLayout } from '@/utils/layout';
 import { uuid } from '@/utils/uuid';
 import { saveProject } from '@/persistence/storage';
+import { exportXlsxTemplate } from '@/export/xlsxExporter';
 import {
   Upload,
   FileSpreadsheet,
@@ -101,6 +102,16 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({ onClose }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDownloadTemplate = () => {
+    const blob = exportXlsxTemplate();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'template_peta_jabatan.xlsx';
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleDownloadFindingsCsv = () => {
@@ -202,15 +213,25 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({ onClose }) => {
                   Format template XLSX dengan hirarki nomor (1, 1.1, 1.1.1)
                 </p>
               </div>
-              <label className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-medium cursor-pointer transition-colors shadow-sm">
-                <span>Pilih Berkas</span>
-                <input
-                  type="file"
-                  accept=".xlsx,.xls,.json"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-              </label>
+              <div className="flex items-center justify-center gap-2">
+                <label className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-medium cursor-pointer transition-colors shadow-sm">
+                  <span>Pilih Berkas</span>
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls,.json"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                </label>
+                <button
+                  onClick={handleDownloadTemplate}
+                  className="flex items-center space-x-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded font-medium border border-slate-700 transition-colors"
+                  title="Unduh template XLSX kosong (contoh + petunjuk pengisian + referensi kategori/jenjang)"
+                >
+                  <Download className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Unduh Template</span>
+                </button>
+              </div>
             </div>
           )}
 

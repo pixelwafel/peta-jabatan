@@ -114,6 +114,70 @@ function buildMetaSheet(project: Project): XLSX.WorkSheet {
   return ws;
 }
 
+function buildPetunjukSheet(): XLSX.WorkSheet {
+  const rows: (string | number)[][] = [
+    ['Petunjuk Pengisian Template Peta Jabatan'],
+    [''],
+    ['1. Kolom "nomor" wajib diisi format hirarkis: 1, 1.1, 1.1.1, dst. Ini menentukan struktur atasan-bawahan.'],
+    ['   Baris dengan nomor "1.2" otomatis jadi anak dari baris bernomor "1".'],
+    ['2. Kolom "tipe" diisi "Unit" (unit organisasi, boleh punya anak) atau "Jabatan" (posisi, angka kebutuhan/eksisting).'],
+    ['   Boleh dikosongkan — aplikasi akan menebak dari konteks, tapi lebih aman diisi eksplisit.'],
+    ['3. Kolom "kategori" khusus baris bertipe Jabatan, diisi salah satu nilai di sheet "Referensi": Struktural, Fungsional, atau Pelaksana.'],
+    ['4. Kolom "rumpun" khusus kategori Fungsional, diisi Keahlian dan/atau Keterampilan (pisahkan dengan koma bila keduanya).'],
+    ['5. Kolom "jenjang" diisi nama jenjang sesuai kombinasi kategori+rumpun — lihat pilihan valid di sheet "Referensi".'],
+    ['6. Kolom "kebutuhan" dan "eksisting" hanya berlaku untuk baris Jabatan, harus angka bulat >= 0.'],
+    ['   Baris Unit tidak boleh diisi angka — akan dihitung otomatis dari total jabatan di bawahnya.'],
+    ['7. Kolom "kode", "unit_kerja", dan "keterangan" bersifat opsional, bebas diisi teks apa saja.'],
+    ['8. Baris contoh di sheet "Struktur" boleh dihapus/ditimpa — hanya sebagai contoh format, bukan data wajib.'],
+    ['9. Setelah selesai, simpan berkas ini dan impor lewat Kelola Proyek → Impor Berkas.'],
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{ wch: 100 }];
+  return ws;
+}
+
+/**
+ * Template kosong (berisi contoh singkat) untuk diisi manual lalu diimpor
+ * lewat ImportDialog — bukan turunan dari proyek tertentu.
+ */
+export function exportXlsxTemplate(): Blob {
+  const wb = XLSX.utils.book_new();
+  const importableCols = COLUMNS.filter(c => c.importable);
+
+  const headerRow = importableCols.map(c => c.header);
+  // Urutan kolom mengikuti COLUMNS (importable saja): nomor, nama, tipe,
+  // kategori, rumpun, jenjang, kebutuhan, eksisting, kode, unit_kerja, keterangan.
+  const sampleRows: (string | number)[][] = [
+    ['1', 'Dinas Contoh', 'Unit', '', '', '', '', '', 'DIS.01', '', ''],
+    ['1.1', 'Sekretariat', 'Unit', '', '', '', '', '', '', '', ''],
+    ['1.1.1', 'Sekretaris', 'Jabatan', 'Struktural', '', '', 1, 1, 'SEK.01', '', ''],
+    ['1.2', 'Bidang Contoh', 'Unit', '', '', '', '', '', '', '', ''],
+    ['1.2.1', 'Kepala Bidang Contoh', 'Jabatan', 'Struktural', '', '', 1, 1, 'KAB.01', '', ''],
+    ['1.2.2', 'Analis Kebijakan', 'Jabatan', 'Fungsional', 'Keahlian', 'Ahli Muda', 2, 1, '', '', ''],
+    ['1.2.3', 'Pengadministrasi Umum', 'Jabatan', 'Pelaksana', '', '', 1, 0, '', '', ''],
+  ];
+
+  const aoa = [headerRow, ...sampleRows];
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = importableCols.map(c => ({ wch: c.width }));
+  ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+
+  const nomorColIdx = importableCols.findIndex(c => c.key === 'nomor');
+  const kodeColIdx = importableCols.findIndex(c => c.key === 'kode');
+  if (nomorColIdx >= 0) forceTextFormat(ws, nomorColIdx);
+  if (kodeColIdx >= 0) forceTextFormat(ws, kodeColIdx);
+
+  XLSX.utils.book_append_sheet(wb, buildPetunjukSheet(), 'Petunjuk');
+  XLSX.utils.book_append_sheet(wb, ws, 'Struktur');
+  XLSX.utils.book_append_sheet(wb, buildReferensiSheet(), 'Referensi');
+
+  const arrayBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  return new Blob([arrayBuffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+}
+
 export function exportXlsx(project: Project, recap: Recap): Blob {
   const wb = XLSX.utils.book_new();
   const cols = [...COLUMNS, ...getCustomColumns(project.attributeSchema)];
