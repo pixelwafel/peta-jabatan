@@ -95,6 +95,10 @@ export const SingleNodeForm: React.FC<SingleNodeFormProps> = ({ node, locked }) 
           </select>
         </div>
 
+        {/* Kategori dulu — nama jabatan pada daftar referensi dikelompokkan
+            per kategori, jadi lebih runut dipilih dulu sebelum mengetik nama. */}
+        {node.type === 'jabatan' && <ClassificationEditor node={node} />}
+
         {/* Name */}
         {node.type === 'jabatan' ? (
           <JabatanNameField node={node} />
@@ -113,13 +117,44 @@ export const SingleNodeForm: React.FC<SingleNodeFormProps> = ({ node, locked }) 
             />
           </div>
         )}
+      </div>
+
+      {/* Struktur & Penempatan */}
+      <div className="pt-2 border-t border-slate-800 space-y-3">
+        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+          Struktur &amp; Penempatan
+        </span>
+        <ParentSelect node={node} />
+
+        {/* Kepala Unit Section (Only for type === 'unit') */}
+        {node.type === 'unit' && <KepalaUnitEditor node={node} />}
+      </div>
+
+      {/* Figures Section */}
+      <div className="pt-2 border-t border-slate-800 space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+            Angka Kebutuhan &amp; Eksisting
+          </span>
+        </div>
+
+        {node.type === 'jabatan' && <JenjangChips node={node} />}
+        <RincianEditor node={node} />
+      </div>
+
+      {/* Detail Tambahan (Opsional) — nomor & kode tidak wajib diisi manual:
+          nomor bisa digenerate lewat "Auto Nomor" (kosong cuma info, tidak
+          menghalangi Cek Kesiapan), kode jabatan tidak divalidasi sama sekali
+          kecuali dicek duplikat kalau diisi. */}
+      <div className="pt-2 border-t border-slate-800 space-y-2.5">
+        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+          Detail Tambahan (Opsional)
+        </span>
 
         {/* Nomor & Renumber button */}
         <div className="space-y-1">
           <div className="flex items-center justify-between">
-            <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-              Nomor Hirarki
-            </label>
+            <label className="text-xs text-slate-400">Nomor Hirarki</label>
             <button
               type="button"
               onClick={renumberFromStructure}
@@ -137,15 +172,13 @@ export const SingleNodeForm: React.FC<SingleNodeFormProps> = ({ node, locked }) 
             onChange={e =>
               updateNode(node.id, { nomor: e.target.value }, `field:${node.id}:nomor`)
             }
-            className="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded px-2.5 py-1.5 text-xs outline-none focus:border-blue-500 font-mono"
+            className="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded px-2.5 py-1 text-xs outline-none focus:border-blue-500 font-mono"
           />
         </div>
 
         {/* Position Code */}
         <div className="space-y-1">
-          <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-            Kode Jabatan
-          </label>
+          <label className="text-xs text-slate-400">Kode Jabatan</label>
           <input
             type="text"
             placeholder="mis. KOB.01"
@@ -153,40 +186,9 @@ export const SingleNodeForm: React.FC<SingleNodeFormProps> = ({ node, locked }) 
             onChange={e =>
               updateNode(node.id, { kode: e.target.value }, `field:${node.id}:kode`)
             }
-            className="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded px-2.5 py-1.5 text-xs outline-none focus:border-blue-500 font-mono"
+            className="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded px-2.5 py-1 text-xs outline-none focus:border-blue-500 font-mono"
           />
         </div>
-      </div>
-
-      {/* Placement Section */}
-      <div className="pt-2 border-t border-slate-800">
-        <ParentSelect node={node} />
-      </div>
-
-      {/* Classification Section (Only for type === 'jabatan') */}
-      {node.type === 'jabatan' && (
-        <div className="pt-2 border-t border-slate-800">
-          <ClassificationEditor node={node} />
-        </div>
-      )}
-
-      {/* Kepala Unit Section (Only for type === 'unit') */}
-      {node.type === 'unit' && (
-        <div className="pt-2 border-t border-slate-800">
-          <KepalaUnitEditor node={node} />
-        </div>
-      )}
-
-      {/* Figures Section */}
-      <div className="pt-2 border-t border-slate-800 space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-            Angka Kebutuhan &amp; Eksisting
-          </span>
-        </div>
-
-        {node.type === 'jabatan' && <JenjangChips node={node} />}
-        <RincianEditor node={node} />
       </div>
 
       {/* Extras / Descriptive Section */}
