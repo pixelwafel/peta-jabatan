@@ -1,8 +1,9 @@
 import React, { memo } from 'react';
-import { ChevronRight, ChevronDown, Folder, AlertTriangle } from 'lucide-react';
+import { ChevronRight, ChevronDown, Folder, AlertTriangle, UserCog } from 'lucide-react';
 import { NodeCardProps } from './CardTypes';
 import { useProjectStore } from '@/store/projectStore';
 import { NODE_W } from '@/utils/layout';
+import { jenjangLabel } from '@/config/resolver';
 
 export const UnitCard: React.FC<NodeCardProps> = memo(
   function UnitCard({ data, selected }) {
@@ -64,6 +65,19 @@ export const UnitCard: React.FC<NodeCardProps> = memo(
               <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
             )}
           </div>
+
+          {/* Kepala unit (struktural), bila diisi */}
+          {node.kepalaUnit && (
+            <div className="flex items-center space-x-1.5 text-[11px] text-slate-400 min-w-0">
+              <UserCog className="w-3 h-3 text-blue-400 flex-shrink-0" />
+              <span className="truncate">
+                {node.kepalaUnit.nama || `Kepala ${node.nama}`}
+                {node.kepalaUnit.jenjangId
+                  ? ` · ${jenjangLabel(node.kepalaUnit.jenjangId, 'struktural')}`
+                  : ''}
+              </span>
+            </div>
+          )}
 
           {/* Subtotals (aggregate figures, read-only) */}
           <div className="pt-1 border-t border-slate-800 flex items-center justify-between text-xs font-mono">

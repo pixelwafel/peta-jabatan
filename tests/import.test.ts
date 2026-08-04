@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import * as XLSX from 'xlsx';
 import { mapColumns } from '../src/import/columnMapper';
 import { coerceInt, parseRows } from '../src/import/rowParser';
 import { groupRows } from '../src/import/groupRows';
@@ -199,5 +200,52 @@ describe('Import & Round-Trip Pipeline (Doc 08 Exit Criteria)', () => {
     const fungsional = preview.built.nodes.find(n => n.nama === 'Analis Kebijakan');
     expect(fungsional?.kategoriId).toBe('fungsional');
     expect(fungsional?.rincian[0]?.jenjangId).toBe('ahli_muda');
+
+    // Kepala unit (struktural) melekat pada node Unit lewat kolom kepala_* —
+    // BUKAN node Jabatan terpisah.
+    const dinas = preview.built.nodes.find(n => n.nama === 'Dinas Contoh');
+    expect(dinas?.kepalaUnit?.nama).toBe('Kepala Dinas Contoh');
+    expect(dinas?.kepalaUnit?.jenjangId).toBe('jpt_pratama');
+    expect(dinas?.kepalaUnit?.kebutuhan).toBe(1);
+
+    // kepala_nama boleh kosong — pengguna tetap bisa isi kepala tanpa nama override
+    const bidang = preview.built.nodes.find(n => n.nama === 'Bidang Contoh');
+    expect(bidang?.kepalaUnit?.jenjangId).toBe('pengawas');
+    expect(bidang?.kepalaUnit?.nama).toBeUndefined();
+
+    // Tidak ada lagi node Jabatan berkategori struktural (format lama)
+    const deprecatedStruktural = preview.built.nodes.filter(
+      n => n.type === 'jabatan' && n.kategoriId === 'struktural'
+    );
+    expect(deprecatedStruktural).toHaveLength(0);
+  });
+
+  it('legacy XLSX format (kepala unit sebagai baris Jabatan struktural terpisah) tetap bisa diimpor, digabung otomatis ke kepalaUnit', async () => {
+    const rows = [
+      ['nomor', 'nama', 'tipe', 'kategori', 'jenjang', 'kebutuhan', 'eksisting'],
+      ['1', 'Dinas Lama', 'Unit', '', '', '', ''],
+      ['1.1', 'Sekretariat', 'Unit', '', '', '', ''],
+      ['1.1.1', 'Sekretaris', 'Jabatan', 'Struktural', 'Administrator', 1, 1],
+      ['1.1.2', 'Analis SDM', 'Jabatan', 'Fungsional', '', '', ''],
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Struktur');
+    const arrayBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const file = new File([arrayBuffer], 'legacy.xlsx');
+
+    const preview = await processXlsxImport(file);
+
+    expect(preview.canCommit).toBe(true);
+    // Node "Sekretaris" harus lenyap sebagai node Jabatan — datanya lipat ke unit induk
+    expect(preview.built.nodes.find(n => n.nama === 'Sekretaris')).toBeUndefined();
+
+    const sekretariat = preview.built.nodes.find(n => n.nama === 'Sekretariat');
+    expect(sekretariat?.kepalaUnit?.jenjangId).toBe('administrator');
+    expect(sekretariat?.kepalaUnit?.kebutuhan).toBe(1);
+
+    // Jabatan non-struktural yang tadinya adik "Sekretaris" tetap anak Sekretariat
+    const analis = preview.built.nodes.find(n => n.nama === 'Analis SDM');
+    expect(analis).toBeDefined();
   });
 });

@@ -15,6 +15,11 @@ export interface RawRow {
   kode?: string;
   unitKerja?: string;
   keterangan?: string;
+  kepalaNama?: string;
+  kepalaKode?: string;
+  kepalaJenjang?: string;
+  kepalaKebutuhan?: string;
+  kepalaEksisting?: string;
   custom: Record<string, string>;
 }
 
@@ -147,6 +152,22 @@ export function parseRows(
         map.unitKerja !== undefined ? String(cells[map.unitKerja] ?? '').trim() : undefined,
       keterangan:
         map.keterangan !== undefined ? String(cells[map.keterangan] ?? '').trim() : undefined,
+      kepalaNama:
+        map.kepalaNama !== undefined ? String(cells[map.kepalaNama] ?? '').trim() : undefined,
+      kepalaKode:
+        map.kepalaKode !== undefined ? String(cells[map.kepalaKode] ?? '').trim() : undefined,
+      kepalaJenjang:
+        map.kepalaJenjang !== undefined
+          ? String(cells[map.kepalaJenjang] ?? '').trim()
+          : undefined,
+      kepalaKebutuhan:
+        map.kepalaKebutuhan !== undefined
+          ? String(cells[map.kepalaKebutuhan] ?? '').trim()
+          : undefined,
+      kepalaEksisting:
+        map.kepalaEksisting !== undefined
+          ? String(cells[map.kepalaEksisting] ?? '').trim()
+          : undefined,
       custom: customValues,
     });
   }

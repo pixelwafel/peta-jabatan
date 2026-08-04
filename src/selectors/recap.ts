@@ -22,7 +22,7 @@ export function resetRecapComputeCount(): void {
 const ZERO: NodeTotals = { kebutuhan: 0, eksisting: 0, selisih: 0 };
 
 function countPositions(nodes: OrgNode[]): number {
-  return nodes.filter(n => n.type === 'jabatan').length;
+  return nodes.filter(n => n.type === 'jabatan' || (n.type === 'unit' && n.kepalaUnit)).length;
 }
 
 function subtreeIds(rootId: string, idx: StructureIndex): Set<string> {
@@ -58,10 +58,12 @@ export function computeRecap(project: Project, cfg: Taxonomy = taxonomy): Recap 
   const nodeTotals = new Map<string, NodeTotals>();
   const subtreeTotals = new Map<string, NodeTotals>();
 
-  // 1. Calculate own rows totals (Units are empty by invariant 1)
+  // 1. Calculate own rows totals (Units carry only their kepalaUnit figures, if any)
   for (const n of project.nodes) {
     if (n.type === 'unit') {
-      nodeTotals.set(n.id, ZERO);
+      const keb = n.kepalaUnit?.kebutuhan ?? 0;
+      const eks = n.kepalaUnit?.eksisting ?? 0;
+      nodeTotals.set(n.id, { kebutuhan: keb, eksisting: eks, selisih: eks - keb });
     } else {
       let keb = 0, eks = 0;
       for (const r of n.rincian) {
@@ -151,13 +153,21 @@ export function computeRecap(project: Project, cfg: Taxonomy = taxonomy): Recap 
   catAcc.set('__tanpa_kategori__', { keb: 0, eks: 0, n: 0 });
 
   for (const n of inScopeNodes) {
-    if (n.type !== 'jabatan') continue;
-    const key = n.kategoriId && catAcc.has(n.kategoriId) ? n.kategoriId : '__tanpa_kategori__';
-    const t = nodeTotals.get(n.id) ?? ZERO;
-    const b = catAcc.get(key)!;
-    b.keb += t.kebutuhan;
-    b.eks += t.eksisting;
-    b.n += 1;
+    if (n.type === 'jabatan') {
+      const key = n.kategoriId && catAcc.has(n.kategoriId) ? n.kategoriId : '__tanpa_kategori__';
+      const t = nodeTotals.get(n.id) ?? ZERO;
+      const b = catAcc.get(key)!;
+      b.keb += t.kebutuhan;
+      b.eks += t.eksisting;
+      b.n += 1;
+    } else if (n.type === 'unit' && n.kepalaUnit) {
+      // Kepala unit selalu berkategori struktural (tersirat, lihat KepalaUnit)
+      const t = nodeTotals.get(n.id) ?? ZERO;
+      const b = catAcc.get('struktural') ?? catAcc.get('__tanpa_kategori__')!;
+      b.keb += t.kebutuhan;
+      b.eks += t.eksisting;
+      b.n += 1;
+    }
   }
 
   const perKategori: RecapBucket[] = Array.from(catAcc.entries())
@@ -175,14 +185,22 @@ export function computeRecap(project: Project, cfg: Taxonomy = taxonomy): Recap 
   const jenjangAcc = new Map<string, { keb: number; eks: number; n: number }>();
 
   for (const n of inScopeNodes) {
-    if (n.type !== 'jabatan') continue;
-    for (const r of n.rincian) {
-      if (!r.jenjangId) continue;
-      const b = jenjangAcc.get(r.jenjangId) ?? { keb: 0, eks: 0, n: 0 };
-      b.keb += r.kebutuhan ?? 0;
-      b.eks += r.eksisting ?? 0;
+    if (n.type === 'jabatan') {
+      for (const r of n.rincian) {
+        if (!r.jenjangId) continue;
+        const b = jenjangAcc.get(r.jenjangId) ?? { keb: 0, eks: 0, n: 0 };
+        b.keb += r.kebutuhan ?? 0;
+        b.eks += r.eksisting ?? 0;
+        b.n += 1;
+        jenjangAcc.set(r.jenjangId, b);
+      }
+    } else if (n.type === 'unit' && n.kepalaUnit?.jenjangId) {
+      const jid = n.kepalaUnit.jenjangId;
+      const b = jenjangAcc.get(jid) ?? { keb: 0, eks: 0, n: 0 };
+      b.keb += n.kepalaUnit.kebutuhan ?? 0;
+      b.eks += n.kepalaUnit.eksisting ?? 0;
       b.n += 1;
-      jenjangAcc.set(r.jenjangId, b);
+      jenjangAcc.set(jid, b);
     }
   }
 
@@ -223,12 +241,14 @@ export function computeRecap(project: Project, cfg: Taxonomy = taxonomy): Recap 
  */
 export const figuresKey = (nodes: OrgNode[]): string =>
   nodes
-    .map(
-      n =>
-        `${n.id}:${n.type}:${n.kategoriId ?? ''}:${n.rumpun.join(',')}:${n.rincian
-          .map(r => `${r.jenjangId ?? ''},${r.kebutuhan},${r.eksisting}`)
-          .join('|')}`
-    )
+    .map(n => {
+      const kepala = n.kepalaUnit
+        ? `${n.kepalaUnit.jenjangId ?? ''},${n.kepalaUnit.kebutuhan},${n.kepalaUnit.eksisting}`
+        : '';
+      return `${n.id}:${n.type}:${n.kategoriId ?? ''}:${n.rumpun.join(',')}:${n.rincian
+        .map(r => `${r.jenjangId ?? ''},${r.kebutuhan},${r.eksisting}`)
+        .join('|')}:${kepala}`;
+    })
     .join(';');
 
 export const structuralKey = (nodes: OrgNode[], edges: OrgEdge[]): string =>

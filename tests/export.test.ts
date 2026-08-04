@@ -72,14 +72,21 @@ describe('Export Pipeline (Doc 09 Exit Criteria)', () => {
     };
   }
 
-  it('COLUMNS contains all 15 core column definitions plus custom attributes', () => {
-    expect(COLUMNS.length).toBe(15);
+  it('COLUMNS contains all 20 core column definitions plus custom attributes', () => {
+    expect(COLUMNS.length).toBe(20);
     const keys = COLUMNS.map(c => c.key);
     expect(keys).toContain('nomor');
     expect(keys).toContain('nama');
     expect(keys).toContain('kebutuhan');
     expect(keys).toContain('eksisting');
     expect(keys).toContain('selisih');
+    // Kepala unit (struktural) melekat pada node Unit, bukan node Jabatan
+    // terpisah — lihat models/node.ts KepalaUnit.
+    expect(keys).toContain('kepala_nama');
+    expect(keys).toContain('kepala_kode');
+    expect(keys).toContain('kepala_jenjang');
+    expect(keys).toContain('kepala_kebutuhan');
+    expect(keys).toContain('kepala_eksisting');
 
     const customCols = getCustomColumns([{ id: 'sub_lokasi', nama: 'Sub Lokasi', tipe: 'text' }]);
     expect(customCols.length).toBe(1);

@@ -3,6 +3,7 @@ import { OrgNode } from '@/models/node';
 import { useProjectStore } from '@/store/projectStore';
 import { ParentSelect } from './ParentSelect';
 import { ClassificationEditor } from './ClassificationEditor';
+import { KepalaUnitEditor } from './KepalaUnitEditor';
 import { JenjangChips } from './JenjangChips';
 import { RincianEditor } from './RincianEditor';
 import { CustomAttributesEditor } from './CustomAttributesEditor';
@@ -112,6 +113,13 @@ export const SingleNodeForm: React.FC<SingleNodeFormProps> = ({ node }) => {
       {node.type === 'jabatan' && (
         <div className="pt-2 border-t border-slate-800">
           <ClassificationEditor node={node} />
+        </div>
+      )}
+
+      {/* Kepala Unit Section (Only for type === 'unit') */}
+      {node.type === 'unit' && (
+        <div className="pt-2 border-t border-slate-800">
+          <KepalaUnitEditor node={node} />
         </div>
       )}
 

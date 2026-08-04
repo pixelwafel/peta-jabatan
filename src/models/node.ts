@@ -21,6 +21,19 @@ export interface LinkRef {
   };
 }
 
+/**
+ * Posisi kepala unit (kategori struktural) melekat langsung pada node Unit —
+ * BUKAN node Jabatan terpisah. Node Jabatan hanya dipakai untuk Fungsional
+ * & Pelaksana. kategoriId tersirat 'struktural', tidak disimpan berulang.
+ */
+export interface KepalaUnit {
+  nama?: string; // override label; default "Kepala {nama unit}" bila kosong
+  kode?: string; // kode posisi kepala, terpisah dari kode unit sendiri
+  jenjangId: string | null; // level struktural (mis. Administrator, Pengawas)
+  kebutuhan: number; // integer >= 0
+  eksisting: number; // integer >= 0
+}
+
 export interface OrgNode {
   id: string; // uuid v4
   type: NodeType;
@@ -36,6 +49,7 @@ export interface OrgNode {
 
   // figures
   rincian: Rincian[]; // ALWAYS [] when type === 'unit'
+  kepalaUnit?: KepalaUnit; // ONLY meaningful when type === 'unit'; always undefined for 'jabatan'
 
   // descriptive
   unitKerja?: string;

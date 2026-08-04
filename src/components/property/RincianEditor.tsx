@@ -27,7 +27,7 @@ export const RincianEditor: React.FC<RincianEditorProps> = ({ node }) => {
   if (node.type === 'unit') {
     return (
       <div className="p-3 bg-slate-950/40 border border-slate-800 rounded-lg text-xs text-slate-400 italic">
-        Node unit tidak memiliki rincian angka langsung. Angka unit dihitung otomatis dari seluruh node bawahan.
+        Angka pada baris ini dihitung otomatis: kepala unit (bagian "Kepala Unit" di atas, bila diisi) ditambah seluruh jabatan pada node bawahan.
       </div>
     );
   }

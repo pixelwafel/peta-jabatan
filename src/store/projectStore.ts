@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { produceWithPatches, enablePatches, applyPatches, Patch } from 'immer';
 import { Project, ProjectMeta, CustomAttribute } from '@/models/project';
-import { OrgNode, NodeType, Rumpun, Rincian } from '@/models/node';
+import { OrgNode, NodeType, Rumpun, Rincian, KepalaUnit } from '@/models/node';
 import { uuid } from '@/utils/uuid';
 import { canSetParent } from '@/selectors/guards';
 import { hierarchyEdges } from '@/utils/edges';
@@ -52,6 +52,9 @@ export interface ProjectState {
   removeRincian: (nodeId: string, rincianId: string) => void;
   setRumpun: (nodeId: string, rumpun: Rumpun[]) => void;
   setKategori: (nodeId: string, kategoriId: string) => void;
+
+  // Kepala unit (posisi struktural, melekat di node Unit — bukan node terpisah)
+  setKepalaUnit: (nodeId: string, patch: Partial<KepalaUnit> | null) => void;
 
   // Layout & Position
   moveNodes: (
@@ -305,8 +308,11 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
           node.rincian = []; // Invariant 1
           node.kategoriId = undefined;
           node.rumpun = [];
-        } else if (node.rincian.length === 0) {
-          node.rincian = [{ id: uuid(), jenjangId: null, kebutuhan: 0, eksisting: 0 }];
+        } else {
+          delete node.kepalaUnit; // hanya melekat pada Unit
+          if (node.rincian.length === 0) {
+            node.rincian = [{ id: uuid(), jenjangId: null, kebutuhan: 0, eksisting: 0 }];
+          }
         }
       }
     });
@@ -440,6 +446,27 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
           r.jenjangId = null;
         }
       }
+    });
+  },
+
+  setKepalaUnit: (nodeId, patch) => {
+    get().commit('Ubah kepala unit', draft => {
+      const node = draft.nodes.find(n => n.id === nodeId);
+      if (!node || node.type !== 'unit') return;
+
+      if (patch === null) {
+        delete node.kepalaUnit;
+        return;
+      }
+
+      node.kepalaUnit = {
+        jenjangId: node.kepalaUnit?.jenjangId ?? null,
+        kebutuhan: node.kepalaUnit?.kebutuhan ?? 0,
+        eksisting: node.kepalaUnit?.eksisting ?? 0,
+        nama: node.kepalaUnit?.nama,
+        kode: node.kepalaUnit?.kode,
+        ...patch,
+      };
     });
   },
 

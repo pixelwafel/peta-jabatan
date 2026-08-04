@@ -4,8 +4,16 @@ import { NodeTotals } from '@/models/derived';
 import { subtreeOf } from './navigation';
 
 export function nodeTotals(node: OrgNode | null | undefined): NodeTotals {
-  if (!node || node.type === 'unit') {
+  if (!node) {
     return { kebutuhan: 0, eksisting: 0, selisih: 0 };
+  }
+
+  if (node.type === 'unit') {
+    // Kepala unit (struktural) melekat langsung di node Unit — angkanya
+    // dihitung sebagai milik unit sendiri, bukan dari node Jabatan terpisah.
+    const kebutuhan = node.kepalaUnit?.kebutuhan ?? 0;
+    const eksisting = node.kepalaUnit?.eksisting ?? 0;
+    return { kebutuhan, eksisting, selisih: eksisting - kebutuhan };
   }
 
   let kebutuhan = 0;

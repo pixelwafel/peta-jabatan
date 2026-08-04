@@ -91,11 +91,15 @@ export const ClassificationEditor: React.FC<ClassificationEditorProps> = ({ node
           className="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded px-2.5 py-1.5 text-xs outline-none focus:border-blue-500 transition-colors"
         >
           <option value="">— Pilih Kategori —</option>
-          {getKategoriList().map(k => (
-            <option key={k.id} value={k.id}>
-              {k.nama}
-            </option>
-          ))}
+          {/* Struktural bukan pilihan di sini — kepala unit melekat pada node
+              Unit induknya, lihat bagian "Kepala Unit" di properti Unit. */}
+          {getKategoriList()
+            .filter(k => k.id !== 'struktural')
+            .map(k => (
+              <option key={k.id} value={k.id}>
+                {k.nama}
+              </option>
+            ))}
         </select>
       </div>
 

@@ -111,6 +111,44 @@ export const COLUMNS: ColumnDef[] = [
     get: c => c.node.keterangan ?? '',
   },
   {
+    key: 'kepala_nama',
+    header: 'kepala_nama',
+    width: 28,
+    importable: true,
+    get: c => (c.node.type === 'unit' ? c.node.kepalaUnit?.nama ?? '' : ''),
+  },
+  {
+    key: 'kepala_kode',
+    header: 'kepala_kode',
+    width: 14,
+    importable: true,
+    get: c => (c.node.type === 'unit' ? c.node.kepalaUnit?.kode ?? '' : ''),
+  },
+  {
+    key: 'kepala_jenjang',
+    header: 'kepala_jenjang',
+    width: 18,
+    importable: true,
+    get: c =>
+      c.node.type === 'unit' && c.node.kepalaUnit?.jenjangId
+        ? jenjangLabel(c.node.kepalaUnit.jenjangId, 'struktural')
+        : '',
+  },
+  {
+    key: 'kepala_kebutuhan',
+    header: 'kepala_kebutuhan',
+    width: 15,
+    importable: true,
+    get: c => (c.node.type === 'unit' && c.node.kepalaUnit ? c.node.kepalaUnit.kebutuhan : ''),
+  },
+  {
+    key: 'kepala_eksisting',
+    header: 'kepala_eksisting',
+    width: 15,
+    importable: true,
+    get: c => (c.node.type === 'unit' && c.node.kepalaUnit ? c.node.kepalaUnit.eksisting : ''),
+  },
+  {
     key: 'parent_nomor',
     header: 'parent_nomor',
     width: 12,

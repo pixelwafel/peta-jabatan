@@ -4,6 +4,7 @@ import { ProjectIndex, ProjectIndexEntry } from './types';
 import { projectTotals } from '@/selectors/totals';
 import { hierarchyEdges } from '@/utils/edges';
 import { compareNomor } from '@/utils/numbering';
+import { mergeStrukturalHeadsIntoUnits } from '@/utils/structuralMerge';
 
 const customStore = createStore('pjb_db', 'pjb_store');
 
@@ -56,6 +57,8 @@ export async function getProject(id: string): Promise<Project | null> {
  * dari urutan lama supaya tampilan outline tidak berubah setelah upgrade.
  */
 export function normalizeProject(project: Project): Project {
+  project = normalizeStrukturalHeads(project);
+
   if (project.nodes.every(n => typeof n.order === 'number')) {
     return project;
   }
@@ -89,6 +92,17 @@ export function normalizeProject(project: Project): Project {
   }
 
   return project;
+}
+
+/**
+ * Proyek lama menyimpan posisi struktural sebagai node Jabatan terpisah di
+ * bawah unitnya. Migrasi sekali jalan (idempotent, no-op setelah proyek
+ * sudah bermigrasi): lipat ke `unit.kepalaUnit`. Lihat utils/structuralMerge.ts.
+ */
+function normalizeStrukturalHeads(project: Project): Project {
+  const result = mergeStrukturalHeadsIntoUnits(project.nodes, project.edges);
+  if (result.mergedCount === 0) return project;
+  return { ...project, nodes: result.nodes, edges: result.edges };
 }
 
 export async function saveProject(project: Project): Promise<void> {

@@ -7,6 +7,7 @@ import { parseRows } from './rowParser';
 import { groupRows } from './groupRows';
 import { buildStructure } from './buildStructure';
 import { projectTotals } from '@/selectors/totals';
+import { mergeStrukturalHeadsIntoUnits } from '@/utils/structuralMerge';
 
 export interface ImportPreview {
   summary: {
@@ -120,13 +121,31 @@ export async function processXlsxImport(file: File): Promise<ImportPreview> {
   const { candidates, findings: groupFindings } = groupRows(rows);
 
   // Stage 5: Build structure & derive parents
-  const { nodes, edges, findings: structFindings } = buildStructure(candidates);
+  const { nodes: builtNodes, edges: builtEdges, findings: structFindings } =
+    buildStructure(candidates);
+
+  // Stage 6: Fold legacy struktural-jabatan rows into their unit's kepalaUnit
+  // (format lama: kepala unit ditulis sebagai baris Jabatan kategori Struktural)
+  const merge = mergeStrukturalHeadsIntoUnits(builtNodes, builtEdges);
+  const { nodes, edges } = merge;
+
+  const mergeFindings: Finding[] =
+    merge.leftoverIds.length > 0
+      ? [
+          {
+            code: 'IMPORT_STRUKTURAL_NOT_MERGED',
+            severity: 'warning',
+            message: `${merge.leftoverIds.length} baris Jabatan berkategori Struktural tidak bisa otomatis digabung ke unit (kemungkinan lebih dari satu kepala per unit). Rapikan manual lewat Outline: pindahkan datanya ke bagian "Kepala Unit" pada properti unit, lalu hapus node Jabatan-nya.`,
+          },
+        ]
+      : [];
 
   const allFindings = [
     ...colFindings,
     ...parseFindings,
     ...groupFindings,
     ...structFindings,
+    ...mergeFindings,
   ];
 
   const hasFatalError = allFindings.some(f => f.severity === 'error');

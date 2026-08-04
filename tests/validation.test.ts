@@ -106,10 +106,22 @@ describe('Hierarchy, Validation & Readiness Engine (Doc 04 Exit Criteria)', () =
     expect(orphanFinding).toBeDefined();
     expect(orphanFinding?.message).toContain('Staf Unplaced'); // Names the node!
 
-    // Finding for unit with multiple heads
-    const multiHeadFinding = findings.find(f => f.code === 'UNIT_BANYAK_KEPALA');
-    expect(multiHeadFinding).toBeDefined();
-    expect(multiHeadFinding?.message).toContain('Sekretariat');
+    // j-struct1/j-struct2 are legacy-format struktural Jabatan nodes (kepala
+    // unit now lives on the Unit node itself, see models/node.ts KepalaUnit)
+    const deprecatedStrukturalFindings = findings.filter(
+      f => f.code === 'JABATAN_STRUKTURAL_DEPRECATED'
+    );
+    expect(deprecatedStrukturalFindings).toHaveLength(2);
+    expect(deprecatedStrukturalFindings.map(f => f.nodeId)).toEqual(
+      expect.arrayContaining(['j-struct1', 'j-struct2'])
+    );
+
+    // u-sub has children but no kepalaUnit filled in yet
+    const noKepalaFinding = findings.find(
+      f => f.code === 'UNIT_TANPA_KEPALA' && f.nodeId === 'u-sub'
+    );
+    expect(noKepalaFinding).toBeDefined();
+    expect(noKepalaFinding?.message).toContain('Sekretariat');
   });
 
   it('canSetParent rejects self, direct parent cycles, and deep cycles', () => {

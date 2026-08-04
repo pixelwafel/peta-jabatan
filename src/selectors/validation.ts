@@ -134,28 +134,57 @@ export function validateProject(
         });
       }
 
-      // Unit head checks (Invariant: 1 structural head per unit)
+      // Unit head check: kepala unit sekarang melekat langsung di node Unit
+      // (bukan node Jabatan terpisah) — lihat models/node.ts KepalaUnit.
       const childrenIds = idx.childIds.get(n.id) ?? [];
-      const children = childrenIds
-        .map(cid => idx.nodeById.get(cid))
-        .filter(Boolean) as OrgNode[];
+      const hasChildren = childrenIds.length > 0;
 
-      const structuralHeads = children.filter(c => c.kategoriId === 'struktural');
-      if (children.length > 0 && structuralHeads.length === 0) {
+      if (hasChildren && !n.kepalaUnit) {
         f.push({
           code: 'UNIT_TANPA_KEPALA',
           severity: 'warning',
           nodeId: n.id,
-          message: `Unit "${n.nama}" belum memiliki kepala (jabatan struktural).`,
-        });
-      } else if (structuralHeads.length > 1) {
-        f.push({
-          code: 'UNIT_BANYAK_KEPALA',
-          severity: 'warning',
-          nodeId: n.id,
-          message: `Unit "${n.nama}" memiliki ${structuralHeads.length} kepala (jabatan struktural).`,
+          message: `Unit "${n.nama}" belum memiliki kepala (posisi struktural).`,
         });
       }
+
+      if (n.kepalaUnit) {
+        if (n.kepalaUnit.kebutuhan < 0 || n.kepalaUnit.eksisting < 0) {
+          f.push({
+            code: 'RINCIAN_NEGATIVE',
+            severity: 'error',
+            nodeId: n.id,
+            message: `Angka kepala unit pada "${n.nama}" tidak boleh negatif.`,
+          });
+        }
+
+        if (!n.kepalaUnit.jenjangId) {
+          f.push({
+            code: 'JENJANG_MISSING',
+            severity: 'warning',
+            nodeId: n.id,
+            message: `Jenjang kepala unit pada "${n.nama}" belum dipilih.`,
+          });
+        } else if (!isJenjangValid('struktural', [], n.kepalaUnit.jenjangId)) {
+          f.push({
+            code: 'JENJANG_INVALID',
+            severity: 'warning',
+            nodeId: n.id,
+            message: `Jenjang kepala unit pada "${n.nama}" tidak valid.`,
+          });
+        }
+      }
+    }
+
+    // Node Jabatan berkategori struktural adalah peninggalan format lama
+    // (belum sempat digabung otomatis ke unit induknya — lihat utils/structuralMerge.ts).
+    if (n.type === 'jabatan' && n.kategoriId === 'struktural') {
+      f.push({
+        code: 'JABATAN_STRUKTURAL_DEPRECATED',
+        severity: 'warning',
+        nodeId: n.id,
+        message: `"${n.nama}" adalah jabatan struktural sebagai node terpisah (format lama). Pindahkan datanya ke bagian "Kepala Unit" pada properti unit induk, lalu hapus node ini.`,
+      });
     }
 
     if (n.type === 'jabatan') {

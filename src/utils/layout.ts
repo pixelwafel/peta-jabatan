@@ -13,6 +13,9 @@ export function nodeHeight(n: OrgNode, showJenjang: boolean = false): number {
   if (n.type === 'jabatan' && n.kategoriId) {
     h += LINE_H; // Classification line
   }
+  if (n.type === 'unit' && n.kepalaUnit) {
+    h += LINE_H; // Kepala unit line
+  }
   if (showJenjang && n.rincian.length > 1) {
     const perLine = 2;
     h += LINE_H * Math.ceil(n.rincian.length / perLine);

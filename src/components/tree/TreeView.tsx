@@ -18,6 +18,7 @@ import {
   CornerDownRight,
   Copy,
   Trash2,
+  UserCog,
 } from 'lucide-react';
 
 type DropPosition = 'before' | 'after' | 'inside';
@@ -185,6 +186,19 @@ const TreeRow: React.FC<TreeRowProps> = ({
           {!isUnit && node.rincian.length > 0 && (
             <span className="text-[11px] text-slate-400 bg-slate-950/60 px-1.5 py-0.5 rounded">
               {keb}/{eks}
+            </span>
+          )}
+
+          {/* Kepala unit (struktural) badge */}
+          {isUnit && node.kepalaUnit && (
+            <span
+              className="flex items-center space-x-1 text-[11px] text-slate-400 bg-slate-950/60 px-1.5 py-0.5 rounded"
+              title={node.kepalaUnit.nama || `Kepala ${node.nama}`}
+            >
+              <UserCog className="w-3 h-3 text-blue-400" />
+              <span>
+                {node.kepalaUnit.kebutuhan}/{node.kepalaUnit.eksisting}
+              </span>
             </span>
           )}
 

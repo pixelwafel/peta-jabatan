@@ -122,14 +122,18 @@ function buildPetunjukSheet(): XLSX.WorkSheet {
     ['   Baris dengan nomor "1.2" otomatis jadi anak dari baris bernomor "1".'],
     ['2. Kolom "tipe" diisi "Unit" (unit organisasi, boleh punya anak) atau "Jabatan" (posisi, angka kebutuhan/eksisting).'],
     ['   Boleh dikosongkan — aplikasi akan menebak dari konteks, tapi lebih aman diisi eksplisit.'],
-    ['3. Kolom "kategori" khusus baris bertipe Jabatan, diisi salah satu nilai di sheet "Referensi": Struktural, Fungsional, atau Pelaksana.'],
+    ['3. Kolom "kategori" khusus baris bertipe Jabatan, diisi Fungsional atau Pelaksana (lihat sheet "Referensi").'],
+    ['   Jabatan struktural (kepala unit) TIDAK dibuat sebagai baris Jabatan — lihat poin 6.'],
     ['4. Kolom "rumpun" khusus kategori Fungsional, diisi Keahlian dan/atau Keterampilan (pisahkan dengan koma bila keduanya).'],
     ['5. Kolom "jenjang" diisi nama jenjang sesuai kombinasi kategori+rumpun — lihat pilihan valid di sheet "Referensi".'],
-    ['6. Kolom "kebutuhan" dan "eksisting" hanya berlaku untuk baris Jabatan, harus angka bulat >= 0.'],
-    ['   Baris Unit tidak boleh diisi angka — akan dihitung otomatis dari total jabatan di bawahnya.'],
-    ['7. Kolom "kode", "unit_kerja", dan "keterangan" bersifat opsional, bebas diisi teks apa saja.'],
-    ['8. Baris contoh di sheet "Struktur" boleh dihapus/ditimpa — hanya sebagai contoh format, bukan data wajib.'],
-    ['9. Setelah selesai, simpan berkas ini dan impor lewat Kelola Proyek → Impor Berkas.'],
+    ['6. Kepala unit (posisi struktural) diisi LANGSUNG di baris Unit lewat kolom kepala_nama, kepala_kode, kepala_jenjang,'],
+    ['   kepala_kebutuhan, kepala_eksisting — bukan baris Jabatan terpisah. kepala_jenjang diisi salah satu jenjang Struktural'],
+    ['   di sheet "Referensi" (JPT Pratama / Administrator / Pengawas). kepala_nama boleh dikosongkan (default "Kepala {nama unit}").'],
+    ['7. Kolom "kebutuhan" dan "eksisting" (bukan kepala_*) hanya berlaku untuk baris Jabatan, harus angka bulat >= 0.'],
+    ['   Baris Unit tidak boleh diisi kolom ini — angka unit dihitung otomatis dari kepala unit + total jabatan di bawahnya.'],
+    ['8. Kolom "kode", "unit_kerja", dan "keterangan" bersifat opsional, bebas diisi teks apa saja.'],
+    ['9. Baris contoh di sheet "Struktur" boleh dihapus/ditimpa — hanya sebagai contoh format, bukan data wajib.'],
+    ['10. Setelah selesai, simpan berkas ini dan impor lewat Kelola Proyek → Impor Berkas.'],
   ];
 
   const ws = XLSX.utils.aoa_to_sheet(rows);
@@ -147,15 +151,19 @@ export function exportXlsxTemplate(): Blob {
 
   const headerRow = importableCols.map(c => c.header);
   // Urutan kolom mengikuti COLUMNS (importable saja): nomor, nama, tipe,
-  // kategori, rumpun, jenjang, kebutuhan, eksisting, kode, unit_kerja, keterangan.
+  // kategori, rumpun, jenjang, kebutuhan, eksisting, kode, unit_kerja,
+  // keterangan, kepala_nama, kepala_kode, kepala_jenjang, kepala_kebutuhan,
+  // kepala_eksisting.
+  //
+  // Kepala unit (struktural) DIISI LANGSUNG di baris Unit lewat kolom
+  // kepala_* — TIDAK dibuat sebagai baris Jabatan terpisah. Baris Jabatan
+  // hanya untuk Fungsional & Pelaksana.
   const sampleRows: (string | number)[][] = [
-    ['1', 'Dinas Contoh', 'Unit', '', '', '', '', '', 'DIS.01', '', ''],
-    ['1.1', 'Sekretariat', 'Unit', '', '', '', '', '', '', '', ''],
-    ['1.1.1', 'Sekretaris', 'Jabatan', 'Struktural', '', '', 1, 1, 'SEK.01', '', ''],
-    ['1.2', 'Bidang Contoh', 'Unit', '', '', '', '', '', '', '', ''],
-    ['1.2.1', 'Kepala Bidang Contoh', 'Jabatan', 'Struktural', '', '', 1, 1, 'KAB.01', '', ''],
-    ['1.2.2', 'Analis Kebijakan', 'Jabatan', 'Fungsional', 'Keahlian', 'Ahli Muda', 2, 1, '', '', ''],
-    ['1.2.3', 'Pengadministrasi Umum', 'Jabatan', 'Pelaksana', '', '', 1, 0, '', '', ''],
+    ['1', 'Dinas Contoh', 'Unit', '', '', '', '', '', 'DIS.01', '', '', 'Kepala Dinas Contoh', 'KADIS.01', 'JPT Pratama', 1, 1],
+    ['1.1', 'Sekretariat', 'Unit', '', '', '', '', '', '', '', '', 'Sekretaris', 'SEK.01', 'Administrator', 1, 1],
+    ['1.2', 'Bidang Contoh', 'Unit', '', '', '', '', '', '', '', '', '', 'KAB.01', 'Pengawas', 1, 1],
+    ['1.2.1', 'Analis Kebijakan', 'Jabatan', 'Fungsional', 'Keahlian', 'Ahli Muda', 2, 1, '', '', '', '', '', '', '', ''],
+    ['1.2.2', 'Pengadministrasi Umum', 'Jabatan', 'Pelaksana', '', '', 1, 0, '', '', '', '', '', '', '', ''],
   ];
 
   const aoa = [headerRow, ...sampleRows];

@@ -1,5 +1,5 @@
 import { Finding } from '@/models/derived';
-import { NodeType, Rumpun, Rincian } from '@/models/node';
+import { NodeType, Rumpun, Rincian, KepalaUnit } from '@/models/node';
 import { RawRow, coerceInt } from './rowParser';
 import {
   resolveKategori,
@@ -18,6 +18,7 @@ export interface NodeCandidate {
   kode?: string;
   unitKerja?: string;
   keterangan?: string;
+  kepalaUnit?: KepalaUnit;
   custom: Record<string, string>;
   rowNumbers: number[];
 }
@@ -128,6 +129,34 @@ export function groupRows(rows: RawRow[]): {
             };
           });
 
+    let kepalaUnit: KepalaUnit | undefined;
+    if (
+      tipe === 'unit' &&
+      (first.kepalaNama || first.kepalaKode || first.kepalaJenjang ||
+        first.kepalaKebutuhan || first.kepalaEksisting)
+    ) {
+      const jenjangId = first.kepalaJenjang
+        ? resolveJenjang('struktural', first.kepalaJenjang)
+        : null;
+
+      if (first.kepalaJenjang && !jenjangId) {
+        findings.push({
+          code: 'IMPORT_BAD_JENJANG',
+          severity: 'warning',
+          rowNumber: first.rowNumber,
+          message: `Baris ${first.rowNumber}: jenjang kepala unit "${first.kepalaJenjang}" tidak dikenal. Dikosongkan.`,
+        });
+      }
+
+      kepalaUnit = {
+        nama: first.kepalaNama || undefined,
+        kode: first.kepalaKode || undefined,
+        jenjangId,
+        kebutuhan: coerceInt(first.kepalaKebutuhan, first.rowNumber, 'kepala_kebutuhan', findings),
+        eksisting: coerceInt(first.kepalaEksisting, first.rowNumber, 'kepala_eksisting', findings),
+      };
+    }
+
     candidates.push({
       nomor,
       nama: first.nama,
@@ -138,6 +167,7 @@ export function groupRows(rows: RawRow[]): {
       kode: first.kode,
       unitKerja: first.unitKerja,
       keterangan: first.keterangan,
+      kepalaUnit,
       custom: first.custom,
       rowNumbers: group.map(r => r.rowNumber),
     });
