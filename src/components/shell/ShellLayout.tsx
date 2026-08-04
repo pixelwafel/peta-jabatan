@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
 import { Toolbar } from './Toolbar';
-import { LeftSidebar } from './LeftSidebar';
+import { OpdListSidebar } from './OpdListSidebar';
+import { StructurePanel } from './StructurePanel';
 import { RightSidebar } from './RightSidebar';
 import { StatusBar } from './StatusBar';
-import { Canvas } from '../canvas/Canvas';
 
 const InnerShellLayout: React.FC = () => {
-  const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [rightCollapsed, setRightCollapsed] = useState(false);
 
-  const leftWidth = leftCollapsed ? '36px' : '280px';
   const rightWidth = rightCollapsed ? '36px' : '320px';
 
   return (
@@ -18,7 +16,6 @@ const InnerShellLayout: React.FC = () => {
       className="shell-grid"
       style={
         {
-          '--left-width': leftWidth,
           '--right-width': rightWidth,
         } as React.CSSProperties
       }
@@ -28,9 +25,9 @@ const InnerShellLayout: React.FC = () => {
         <Toolbar />
       </div>
 
-      {/* Main Row (Grid row 2): Left sidebar, Canvas, Right panel */}
-      <LeftSidebar collapsed={leftCollapsed} onToggleCollapse={() => setLeftCollapsed(!leftCollapsed)} />
-      <Canvas />
+      {/* Main Row (Grid row 2): Kolom 1 daftar OPD, Kolom 2 struktur (outline/preview/unplaced/recap), Kolom 3 properti */}
+      <OpdListSidebar />
+      <StructurePanel />
       <RightSidebar collapsed={rightCollapsed} onToggleCollapse={() => setRightCollapsed(!rightCollapsed)} />
 
       {/* Bottom Status bar (Grid row 3, col span 3) */}

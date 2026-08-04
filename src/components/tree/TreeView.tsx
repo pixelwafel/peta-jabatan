@@ -8,6 +8,7 @@ import { ancestorsOf, childrenOf, parentOf, rootNodes } from '@/selectors/naviga
 import { NODE_W, nodeHeight } from '@/utils/layout';
 import { useReactFlow } from '@xyflow/react';
 import { useStructureShortcuts } from '@/hooks/useStructureShortcuts';
+import { useLiveLayout } from '@/hooks/useLiveLayout';
 import {
   ChevronDown,
   ChevronRight,
@@ -288,6 +289,14 @@ export const TreeView: React.FC = () => {
   const tree = useMemo(() => buildTree(nodes, edges), [nodes, edges]);
   const nodeByIdMap = useMemo(() => new Map(nodes.map(n => [n.id, n])), [nodes]);
 
+  // Posisi mode preview di canvas dihitung otomatis (Dagre) — pakai layout
+  // yang sama supaya "fokus ke canvas" akurat terhadap yang benar-benar dirender.
+  const liveLayout = useLiveLayout(nodes, edges, {
+    direction: 'TB',
+    scope: 'all',
+    showJenjang: showJenjangOnCard,
+  });
+
   const handleFocus = (nodeId: string) => {
     // Auto expand collapsed ancestors
     const collapsedAncestors = ancestorsOf(nodes, edges, nodeId).filter(a => a.collapsed);
@@ -298,9 +307,10 @@ export const TreeView: React.FC = () => {
     }
 
     const target = nodeByIdMap.get(nodeId);
-    if (target) {
+    const pos = liveLayout.get(nodeId) ?? target?.position;
+    if (target && pos) {
       const h = nodeHeight(target, showJenjangOnCard);
-      setCenter(target.position.x + NODE_W / 2, target.position.y + h / 2, {
+      setCenter(pos.x + NODE_W / 2, pos.y + h / 2, {
         zoom: 1.2,
         duration: 300,
       });

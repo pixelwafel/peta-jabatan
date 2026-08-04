@@ -15,7 +15,7 @@
 
   .shell-grid {
     display: grid;
-    grid-template-columns: var(--left-width, 280px) 1fr var(--right-width, 320px);
+    grid-template-columns: 220px 1fr var(--right-width, 320px);
     grid-template-rows: 48px 1fr 28px;
     height: 100vh;
     width: 100vw;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Folder, Plus, LayoutGrid, Undo, Redo, ShieldCheck, Download } from 'lucide-react';
+import { Folder, Plus, Undo, Redo, ShieldCheck, Download } from 'lucide-react';
 import { useProjectStore } from '@/store/projectStore';
 import { useHistoryStore } from '@/store/historyStore';
 import { useUiStore } from '@/store/uiStore';
@@ -7,7 +7,6 @@ import { validateProject } from '@/selectors/validation';
 import { ProjectManagerDialog } from '../dialogs/ProjectManagerDialog';
 import { ExportDialog } from '../dialogs/ExportDialog';
 import { ReadinessDialog } from '../dialogs/ReadinessDialog';
-import { computeLayout } from '@/utils/layout';
 
 export const Toolbar: React.FC = () => {
   const [showProjectManager, setShowProjectManager] = useState(false);
@@ -19,8 +18,6 @@ export const Toolbar: React.FC = () => {
   const undo = useProjectStore(s => s.undo);
   const redo = useProjectStore(s => s.redo);
   const selectedNodeIds = useUiStore(s => s.selectedNodeIds);
-  const showJenjangOnCard = useUiStore(s => s.showJenjangOnCard);
-  const openConfirm = useUiStore(s => s.openConfirm);
 
   const past = useHistoryStore(s => s.past);
   const future = useHistoryStore(s => s.future);
@@ -34,24 +31,6 @@ export const Toolbar: React.FC = () => {
   const handleAddPosition = () => {
     const parentId = selectedNodeIds[0];
     addNode({ type: 'jabatan', parentId });
-  };
-
-  const handleTidy = () => {
-    if (!project) return;
-
-    openConfirm({
-      title: 'Rapikan Layout Struktur?',
-      body: 'Rapikan akan menata ulang posisi seluruh node pada kanvas menggunakan algoritma Dagre. Tindakan ini dapat dibatalkan dengan Ctrl+Z.',
-      confirmLabel: 'Rapikan',
-      onConfirm: () => {
-        const layout = computeLayout(project.nodes, project.edges, {
-          direction: 'TB',
-          scope: 'all',
-          showJenjang: showJenjangOnCard,
-        });
-        useProjectStore.getState().applyLayout(layout);
-      },
-    });
   };
 
   return (
@@ -82,15 +61,6 @@ export const Toolbar: React.FC = () => {
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Tambah</span>
-            </button>
-
-            <button
-              onClick={handleTidy}
-              className="flex items-center space-x-1 px-2.5 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-slate-200"
-              title="Rapikan Layout (Dagre Auto-Layout)"
-            >
-              <LayoutGrid className="w-3.5 h-3.5 text-slate-300" />
-              <span>Rapikan</span>
             </button>
 
             <div className="h-4 w-px bg-slate-700 mx-1" />

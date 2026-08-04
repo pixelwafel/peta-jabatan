@@ -58,7 +58,6 @@ export interface ProjectState {
     moves: Array<{ id: string; position: { x: number; y: number } }>,
     txId: string
   ) => void;
-  applyLayout: (positions: Map<string, { x: number; y: number }>) => void;
 
   // Metadata & Custom Attributes
   setMeta: (patch: Partial<ProjectMeta>) => void;
@@ -454,17 +453,6 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       },
       { txId }
     );
-  },
-
-  applyLayout: positions => {
-    get().commit('Rapikan layout', draft => {
-      for (const n of draft.nodes) {
-        const pos = positions.get(n.id);
-        if (pos) {
-          n.position = { ...pos };
-        }
-      }
-    });
   },
 
   setMeta: patch => {
