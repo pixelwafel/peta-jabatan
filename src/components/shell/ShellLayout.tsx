@@ -9,7 +9,7 @@ import { StatusBar } from './StatusBar';
 const InnerShellLayout: React.FC = () => {
   const [rightCollapsed, setRightCollapsed] = useState(false);
 
-  const rightWidth = rightCollapsed ? '36px' : '320px';
+  const rightWidth = rightCollapsed ? '36px' : '380px';
 
   return (
     <div

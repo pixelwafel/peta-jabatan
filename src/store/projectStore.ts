@@ -74,6 +74,10 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   setProject: (project: Project | null) => {
     set({ project });
     useHistoryStore.getState().clearHistory();
+    // Seleksi node lama tidak relevan lagi untuk proyek baru — kalau tidak
+    // dibersihkan, panel properti (kolom 3) tetap menampilkan form node dari
+    // proyek sebelumnya (atau kosong) alih-alih form metadata OPD.
+    useUiStore.getState().clearSelection();
   },
 
   commit: (label, recipe, opts) => {

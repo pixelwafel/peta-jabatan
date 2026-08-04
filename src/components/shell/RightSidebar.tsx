@@ -44,11 +44,11 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({ collapsed, onToggleC
 
   return (
     <>
-      <aside className="w-[320px] bg-slate-900 border-l border-slate-700 flex flex-col h-full select-none text-slate-300">
+      <aside className="w-[380px] bg-slate-900 border-l border-slate-700 flex flex-col h-full select-none text-slate-300">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-800 px-3 py-2">
-          <div className="flex items-center space-x-2 font-medium text-xs text-slate-200">
-            <Sliders className="w-3.5 h-3.5 text-blue-400" />
+          <div className="flex items-center space-x-2 font-medium text-sm text-slate-200">
+            <Sliders className="w-4 h-4 text-blue-400" />
             <span>Properti &amp; Detail</span>
           </div>
           <button

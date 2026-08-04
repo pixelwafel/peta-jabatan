@@ -21,7 +21,7 @@ describe('Canvas & Layout (Doc 05 Exit Criteria)', () => {
     };
 
     // 1 row with showJenjang = false or true
-    expect(nodeHeight(baseNode, false)).toBe(94); // CARD_BASE_H (76) + LINE_H (18)
+    expect(nodeHeight(baseNode, false)).toBe(104); // CARD_BASE_H (84) + LINE_H (20)
 
     // 2 rows with showJenjang = true
     const node2 = {
@@ -31,9 +31,9 @@ describe('Canvas & Layout (Doc 05 Exit Criteria)', () => {
         { id: 'r2', jenjangId: 'ahli_pertama', kebutuhan: 1, eksisting: 1 },
       ],
     };
-    expect(nodeHeight(node2, true)).toBe(112); // 94 + LINE_H (18)
+    expect(nodeHeight(node2, true)).toBe(124); // 104 + LINE_H (20)
 
-    // 3 rows with showJenjang = true (Math.ceil(3/2) = 2 lines -> 2 * 18 = 36)
+    // 3 rows with showJenjang = true (Math.ceil(3/2) = 2 lines -> 2 * 20 = 40)
     const node3 = {
       ...baseNode,
       rincian: [
@@ -42,9 +42,9 @@ describe('Canvas & Layout (Doc 05 Exit Criteria)', () => {
         { id: 'r3', jenjangId: 'ahli_muda', kebutuhan: 1, eksisting: 1 },
       ],
     };
-    expect(nodeHeight(node3, true)).toBe(130);
+    expect(nodeHeight(node3, true)).toBe(144);
 
-    // 4 rows with showJenjang = true (Math.ceil(4/2) = 2 lines -> 2 * 18 = 36)
+    // 4 rows with showJenjang = true (Math.ceil(4/2) = 2 lines -> 2 * 20 = 40)
     const node4 = {
       ...baseNode,
       rincian: [
@@ -54,7 +54,7 @@ describe('Canvas & Layout (Doc 05 Exit Criteria)', () => {
         { id: 'r4', jenjangId: 'ahli_pertama', kebutuhan: 1, eksisting: 1 },
       ],
     };
-    expect(nodeHeight(node4, true)).toBe(130);
+    expect(nodeHeight(node4, true)).toBe(144);
   });
 
   it('Dagre receives only kind === hirarki edges and centers coordinates to top-left', () => {

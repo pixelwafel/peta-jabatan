@@ -13,7 +13,7 @@ export const StructurePanel: React.FC = () => {
   return (
     <div className="bg-slate-950 border-r border-slate-700 flex flex-col h-full select-none text-slate-300 min-w-0">
       {/* Tabs */}
-      <div className="flex items-center border-b border-slate-800 px-2 py-1.5 space-x-1 text-xs">
+      <div className="flex items-center border-b border-slate-800 px-2 py-1.5 space-x-1 text-sm">
         <button
           onClick={() => setActiveTab('outline')}
           className={`flex items-center space-x-1.5 px-2.5 py-1 rounded font-medium ${

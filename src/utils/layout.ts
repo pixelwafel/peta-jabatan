@@ -4,9 +4,9 @@ import { OrgEdge } from '@/models/edge';
 import { hierarchyEdges } from '@/utils/edges';
 import { subtreeOf } from '@/selectors/navigation';
 
-export const NODE_W = 220;
-export const CARD_BASE_H = 76;
-export const LINE_H = 18;
+export const NODE_W = 240;
+export const CARD_BASE_H = 84;
+export const LINE_H = 20;
 
 export function nodeHeight(n: OrgNode, showJenjang: boolean = false): number {
   let h = CARD_BASE_H;

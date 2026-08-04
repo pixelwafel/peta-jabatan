@@ -51,9 +51,9 @@ export const UnitCard: React.FC<NodeCardProps> = memo(
                   )}
                 </button>
               )}
-              <Folder className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+              <Folder className="w-4 h-4 text-slate-400 flex-shrink-0" />
               <span
-                className="font-bold text-xs text-slate-200 tracking-tight uppercase truncate"
+                className="font-bold text-sm text-slate-200 tracking-tight uppercase truncate"
                 title={node.nama}
               >
                 {node.nama}
@@ -66,7 +66,7 @@ export const UnitCard: React.FC<NodeCardProps> = memo(
           </div>
 
           {/* Subtotals (aggregate figures, read-only) */}
-          <div className="pt-1 border-t border-slate-800 flex items-center justify-between text-[11px] font-mono">
+          <div className="pt-1 border-t border-slate-800 flex items-center justify-between text-xs font-mono">
             <span className="text-slate-400">
               Keb {dispTotals.kebutuhan} · Eks {dispTotals.eksisting}
             </span>
@@ -77,7 +77,7 @@ export const UnitCard: React.FC<NodeCardProps> = memo(
 
           {/* Collapsed badge */}
           {node.collapsed && childCount > 0 && (
-            <div className="mt-1 bg-slate-800/80 text-slate-300 rounded px-1.5 py-0.5 text-[10px] flex items-center justify-between font-mono">
+            <div className="mt-1 bg-slate-800/80 text-slate-300 rounded px-1.5 py-0.5 text-[11px] flex items-center justify-between font-mono">
               <span>+{childCount} tersembunyi</span>
             </div>
           )}

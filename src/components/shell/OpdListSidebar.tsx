@@ -42,10 +42,10 @@ export const OpdListSidebar: React.FC = () => {
   };
 
   return (
-    <aside className="w-[220px] bg-slate-900 border-r border-slate-700 flex flex-col h-full select-none text-slate-300">
+    <aside className="w-[260px] bg-slate-900 border-r border-slate-700 flex flex-col h-full select-none text-slate-300">
       <div className="flex items-center justify-between border-b border-slate-800 px-3 py-2">
-        <div className="flex items-center space-x-2 font-medium text-xs text-slate-200">
-          <Folder className="w-3.5 h-3.5 text-blue-400" />
+        <div className="flex items-center space-x-2 font-medium text-sm text-slate-200">
+          <Folder className="w-4 h-4 text-blue-400" />
           <span>Daftar OPD</span>
         </div>
       </div>
@@ -75,14 +75,14 @@ export const OpdListSidebar: React.FC = () => {
               <button
                 key={entry.id}
                 onClick={() => handleSelect(entry.id)}
-                className={`w-full text-left px-2 py-1.5 rounded text-xs transition-colors ${
+                className={`w-full text-left px-2 py-2 rounded text-sm transition-colors ${
                   isActive
                     ? 'bg-blue-900/40 text-blue-200 font-semibold'
                     : 'hover:bg-slate-800/60 text-slate-300'
                 }`}
               >
                 <div className="truncate font-medium">{entry.namaOPD}</div>
-                <div className="text-[10px] text-slate-500 font-mono">{entry.kodeOPD}</div>
+                <div className="text-[11px] text-slate-500 font-mono">{entry.kodeOPD}</div>
               </button>
             );
           })
@@ -92,7 +92,7 @@ export const OpdListSidebar: React.FC = () => {
       <div className="p-2 border-t border-slate-800">
         <button
           onClick={() => setShowManager(true)}
-          className="w-full flex items-center justify-center space-x-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded border border-slate-700"
+          className="w-full flex items-center justify-center space-x-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded border border-slate-700"
         >
           <Settings className="w-3.5 h-3.5 text-blue-400" />
           <span>Kelola...</span>

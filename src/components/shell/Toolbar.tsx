@@ -44,7 +44,7 @@ export const Toolbar: React.FC = () => {
           </div>
 
           {/* Action groups */}
-          <div className="flex items-center space-x-1 text-xs">
+          <div className="flex items-center space-x-1 text-sm">
             <button
               onClick={() => setShowProjectManager(true)}
               className="flex items-center space-x-1 px-2.5 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-slate-200"
@@ -103,7 +103,7 @@ export const Toolbar: React.FC = () => {
         </div>
 
         {/* Export Group */}
-        <div className="flex items-center space-x-2 text-xs">
+        <div className="flex items-center space-x-2 text-sm">
           <button
             onClick={() => setShowExportDialog(true)}
             className="flex items-center space-x-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded shadow-sm"

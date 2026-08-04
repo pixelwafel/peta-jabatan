@@ -44,12 +44,12 @@ export const JabatanCard: React.FC<NodeCardProps> = memo(
           <div className="flex items-start justify-between space-x-1">
             <div className="min-w-0 flex-1">
               <h4
-                className="font-semibold text-xs text-slate-100 line-clamp-2 leading-tight tracking-tight"
+                className="font-semibold text-sm text-slate-100 line-clamp-2 leading-tight tracking-tight"
                 title={node.nama}
               >
                 {node.nama}
               </h4>
-              <p className="text-[10px] text-slate-400 truncate mt-0.5" title={classLabel}>
+              <p className="text-[11px] text-slate-400 truncate mt-0.5" title={classLabel}>
                 {classLabel}
               </p>
             </div>
@@ -57,12 +57,12 @@ export const JabatanCard: React.FC<NodeCardProps> = memo(
             {hasFindings ? (
               <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
             ) : (
-              <UserCheck className="w-3 h-3 text-slate-600 flex-shrink-0 mt-0.5" />
+              <UserCheck className="w-3.5 h-3.5 text-slate-600 flex-shrink-0 mt-0.5" />
             )}
           </div>
 
           {/* Node Totals */}
-          <div className="pt-1 border-t border-slate-800 flex items-center justify-between text-[11px] font-mono">
+          <div className="pt-1 border-t border-slate-800 flex items-center justify-between text-xs font-mono">
             <span className="text-slate-300">
               Keb {totals.kebutuhan} · Eks {totals.eksisting}
             </span>
@@ -73,7 +73,7 @@ export const JabatanCard: React.FC<NodeCardProps> = memo(
 
           {/* Compact Per-Level Breakdown */}
           {showJenjang && node.rincian.length > 1 && (
-            <div className="pt-1 border-t border-slate-800/60 flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] font-mono text-slate-400">
+            <div className="pt-1 border-t border-slate-800/60 flex flex-wrap gap-x-2 gap-y-0.5 text-[11px] font-mono text-slate-400">
               {node.rincian.map(r => (
                 <span key={r.id}>
                   {jenjangSingkatan(r.jenjangId, node.kategoriId)} {r.kebutuhan}/{r.eksisting}

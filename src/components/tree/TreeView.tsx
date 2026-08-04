@@ -110,7 +110,7 @@ const TreeRow: React.FC<TreeRowProps> = ({
           }
         }}
         onClick={() => onFocus(node.id)}
-        className={`group relative flex items-center justify-between py-1 px-1.5 rounded cursor-pointer transition-colors text-xs ${
+        className={`group relative flex items-center justify-between py-1.5 px-1.5 rounded cursor-pointer transition-colors text-sm ${
           isSelected
             ? 'bg-blue-900/40 text-blue-200 font-semibold'
             : 'hover:bg-slate-800/60 text-slate-300'
@@ -134,9 +134,9 @@ const TreeRow: React.FC<TreeRowProps> = ({
               className="p-0.5 hover:bg-slate-700 rounded text-slate-400"
             >
               {node.collapsed ? (
-                <ChevronRight className="w-3 h-3" />
+                <ChevronRight className="w-3.5 h-3.5" />
               ) : (
-                <ChevronDown className="w-3 h-3" />
+                <ChevronDown className="w-3.5 h-3.5" />
               )}
             </button>
           ) : (
@@ -144,9 +144,9 @@ const TreeRow: React.FC<TreeRowProps> = ({
           )}
 
           {isUnit ? (
-            <Folder className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+            <Folder className="w-4 h-4 text-blue-400 flex-shrink-0" />
           ) : (
-            <FileText className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+            <FileText className="w-4 h-4 text-slate-400 flex-shrink-0" />
           )}
 
           {isEditing ? (
@@ -164,7 +164,7 @@ const TreeRow: React.FC<TreeRowProps> = ({
                   onCancelRename();
                 }
               }}
-              className="bg-slate-900 border border-blue-500 rounded px-1 py-0.5 text-xs text-slate-100 w-full min-w-0"
+              className="bg-slate-900 border border-blue-500 rounded px-1 py-0.5 text-sm text-slate-100 w-full min-w-0"
             />
           ) : (
             <span
@@ -183,7 +183,7 @@ const TreeRow: React.FC<TreeRowProps> = ({
         <div className="flex items-center space-x-1 flex-shrink-0">
           {/* Figures Badge */}
           {!isUnit && node.rincian.length > 0 && (
-            <span className="text-[10px] text-slate-400 bg-slate-950/60 px-1.5 py-0.5 rounded">
+            <span className="text-[11px] text-slate-400 bg-slate-950/60 px-1.5 py-0.5 rounded">
               {keb}/{eks}
             </span>
           )}
