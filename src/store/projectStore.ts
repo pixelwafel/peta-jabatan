@@ -164,6 +164,12 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         position: pos ?? { x: 100, y: 100 },
         collapsed: false,
         order: siblingCount,
+        // Unit baru otomatis dapat kepala (struktural), kebutuhan 1 — nama
+        // dibiarkan kosong supaya default "Kepala {nama unit}" ikut update
+        // kalau unitnya di-rename. Bisa diedit/dihapus lewat panel properti.
+        ...(type === 'unit'
+          ? { kepalaUnit: { jenjangId: null, kebutuhan: 1, eksisting: 0 } }
+          : {}),
       });
 
       if (parentId) {
@@ -308,6 +314,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
           node.rincian = []; // Invariant 1
           node.kategoriId = undefined;
           node.rumpun = [];
+          if (!node.kepalaUnit) {
+            node.kepalaUnit = { jenjangId: null, kebutuhan: 1, eksisting: 0 };
+          }
         } else {
           delete node.kepalaUnit; // hanya melekat pada Unit
           if (node.rincian.length === 0) {
