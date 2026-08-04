@@ -20,6 +20,7 @@ describe('Hierarchy, Validation & Readiness Engine (Doc 04 Exit Criteria)', () =
         custom: {},
         position: { x: 100, y: 0 },
         collapsed: false,
+        order: 0,
       },
       {
         id: 'u-sub',
@@ -31,6 +32,7 @@ describe('Hierarchy, Validation & Readiness Engine (Doc 04 Exit Criteria)', () =
         custom: {},
         position: { x: 50, y: 100 },
         collapsed: false,
+        order: 0,
       },
       {
         id: 'j-struct1',
@@ -43,6 +45,7 @@ describe('Hierarchy, Validation & Readiness Engine (Doc 04 Exit Criteria)', () =
         custom: {},
         position: { x: 0, y: 200 },
         collapsed: false,
+        order: 1,
       },
       {
         id: 'j-struct2',
@@ -55,6 +58,7 @@ describe('Hierarchy, Validation & Readiness Engine (Doc 04 Exit Criteria)', () =
         custom: {},
         position: { x: 100, y: 200 },
         collapsed: false,
+        order: 0,
       },
       {
         id: 'j-orphan',
@@ -67,6 +71,7 @@ describe('Hierarchy, Validation & Readiness Engine (Doc 04 Exit Criteria)', () =
         custom: {},
         position: { x: 500, y: 500 },
         collapsed: false,
+        order: 0,
       },
     ];
 
@@ -134,19 +139,20 @@ describe('Hierarchy, Validation & Readiness Engine (Doc 04 Exit Criteria)', () =
     expect(validIds).not.toContain('j-struct2');
   });
 
-  it('buildTree handles sibling sorting priority (nomor, then canvas x-position with 8px tolerance, then name)', () => {
+  it('buildTree sorts siblings by explicit `order` field, not nomor or canvas position', () => {
     const proj = createValidationFixture();
 
     const nodeById = new Map(proj.nodes.map(n => [n.id, n]));
 
-    // j-struct1 (x=0, nomor="1.1.1") vs j-struct2 (x=100, nomor="1.1.2")
+    // j-struct1 has order=1, j-struct2 has order=0 — order wins even though
+    // j-struct1's nomor ("1.1.1") and x-position (0) would sort it first.
     const siblings = [
-      { id: 'j-struct2', children: [], depth: 2 },
       { id: 'j-struct1', children: [], depth: 2 },
+      { id: 'j-struct2', children: [], depth: 2 },
     ];
 
     const sorted = sortSiblings(siblings, nodeById);
-    expect(sorted[0].id).toBe('j-struct1'); // 1.1.1 before 1.1.2!
+    expect(sorted[0].id).toBe('j-struct2'); // order=0 before order=1
   });
 
   it('buildTree terminates on a cyclic edge fixture (seen guard)', () => {

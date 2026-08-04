@@ -5,8 +5,8 @@ import { OrgNode, NodeType, Rumpun, Rincian } from '@/models/node';
 import { uuid } from '@/utils/uuid';
 import { canSetParent } from '@/selectors/guards';
 import { hierarchyEdges } from '@/utils/edges';
-import { childrenOf, subtreeOf, designatedRoot } from '@/selectors/navigation';
-import { compareNomor, formatNomor } from '@/utils/numbering';
+import { childrenOf, subtreeOf, designatedRoot, rootNodes, parentOf } from '@/selectors/navigation';
+import { formatNomor } from '@/utils/numbering';
 import { useHistoryStore } from './historyStore';
 import { useUiStore } from './uiStore';
 
@@ -39,6 +39,7 @@ export interface ProjectState {
 
   // Hierarchy actions
   setParent: (childId: string, parentId: string | null) => void;
+  moveNode: (nodeId: string, targetParentId: string | null, targetIndex: number) => void;
 
   // Detail row actions
   addRincian: (nodeId: string, jenjangId: string | null) => void;
@@ -135,6 +136,12 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       if (!pos) pos = { x: 100, y: 100 };
     }
 
+    const siblingCount = currentProject
+      ? parentId
+        ? childrenOf(currentProject.nodes, currentProject.edges, parentId).length
+        : rootNodes(currentProject.nodes, currentProject.edges).length
+      : 0;
+
     get().commit('Tambah node', draft => {
       draft.nodes.push({
         id,
@@ -150,6 +157,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         custom: {},
         position: pos ?? { x: 100, y: 100 },
         collapsed: false,
+        order: siblingCount,
       });
 
       if (parentId) {
@@ -326,6 +334,51 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     });
   },
 
+  moveNode: (nodeId, targetParentId, targetIndex) => {
+    const current = get().project;
+    if (!current) return;
+
+    if (targetParentId && !canSetParent(current.nodes, current.edges, nodeId, targetParentId)) {
+      return; // Cycle guard, sama seperti setParent()
+    }
+
+    const oldParentId = parentOf(current.nodes, current.edges, nodeId)?.id ?? null;
+
+    const siblingsOf = (parentId: string | null) =>
+      (parentId
+        ? childrenOf(current.nodes, current.edges, parentId)
+        : rootNodes(current.nodes, current.edges)
+      )
+        .filter(n => n.id !== nodeId)
+        .map(n => n.id);
+
+    get().commit('Pindahkan node', draft => {
+      // 1. hapus hierarchy edge lama (identik dgn setParent)
+      draft.edges = draft.edges.filter(e => !(e.kind === 'hirarki' && e.target === nodeId));
+      if (targetParentId) {
+        draft.edges.push({ id: uuid(), source: targetParentId, target: nodeId, kind: 'hirarki' });
+      }
+
+      // 2. re-index `order` pada sibling BARU (sisipkan di targetIndex)
+      const newSiblingIds = siblingsOf(targetParentId);
+      newSiblingIds.splice(targetIndex, 0, nodeId);
+      newSiblingIds.forEach((id, i) => {
+        const n = draft.nodes.find(n => n.id === id);
+        if (n) n.order = i;
+      });
+
+      // 3. re-index `order` pada sibling LAMA (tutup celah bekas posisi nodeId),
+      //    hanya jika pindah ke parent berbeda (kalau sama, langkah 2 sudah cukup)
+      if (oldParentId !== targetParentId) {
+        const oldSiblingIds = siblingsOf(oldParentId);
+        oldSiblingIds.forEach((id, i) => {
+          const n = draft.nodes.find(n => n.id === id);
+          if (n) n.order = i;
+        });
+      }
+    });
+  },
+
   addRincian: (nodeId, jenjangId) => {
     get().commit('Tambah rincian', draft => {
       const node = draft.nodes.find(n => n.id === nodeId);
@@ -450,9 +503,10 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     const walk = (nodeId: string, prefix: number[]) => {
       assignments.set(nodeId, formatNomor(prefix));
       const kids = childrenOf(current.nodes, current.edges, nodeId).sort((a, b) => {
-        // Sort by canvas position (left to right), then name
-        const posDiff = a.position.x - b.position.x;
-        if (posDiff !== 0) return posDiff;
+        if (typeof a.order === 'number' && typeof b.order === 'number') {
+          const byOrder = a.order - b.order;
+          if (byOrder !== 0) return byOrder;
+        }
         return a.nama.localeCompare(b.nama);
       });
       kids.forEach((k, i) => walk(k.id, [...prefix, i + 1]));

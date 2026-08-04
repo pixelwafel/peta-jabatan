@@ -49,4 +49,7 @@ export interface OrgNode {
   // presentation
   position: { x: number; y: number };
   collapsed: boolean;
+
+  // ordering
+  order: number; // urutan sibling, sumber kebenaran untuk sort & renumber
 }

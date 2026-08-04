@@ -4,7 +4,7 @@ import { zProject } from '@/schema/project';
 import { migrateProject } from '@/schema/migration';
 import { validateProject } from '@/selectors/validation';
 import { taxonomy } from '@/config/taxonomy';
-import { uuid } from '@/utils/uuid';
+import { normalizeProject } from '@/persistence/storage';
 
 export interface JsonImportResult {
   project: Project | null;
@@ -36,7 +36,7 @@ export async function importJsonFile(file: File): Promise<JsonImportResult> {
     const parseResult = zProject.safeParse(migrated);
 
     if (parseResult.success) {
-      const project = parseResult.data;
+      const project = normalizeProject(parseResult.data as Project);
       // Validate project structure findings
       const projFindings = validateProject(project, taxonomy);
       return { project, findings: [...findings, ...projFindings] };
@@ -83,8 +83,9 @@ export async function importJsonFile(file: File): Promise<JsonImportResult> {
 
       const secondaryParse = zProject.safeParse(projObj);
       if (secondaryParse.success) {
-        const projFindings = validateProject(secondaryParse.data, taxonomy);
-        return { project: secondaryParse.data, findings: [...findings, ...projFindings] };
+        const project = normalizeProject(secondaryParse.data as Project);
+        const projFindings = validateProject(project, taxonomy);
+        return { project, findings: [...findings, ...projFindings] };
       }
     }
 

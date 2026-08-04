@@ -3,7 +3,6 @@ import { OrgEdge } from '@/models/edge';
 import { TreeNode } from '@/models/derived';
 import { getStructureIndex } from './structureIndex';
 import { designatedRoot } from './navigation';
-import { compareNomor } from '@/utils/numbering';
 
 export function sortSiblings(
   treeNodes: TreeNode[],
@@ -14,14 +13,12 @@ export function sortSiblings(
     const B = nodeByIdMap.get(b.id);
     if (!A || !B) return 0;
 
-    if (A.nomor && B.nomor) {
-      const byNomor = compareNomor(A.nomor, B.nomor);
-      if (byNomor !== 0) return byNomor;
+    if (typeof A.order === 'number' && typeof B.order === 'number') {
+      const byOrder = A.order - B.order;
+      if (byOrder !== 0) return byOrder;
     }
 
-    const byX = A.position.x - B.position.x;
-    if (Math.abs(byX) > 8) return byX; // 8px tolerance prevents tree reordering on small nudges
-
+    // fallback safety net for any not-yet-normalized data
     return A.nama.localeCompare(B.nama, 'id');
   });
 }

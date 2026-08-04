@@ -31,21 +31,31 @@ export function buildStructure(candidates: NodeCandidate[]): {
   const byNomor = new Map(sorted.map(c => [c.nomor, c]));
   const idByNomor = new Map(sorted.map(c => [c.nomor, uuid()]));
 
-  const nodes: OrgNode[] = sorted.map(c => ({
-    id: idByNomor.get(c.nomor)!,
-    type: c.tipe,
-    nama: c.nama,
-    nomor: c.nomor,
-    kode: c.kode,
-    kategoriId: c.kategoriId,
-    rumpun: c.rumpun,
-    rincian: c.rincian,
-    unitKerja: c.unitKerja,
-    keterangan: c.keterangan,
-    custom: c.custom,
-    position: { x: 0, y: 0 }, // Tidy assigns real coordinates on commit
-    collapsed: false,
-  }));
+  // sorted sudah terurut per-nomor (yang mencerminkan hierarki), jadi urutan
+  // kemunculan di dalam grup parent yang sama = urutan sibling yang benar.
+  const orderCounters = new Map<string, number>();
+  const nodes: OrgNode[] = sorted.map(c => {
+    const parentKey = parentNomor(c.nomor) ?? '__root__';
+    const order = orderCounters.get(parentKey) ?? 0;
+    orderCounters.set(parentKey, order + 1);
+
+    return {
+      id: idByNomor.get(c.nomor)!,
+      type: c.tipe,
+      nama: c.nama,
+      nomor: c.nomor,
+      kode: c.kode,
+      kategoriId: c.kategoriId,
+      rumpun: c.rumpun,
+      rincian: c.rincian,
+      unitKerja: c.unitKerja,
+      keterangan: c.keterangan,
+      custom: c.custom,
+      position: { x: 0, y: 0 }, // Tidy assigns real coordinates on commit
+      collapsed: false,
+      order,
+    };
+  });
 
   const edges: OrgEdge[] = [];
 

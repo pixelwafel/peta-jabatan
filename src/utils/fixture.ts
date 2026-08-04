@@ -17,6 +17,7 @@ export function generate500NodeFixture(): Project {
     custom: {},
     position: { x: 0, y: 0 },
     collapsed: false,
+    order: 0,
   });
 
   const CATEGORIES = ['struktural', 'fungsional', 'pelaksana'];
@@ -38,6 +39,7 @@ export function generate500NodeFixture(): Project {
       custom: {},
       position: { x: (d - 10) * 300, y: 200 },
       collapsed: false,
+      order: d - 1,
     });
 
     edges.push({
@@ -74,6 +76,7 @@ export function generate500NodeFixture(): Project {
         custom: {},
         position: { x: (d - 10) * 300 + (p - 12) * 20, y: 350 + p * 60 },
         collapsed: false,
+        order: p - 1,
       });
 
       edges.push({

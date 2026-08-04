@@ -40,6 +40,7 @@ export async function bootstrapPersistence(): Promise<void> {
             custom: {},
             position: { x: 250, y: 50 },
             collapsed: false,
+            order: 0,
           },
         ],
         edges: [],

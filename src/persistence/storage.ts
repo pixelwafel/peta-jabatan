@@ -2,6 +2,8 @@ import { get, set, del, keys, createStore } from 'idb-keyval';
 import { Project } from '@/models/project';
 import { ProjectIndex, ProjectIndexEntry } from './types';
 import { projectTotals } from '@/selectors/totals';
+import { hierarchyEdges } from '@/utils/edges';
+import { compareNomor } from '@/utils/numbering';
 
 const customStore = createStore('pjb_db', 'pjb_store');
 
@@ -44,7 +46,49 @@ export async function saveProjectIndex(index: ProjectIndex): Promise<void> {
 export async function getProject(id: string): Promise<Project | null> {
   const key = getProjectKey(id);
   const raw = await get<Project>(key, customStore);
-  return raw ?? null;
+  if (!raw) return null;
+  return normalizeProject(raw);
+}
+
+/**
+ * Proyek lama tersimpan tanpa field `order` pada node (urutan sibling dulu
+ * disimpulkan dari `position.x`). Migrasi sekali jalan: turunkan `order`
+ * dari urutan lama supaya tampilan outline tidak berubah setelah upgrade.
+ */
+export function normalizeProject(project: Project): Project {
+  if (project.nodes.every(n => typeof n.order === 'number')) {
+    return project;
+  }
+
+  const parentIdByChild = new Map<string, string>();
+  for (const e of hierarchyEdges(project.edges)) {
+    parentIdByChild.set(e.target, e.source);
+  }
+
+  const childrenByParent = new Map<string, typeof project.nodes>();
+  for (const n of project.nodes) {
+    const parentId = parentIdByChild.get(n.id) ?? '__root__';
+    const siblings = childrenByParent.get(parentId) ?? [];
+    siblings.push(n);
+    childrenByParent.set(parentId, siblings);
+  }
+
+  for (const siblings of childrenByParent.values()) {
+    siblings.sort((a, b) => {
+      const byX = a.position.x - b.position.x;
+      if (byX !== 0) return byX;
+      if (a.nomor && b.nomor) {
+        const byNomor = compareNomor(a.nomor, b.nomor);
+        if (byNomor !== 0) return byNomor;
+      }
+      return a.nama.localeCompare(b.nama, 'id');
+    });
+    siblings.forEach((n, index) => {
+      n.order = index;
+    });
+  }
+
+  return project;
 }
 
 export async function saveProject(project: Project): Promise<void> {

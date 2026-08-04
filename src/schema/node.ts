@@ -29,6 +29,7 @@ export const zNode = z
     isTemplate: z.boolean().optional(),
     position: z.object({ x: z.number(), y: z.number() }),
     collapsed: z.boolean().default(false),
+    order: z.number().optional(), // absent on data from before the `order` field existed; see normalizeProject
   })
   .refine(n => n.type !== 'unit' || n.rincian.length === 0, {
     message: 'Node unit tidak boleh memiliki rincian angka',

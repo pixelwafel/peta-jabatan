@@ -93,6 +93,7 @@ export const ProjectManagerDialog: React.FC<ProjectManagerDialogProps> = ({ onCl
           custom: {},
           position: { x: 200, y: 100 },
           collapsed: false,
+          order: 0,
         },
       ],
       edges: [],
