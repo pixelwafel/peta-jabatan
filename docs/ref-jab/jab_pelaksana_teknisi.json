@@ -1,0 +1,1170 @@
+{
+  "judul": "Data Nomenklatur Jabatan Pelaksana ASN - Klasifikasi Teknisi",
+  "sumber": "Keputusan Menteri PANRB No. 11 Tahun 2024",
+  "data": [
+    {
+      "no": "1",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Nakhoda",
+      "tugas_jabatan": "Melakukan kegiatan pada kapal negara sebagai komandan kapal dalam pelaksanaan kegiatan keamanan dan keselamatan pelayaran/maritim",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": false },
+      "rincian": [
+        {
+          "kategori": "Kapal Kelas I",
+          "pendidikan_minimal": "S-1 / D-4 Pelayaran/Umum",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "ANT I/PDKN I/Ankapin 1",
+          "sertifikat_keterampilan": "BST, AFF, SCRB, MFA, RADAR SIMULATOR, RADAR ARPA, GMDSS, SAT, ORU Medical Care, Bridge Resource Management, Ecdis, Ship Security Officer, IMDG/Seafares Designated Securities Duties",
+          "keterangan": "P > 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas II",
+          "pendidikan_minimal": "D-3 Pelayaran/Umum",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "ANT III/PDKN 1/Ankapin 1",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF, RADAR SIMULATOR, RADAR ARPA, GMDSS",
+          "keterangan": "35 <= P <= 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas III",
+          "pendidikan_minimal": "D-3 Pelayaran/Umum",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "ANT IV/PDKN I/Ankapin II",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "25 <= P < 35 meter"
+        },
+        {
+          "kategori": "Kapal Kelas IV",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika / Umum",
+          "sertifikat_keahlian": "ANT V/PDKN III/Ankapin III",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "12 <= P < 25 meter"
+        },
+        {
+          "kategori": "Kapal Kelas V",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "ANT V/PDKN III/Ankapin III",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "P < 12 meter"
+        }
+      ]
+    },
+    {
+      "no": "2",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Kepala Kamar Mesin",
+      "tugas_jabatan": "Melakukan kegiatan manajemen terhadap permesinan dan bertanggung jawab penuh atas kegiatan operasi dan pemeliharaan terhadap semua permesinan yang ada di atas kapal, serta mengawasi semua awak kapal di bagian mesin",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": false },
+      "rincian": [
+        {
+          "kategori": "Kapal Kelas I",
+          "pendidikan_minimal": "S-1 / D-4 Pelayaran/Umum",
+          "detail_studi": "Teknika / Umum",
+          "sertifikat_keahlian": "ATT III/PMKN 1/Atlapin 1",
+          "sertifikat_keterampilan": "BST, AFF, SCRB, MFA, SAT, Medical Care, Engine Resource Management, Ship Security Officer, IMDG/Seafares Designated Securities Duties",
+          "keterangan": "P > 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas II",
+          "pendidikan_minimal": "D-3 Pelayaran/Umum",
+          "detail_studi": "Teknika/Umum",
+          "sertifikat_keahlian": "ATT III/PMKN I/Atkapin 1",
+          "sertifikat_keterampilan": "BST, AFF, SCRB, MFA, SAT, Medical Care, Engine Resource Management, Ship Security Officer",
+          "keterangan": "35 <= P <= 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas III",
+          "pendidikan_minimal": "D-3 Pelayaran/Umum",
+          "detail_studi": "Teknika/Umum",
+          "sertifikat_keahlian": "ATT IV/PMKN II/Atkapin II",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "25 <= P < 35 meter"
+        },
+        {
+          "kategori": "Kapal Kelas IV",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Teknika / Umum",
+          "sertifikat_keahlian": "ATT V/PMKN III/Atkapin III",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "12 <= P < 25 meter"
+        },
+        {
+          "kategori": "Kapal Kelas V",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Teknika / Umum",
+          "sertifikat_keahlian": "ATT V/PMKN III/Atkapin III",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "P < 12 meter"
+        }
+      ]
+    },
+    {
+      "no": "3",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Mualim I",
+      "tugas_jabatan": "Melakukan kegiatan tugas harian sebagai perwira jaga, merencanakan pelayaran dan memimpin kapal jika nakhoda berhalangan",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": false },
+      "rincian": [
+        {
+          "kategori": "Kapal Kelas I",
+          "pendidikan_minimal": "D-3 Pelayaran/Umum",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "ANT III/PDKN I/Ankapin I",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF, RADAR SIMULATOR, RADAR ARPA, GMDSS",
+          "keterangan": "P > 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas II",
+          "pendidikan_minimal": "D-3 Pelayaran/Umum",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "ANT IV/PDKN II/Ankapin II",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "35 <= P <= 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas III",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "ANT V/PDKN III/Ankapin III",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "25 <= P < 35 meter"
+        },
+        {
+          "kategori": "Kapal Kelas IV",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "ANT V/PDKN III/Ankapin III",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "12 <= P < 25 meter"
+        }
+      ]
+    },
+    {
+      "no": "4",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Mualim II",
+      "tugas_jabatan": "Melakukan kegiatan tugas harian sebagai perwira jaga, bertanggung jawab terhadap pengoperasian dan perawatan peralatan kenavigasian",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": false },
+      "rincian": [
+        {
+          "kategori": "Kapal Kelas I",
+          "pendidikan_minimal": "D-3 Pelayaran/Umum",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "ANT IV/PDKN II/Ankapin II",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "P > 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas II",
+          "pendidikan_minimal": "D-3 Pelayaran/Umum",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "ANT V/PDKN III/Ankapin III",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "35 <= P <= 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas III",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "ANT V/PDKN III/Ankapin III",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "25 <= P < 35 meter"
+        }
+      ]
+    },
+    {
+      "no": "5",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Mualim III",
+      "tugas_jabatan": "Melakukan kegiatan tugas harian sebagai perwira jaga, bertanggung jawab terhadap pengoperasian dan perawatan peralatan keselamatan serta persenjataan diatas kapal",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": false },
+      "rincian": [
+        {
+          "kategori": "Kapal Kelas I",
+          "pendidikan_minimal": "D-3 Pelayaran/Umum",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "ANT IV/PDKN II/Ankapin II",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "P > 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas II",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "ANT V/PDKN III/Ankapin III",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "35 <= P <= 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas III",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "ANT V/PDKN III/Ankapin III",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "25 <= P < 35 meter"
+        }
+      ]
+    },
+    {
+      "no": "6",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Masinis I",
+      "tugas_jabatan": "Melakukan kegiatan tugas harian sebagai perwira jaga, bertanggung jawab terhadap pengoperasian dan perawatan mesin induk",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": false },
+      "rincian": [
+        {
+          "kategori": "Kapal Kelas I",
+          "pendidikan_minimal": "D-3 Pelayaran/Umum",
+          "detail_studi": "Teknika/Umum",
+          "sertifikat_keahlian": "ATT III/PMKN I/Atkapin I",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "P > 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas II",
+          "pendidikan_minimal": "D-3 Pelayaran/Umum",
+          "detail_studi": "Teknika/Umum",
+          "sertifikat_keahlian": "ATT IV/PMKN II/Atkapin II",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "35 <= P <= 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas III",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Teknika/Umum",
+          "sertifikat_keahlian": "ATT V/PMKN III/Atkapin III",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "25 <= P < 35 meter"
+        },
+        {
+          "kategori": "Kapal Kelas IV",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Teknika/Umum",
+          "sertifikat_keahlian": "ATT V/PMKN III/Atkapin III",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "12 <= P < 25 meter"
+        }
+      ]
+    },
+    {
+      "no": "7",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Masinis II",
+      "tugas_jabatan": "Melakukan kegiatan tugas harian sebagai perwira jaga, bertanggung jawab terhadap pengoperasian dan perawatan mesin bantu dan/atau kompresor",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": false },
+      "rincian": [
+        {
+          "kategori": "Kapal Kelas I",
+          "pendidikan_minimal": "D-3 Pelayaran/Umum",
+          "detail_studi": "Teknika/Umum",
+          "sertifikat_keahlian": "ATT IV/PMKN II/Atkapin II",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "P > 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas II",
+          "pendidikan_minimal": "D-3 Pelayaran/Umum",
+          "detail_studi": "Teknika/Umum",
+          "sertifikat_keahlian": "ATT V/PMKN III/Atkapin III",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "35 <= P <= 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas III",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Teknika/Umum",
+          "sertifikat_keahlian": "ATT V/PMKN III/Atkapin III",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "25 <= P < 35 meter"
+        }
+      ]
+    },
+    {
+      "no": "8",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Masinis III",
+      "tugas_jabatan": "Melakukan kegiatan tugas harian sebagai perwira jaga, bertanggung jawab terhadap pengoperasian dan perawatan pompa-pompa dan perpipaan",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": false },
+      "rincian": [
+        {
+          "kategori": "Kapal Kelas I",
+          "pendidikan_minimal": "D-3 Pelayaran/Umum",
+          "detail_studi": "Teknika/Umum",
+          "sertifikat_keahlian": "ATT IV/PMKN II/Atkapin II",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "P > 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas II",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Teknika/Umum",
+          "sertifikat_keahlian": "ATT V/PMKN III/Atkapin III",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "35 <= P <= 50 meter"
+        }
+      ]
+    },
+    {
+      "no": "9",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Markonis",
+      "tugas_jabatan": "Melakukan kegiatan pencatatan dan komunikasi di kapal dan antar instansi terkait, serta pengadministrasi kapal",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": false },
+      "rincian": [
+        {
+          "kategori": "Kapal Kelas I",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF, ORU",
+          "keterangan": "P > 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas II",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF, ORU",
+          "keterangan": "35 <= P <= 50 meter"
+        }
+      ]
+    },
+    {
+      "no": "10",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Serang",
+      "tugas_jabatan": "Melakukan koordinasi pelaksanaan kegiatan pemeliharaan dan perawatan kapal bagian deck serta melakukan inventarisasi peralatan dan perlengkapan",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Kapal Kelas I",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF, RATING DEK",
+          "keterangan": "P > 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas II",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF, RATING DEK",
+          "keterangan": "35 <= P <= 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas III",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF, RATING DEK",
+          "keterangan": "25 <= P < 35 meter"
+        }
+      ]
+    },
+    {
+      "no": "11",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Mandor Mesin",
+      "tugas_jabatan": "Melakukan koordinasi pelaksanaan kegiatan pemeliharaan dan perawatan kapal bagian mesin dalam melakukan tugas perawatan dan kebersihan bagian kamar mesin serta perlengkapannya",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Kapal Kelas I",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Teknika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF, RATING MESIN",
+          "keterangan": "P > 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas II",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Teknika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF, RATING MESIN",
+          "keterangan": "35 <= P <= 50 meter"
+        }
+      ]
+    },
+    {
+      "no": "12",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Kerani",
+      "tugas_jabatan": "Melakukan kegiatan administrasi, pencatatan dan komunikasi serta membantu markonis dalam pelaksanaan tugasnya",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Kapal Kelas I",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "P > 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas II",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "35 <= P <= 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas III",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "25 <= P < 35 meter"
+        }
+      ]
+    },
+    {
+      "no": "13",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Kasab Deck",
+      "tugas_jabatan": "Melakukan pengoperasian, perawatan, persiapan peralatan dan perlengkapan kapal bagian deck serta menginventarisasi",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Kapal Kelas I",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "P > 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas II",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "35 <= P <= 50 meter"
+        }
+      ]
+    },
+    {
+      "no": "14",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Kasab Mesin",
+      "tugas_jabatan": "Melakukan pengoperasian, perawatan, persiapan peralatan dan perlengkapan kapal bagian mesin serta menginventarisasi",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Kapal Kelas I",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Teknika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "P > 50 meter"
+        }
+      ]
+    },
+    {
+      "no": "15",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Penyelam Scuba",
+      "tugas_jabatan": "Melakukan kegiatan penyelaman dan penyelamatan dalam operasi keselamatan maritim",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Umum",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Teknika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "N/A"
+        }
+      ]
+    },
+    {
+      "no": "16",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Konstabel",
+      "tugas_jabatan": "Melakukan perawatan persenjataan di atas kapal agar selalu siap digunakan serta mengoperasionalkan senjata berat",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Kapal Kelas I",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "P > 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas II",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "35 <= P <= 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas III",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "25 <= P < 35 meter"
+        }
+      ]
+    },
+    {
+      "no": "17",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Tenaga Penanggulangan Pencemaran",
+      "tugas_jabatan": "Melakukan kegiatan pengawasan, penyusunan rencana dan strategi penanggulangan pencemaran di perairan dan pantai",
+      "kedudukan": "Kementerian Perhubungan",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Umum",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "N/A"
+        }
+      ]
+    },
+    {
+      "no": "18",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Teknisi Listrik",
+      "tugas_jabatan": "Melakukan kegiatan pengoperasian dan perawatan peralatan listrik dan elektronika",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Kapal Kelas I",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Teknika/Teknik Elektro/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "P > 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas II",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Teknika/Teknik Elektro/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "35 <= P <= 50 meter"
+        }
+      ]
+    },
+    {
+      "no": "19",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Juru Minyak",
+      "tugas_jabatan": "Melakukan kegiatan pengecekan, pencatatan, dan penggantian minyak lumas serta membantu dalam hal perawatan dan kebersihan kamar mesin",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Kapal Kelas I",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Teknika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF, RATING MESIN",
+          "keterangan": "P > 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas II",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Teknika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF, RATING MESIN",
+          "keterangan": "35 <= P <= 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas III",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Teknika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF, RATING MESIN",
+          "keterangan": "25 <= P < 35 meter"
+        }
+      ]
+    },
+    {
+      "no": "20",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Jenang",
+      "tugas_jabatan": "Melakukan kegiatan perencanaan, persiapan, pengolahan konsumsi dan menu makanan serta melaporkan jenis menu makanan",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Kapal Kelas I",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Teknika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "P > 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas II",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Teknika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "35 <= P <= 50 meter"
+        }
+      ]
+    },
+    {
+      "no": "21",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Juru Mudi",
+      "tugas_jabatan": "Melakukan kegiatan mengemudi kapal",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Kapal Kelas I",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF, RATING DEK",
+          "keterangan": "P > 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas II",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF, RATING DEK",
+          "keterangan": "35 <= P <= 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas III",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF, RATING DEK",
+          "keterangan": "25 <= P < 35 meter"
+        }
+      ]
+    },
+    {
+      "no": "22",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Kelasi",
+      "tugas_jabatan": "Melakukan kegiatan persiapan, pengoperasian dan pemeliharaan peralatan",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Kapal Kelas I",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Teknika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "P > 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas II",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Teknika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "35 <= P <= 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas III",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Teknika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "25 <= P < 35 meter"
+        },
+        {
+          "kategori": "Kapal Kelas IV",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Teknika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "12 <= P < 25 meter"
+        },
+        {
+          "kategori": "Kapal Kelas V",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Teknika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "P < 12 meter"
+        }
+      ]
+    },
+    {
+      "no": "23",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Juru Mesin",
+      "tugas_jabatan": "Melawatan dan menjaga kebersihan mesin serta kamar mesin",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Kapal Kelas I",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Teknika/Teknik Elektro/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "P > 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas II",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Teknika/Teknik Elektro/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "35 <= P <= 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas III",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Teknika/Teknik Elektro/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "25 <= P < 35 meter"
+        }
+      ]
+    },
+    {
+      "no": "24",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Juru Masak",
+      "tugas_jabatan": "Melakukan kegiatan memasak makanan dan minuman, serta menghidangkannya",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Kapal Kelas I",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Teknika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "P > 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas II",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Teknika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "35 <= P <= 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas III",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Teknika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "25 <= P < 35 meter"
+        }
+      ]
+    },
+    {
+      "no": "25",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Juru Cuci Kapal",
+      "tugas_jabatan": "Melakukan kegiatan pencucian kapal",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Kapal Kelas I",
+          "pendidikan_minimal": "SLTA/SMK Umum/Pelayaran",
+          "detail_studi": "Nautika/Teknika/Umum",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, SCRB, SAT, AFF",
+          "keterangan": "P > 50 meter"
+        }
+      ]
+    },
+    {
+      "no": "26",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Juru Rawat Kesehatan",
+      "tugas_jabatan": "Melakukan kegiatan pemeriksaan dan perawatan kesehatan",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Kapal Kelas I",
+          "pendidikan_minimal": "D-III Keperawatan",
+          "detail_studi": "Keperawatan / Kesehatan Masyarakat",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "P > 50 meter"
+        },
+        {
+          "kategori": "Kapal Kelas II",
+          "pendidikan_minimal": "D-III Keperawatan",
+          "detail_studi": "Keperawatan / Kesehatan Masyarakat",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "BST, MFA, SCRB, MC, SAT, AFF",
+          "keterangan": "35 <= P <= 50 meter"
+        }
+      ]
+    },
+    {
+      "no": "27",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Manager VTS (Vessel Traffic Services)",
+      "tugas_jabatan": "Mengelola dan bertanggung jawab penuh terhadap pengoperasian stasiun VTS, melaksanakan koordinasi dengan Supervisor VTS, Operator VTS dan Teknisi VTS, serta stakeholder terkait",
+      "kedudukan": "Kementerian Perhubungan",
+      "status": { "pns": true, "pppk": false },
+      "rincian": [
+        {
+          "kategori": "Umum",
+          "pendidikan_minimal": "S-1 / D-4 Pelayaran (Nautika)/ Teknik Elektro/Teknik Mesin/ Teknik Telekomunikasi/Teknik Informatika/ Teknik Komputer/ Teknik Transportasi",
+          "detail_studi": "N/A",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "ORU-GMDSS, IALA VTS Operator Training (V103/1), IALA VTS Supervisor Training (V103/2), IALA VTS On The Job Training (V103/3)",
+          "keterangan": "N/A"
+        }
+      ]
+    },
+    {
+      "no": "28",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Supervisor VTS (Vessel Traffic Services)",
+      "tugas_jabatan": "Melaksanakan pengawasan dalam pelayanan VTS, mengelola penilaian kinerja, pelatihan, pengesahan terhadap pelaksanaan tugas Operator VTS dan/atau Teknisi VTS",
+      "kedudukan": "Kementerian Perhubungan",
+      "status": { "pns": true, "pppk": false },
+      "rincian": [
+        {
+          "kategori": "Umum",
+          "pendidikan_minimal": "S-1 / D-4 Pelayaran (Nautika)/ Teknik Elektro/Teknik Mesin/ Teknik Telekomunikasi/Teknik Informatika/ Teknik Komputer/ Teknik Transportasi",
+          "detail_studi": "N/A",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "ORU-GMDSS, IALA VTS Operator Training (V103/1), IALA VTS Supervisor Training (V103/2), IALA VTS On The Job Training (V103/3)",
+          "keterangan": "N/A"
+        }
+      ]
+    },
+    {
+      "no": "29",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Operator VTS (Vessel Traffic Services)",
+      "tugas_jabatan": "Melaksanakan pengendalian pengumpulan data, pengecekan perangkat/peralatan dan sistem, melakukan monitoring dan komunikasi timbal balik",
+      "kedudukan": "Kementerian Perhubungan",
+      "status": { "pns": true, "pppk": false },
+      "rincian": [
+        {
+          "kategori": "Umum",
+          "pendidikan_minimal": "D-3 Pelayaran (Nautika)/Teknik Elektro/Teknik Mesin/Teknik Telekomunikasi/ Teknik Informatika/Teknik Komputer/Teknik Transportasi",
+          "detail_studi": "N/A",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "ORU-GMDSS, IALA VTS Operator Training (V103/1), IALA VTS On The Job Training (V103/3)",
+          "keterangan": "N/A"
+        }
+      ]
+    },
+    {
+      "no": "30",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Teknisi VTS (Vessel Traffic Services)",
+      "tugas_jabatan": "Secara rutin melaksanakan pengecekan, pemeliharaan perbaikan dan kalibrasi peralatan, menerima dan menginventarisasi laporan kerusakan",
+      "kedudukan": "Kementerian Perhubungan",
+      "status": { "pns": true, "pppk": false },
+      "rincian": [
+        {
+          "kategori": "Umum",
+          "pendidikan_minimal": "D-III Teknik Elektro/Teknik Mesin/Teknik Telekomunikasi/ Teknik Informatika/ Komputer",
+          "detail_studi": "N/A",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "TTP III, ORU GMDSS, SRE II",
+          "keterangan": "N/A"
+        }
+      ]
+    },
+    {
+      "no": "31",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Auditor ISM Code",
+      "tugas_jabatan": "Mengaudit perusahaan (DOC) dan kapal (SMC), menyiapkan penerbitan / pengukuhan sertifikat perusahaan (DOC) dan kapal (SMC)",
+      "kedudukan": "Kementerian Perhubungan",
+      "status": { "pns": true, "pppk": false },
+      "rincian": [
+        {
+          "kategori": "Umum",
+          "pendidikan_minimal": "S-1 / D-4 Teknik Perkapalan/ Pelayaran / Nautika/ Teknika",
+          "detail_studi": "N/A",
+          "sertifikat_keahlian": "ANT II/ATT II, Basic Safety Training",
+          "sertifikat_keterampilan": "Diklat Marine Inspektor, Diklat Auditor ISM Code",
+          "keterangan": "N/A"
+        }
+      ]
+    },
+    {
+      "no": "32",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Ahli Ukur Kapal",
+      "tugas_jabatan": "Melakukan kegiatan pengukuran, perhitungan dan penetapan tonase, pembuatan daftar ukur serta verifikasi dokumen",
+      "kedudukan": "Kementerian Perhubungan",
+      "status": { "pns": true, "pppk": false },
+      "rincian": [
+        {
+          "kategori": "Umum",
+          "pendidikan_minimal": "S-1 / D-4 Teknik Sipil/Teknik Perkapalan",
+          "detail_studi": "N/A",
+          "sertifikat_keahlian": "N/A",
+          "sertifikat_keterampilan": "Diklat Pengukuran Kapal, Diklat Pengukuran kapal metode khusus (Terusan Suez, Panama Canal), Diklat Keterampilan: Basic Computer Aided Design for Ship",
+          "keterangan": "N/A"
+        }
+      ]
+    },
+    {
+      "no": "33",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Personel Penerbangan",
+      "tugas_jabatan": "Melaksanakan kegiatan penggunaan peralatan PKP-PK, pemantauan dan pengendalian keamanan Bandar Udara, dan atau penyusunan jadwal / komposisi penerbangan kalibrasi",
+      "kedudukan": "Kementerian Perhubungan",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Bidang Avsec",
+          "pendidikan_minimal": "SMA Umum sederajat",
+          "detail_studi": "N/A",
+          "sertifikat_keahlian": "Basic AVSEC",
+          "sertifikat_keterampilan": "Keudaraan Tingkat Dasar, Dangerous Goods Type A, Profiling",
+          "keterangan": "N/A"
+        },
+        {
+          "kategori": "Bidang PKP-PK",
+          "pendidikan_minimal": "SMA Umum sederajat",
+          "detail_studi": "N/A",
+          "sertifikat_keahlian": "Basic PKP-PK",
+          "sertifikat_keterampilan": "Keudaraan tingkat Dasar, Simpul dan Tali temali, Teknik Pemadaman Api, Hazardous Material, Airport Emergency Plan, Aircraft Familirization, Breathing Apparatus Operation, Airport Topography, Teknik Pemeliharaan Kendaraan PKP PK",
+          "keterangan": "N/A"
+        },
+        {
+          "kategori": "Bidang FOO",
+          "pendidikan_minimal": "SMA IPA/SMK Listrik, SMK Teknik Mesin, SMK Penerbangan",
+          "detail_studi": "N/A",
+          "sertifikat_keahlian": "Flight Operation Officer (FOO) / Helicopter Landing Officer (HLO) Training",
+          "sertifikat_keterampilan": "Recurrent Mandatory Training, Basic Indoctrination",
+          "keterangan": "N/A"
+        }
+      ]
+    },
+    {
+      "no": "34",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Pengawas Personel Penerbangan",
+      "tugas_jabatan": "Melaksanakan kegiatan pengawasan terhadap penggunaan peralatan PKP-PK, pelaksanaan pemantauan dan pengendalian keamanan Bandar Udara",
+      "kedudukan": "Kementerian Perhubungan",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Bidang Avsec",
+          "pendidikan_minimal": "SMA Umum sederajat",
+          "detail_studi": "N/A",
+          "sertifikat_keahlian": "Junior AVSEC",
+          "sertifikat_keterampilan": "Explosive and Liquid Detector, Security Management System",
+          "keterangan": "N/A"
+        },
+        {
+          "kategori": "Bidang PKP-PK",
+          "pendidikan_minimal": "SMA Umum sederajat",
+          "detail_studi": "N/A",
+          "sertifikat_keahlian": "Junior PKP PK",
+          "sertifikat_keterampilan": "Human Factor for PKP PK, Fire Operation Command and Control, Strategies and Tactic in Fire Fighting, Foam Tender Operation and Driving, Standard of Emergency Management, Type Rating ARFF, Troubleshooting",
+          "keterangan": "N/A"
+        },
+        {
+          "kategori": "Bidang FOO",
+          "pendidikan_minimal": "SMA IPA/SMK Listrik, SMK Teknik Mesin, SMK Penerbangan",
+          "detail_studi": "N/A",
+          "sertifikat_keahlian": "Flight Operation Officer (FOO) / Helicopter Landing Officer (HLO) Training",
+          "sertifikat_keterampilan": "Type Rating Pesawat King Air B200 atau King Air 350i atau Hawker 900XP atau Bell 429 atau pesawat yang dimiliki oleh BBKFP",
+          "keterangan": "N/A"
+        }
+      ]
+    },
+    {
+      "no": "35",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Pengevaluasi Keselamatan dan Keamanan Bandar Udara",
+      "tugas_jabatan": "Melaksanakan kegiatan analisis dan evaluasi terhadap penyiapan dan penggunaan peralatan PKP PK, pemantauan dan pengendalian keamanan Bandar Udara",
+      "kedudukan": "Kementerian Perhubungan",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Bidang Avsec",
+          "pendidikan_minimal": "SMA Umum sederajat",
+          "detail_studi": "N/A",
+          "sertifikat_keahlian": "Senior AVSEC",
+          "sertifikat_keterampilan": "AVSEC Management, Security Risk and Crisis Management System, TOT AVSEC",
+          "keterangan": "N/A"
+        },
+        {
+          "kategori": "Bidang PKP-PK",
+          "pendidikan_minimal": "SMA Umum sederajat",
+          "detail_studi": "N/A",
+          "sertifikat_keahlian": "Senior PKPPK",
+          "sertifikat_keterampilan": "Fire Safety Management, Fire Investigation, Fire Safety Inspection, Watchroom Operation and Incident Reporting, Fire Service Safety Audit, Search and Rescue Management, TOT PKP PK",
+          "keterangan": "N/A"
+        },
+        {
+          "kategori": "Bidang FOO",
+          "pendidikan_minimal": "SMA IPA/SMK Listrik, SMK Teknik Mesin, SMK Penerbangan",
+          "detail_studi": "N/A",
+          "sertifikat_keahlian": "Flight Operation Officer (FOO)/ Helicopter Landing Officer (HLO) Training",
+          "sertifikat_keterampilan": "Type Rating Pesawat King Air B200 atau King Air 350i atau Hawker 900XP atau Bell 429 atau pesawat yang dimiliki, SPIP",
+          "keterangan": "N/A"
+        }
+      ]
+    },
+    {
+      "no": "36",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Instruktur",
+      "tugas_jabatan": "Melakukan kegiatan pengoperasian pesawat udara sebagai kapten pesawat dan melaksanakan pelatihan penerbangan",
+      "kedudukan": "Kementerian Perhubungan",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Umum",
+          "pendidikan_minimal": "D-IV Penerbang atau D-II Penerbang atau SLTA/SMK/STM",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "CPLH/PIC ATPL BBKFP TYPE RATED, Commercial Pilot Lisence Holder/LOA/Rating Instrument/FI type rated/CCP/DCCP/Chief (Pengalaman jam terbang min 3000 fix wing/1500 rotary wing)",
+          "sertifikat_keterampilan": "Ground Instructor Course/ Company Check Pilot/ Flight Instructor/ Route Instructor/Simulator Instructor",
+          "keterangan": "N/A"
+        }
+      ]
+    },
+    {
+      "no": "37",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Pilot",
+      "tugas_jabatan": "Melakukan kegiatan pengoperasian pesawat udara sebagai kapten pesawat",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Umum",
+          "pendidikan_minimal": "D-IV Penerbang atau D-II Penerbang atau SLTA/SMK/STM",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "Sama dengan Instruktur",
+          "sertifikat_keterampilan": "Commercial Private Lisence+Instrument Rating Holder, Type Rating Pesawat sesuai kepemilikan BBKFP",
+          "keterangan": "N/A"
+        }
+      ]
+    },
+    {
+      "no": "38",
+      "instansi_teknis": "Kementerian Perhubungan",
+      "nomenklatur": "Co-Pilot",
+      "tugas_jabatan": "Melakukan kegiatan pengoperasian pesawat udara sebagai asisten/ pendamping kapten pesawat",
+      "kedudukan": "Instansi Pemerintah tertentu",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Umum",
+          "pendidikan_minimal": "D-IV Penerbang atau D-II Penerbang atau SLTA/SMK/STM",
+          "detail_studi": "Nautika/Umum",
+          "sertifikat_keahlian": "Commercial Pilot Lisence Holder/PIC ATPL BBKFP TYPE RATED (Pengalaman jam terbang 3000 fix wing/1500 rotary wing)",
+          "sertifikat_keterampilan": "Safety Management System, Recurrent Mandatory Training, Basic Indoctrination, Bahasa Inggris",
+          "keterangan": "N/A"
+        }
+      ]
+    },
+    {
+      "no": "39",
+      "instansi_teknis": "Kementerian LHK",
+      "nomenklatur": "Petugas Ukur Kawasan Hutan",
+      "tugas_jabatan": "Melakukan kegiatan persiapan, pemeriksaan, dan pengukuran Kawasan hutan",
+      "kedudukan": "Instansi Pemerintah",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Umum",
+          "pendidikan_minimal": "SMK Kehutanan / D-1 / D-2 / D-3 bidang Pemetaan dan Pertanahan atau bidang relevan",
+          "detail_studi": "N/A",
+          "sertifikat_keahlian": "Penataan Batas Wilayah, Operator SIG",
+          "sertifikat_keterampilan": "Sertifikat pengukuran dan pemetaan kawasan hutan, mampu mengoperasikan GIS dan GPS",
+          "keterangan": "N/A"
+        }
+      ]
+    },
+    {
+      "no": "40",
+      "instansi_teknis": "Kementerian LHK",
+      "nomenklatur": "Pengendali Kedaruratan Pengelolaan Limbah B3",
+      "tugas_jabatan": "Melaksanakan pengawasan terhadap penerapan K3, melaksanakan pemantauan lingkungan dan pencegahan dampak kegiatan terhadap lingkungan",
+      "kedudukan": "Instansi Pemerintah",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Umum",
+          "pendidikan_minimal": "S-1 / D-4 bidang Lingkungan Hidup/ Kesehatan dan Keselamatan Kerja/ Ilmu Hayat atau bidang relevan",
+          "detail_studi": "N/A",
+          "sertifikat_keahlian": "Diklat K3, Diklat Pengelolaan Lingkungan, Diklat Pengelolaan Limbah B3, Diklat Amdal A",
+          "sertifikat_keterampilan": "N/A",
+          "keterangan": "N/A"
+        }
+      ]
+    },
+    {
+      "no": "41",
+      "instansi_teknis": "Kementerian PUPR",
+      "nomenklatur": "Teknisi Mesin Alat Berat",
+      "tugas_jabatan": "Melakukan kegiatan pemasangan, perbaikan dan pengecekan serta pemeliharaan mesin",
+      "kedudukan": "Instansi Pemerintah",
+      "status": { "pns": true, "pppk": true },
+      "rincian": [
+        {
+          "kategori": "Umum",
+          "pendidikan_minimal": "SLTA / D-1 / D-2 / D-3 bidang listrik atau bidang lain yang relevan",
+          "detail_studi": "N/A",
+          "sertifikat_keahlian": "Sertifikasi Mekanik Engine Alat Berat",
+          "sertifikat_keterampilan": "N/A",
+          "keterangan": "N/A"
+        }
+      ]
+    },
+    {
+      "no": "42",
+      "instansi_teknis": "Kementerian Kelautan dan Perikanan",
+      "nomenklatur": "Syahbandar di Pelabuhan Perikanan",
+      "tugas_jabatan": "Menjamin keamanan dan keselamatan operasional kapal perikanan dan pelabuhan perikanan melalui pemeriksaan dokumen, penerbitan persetujuan berlayar, serta mengatur aktivitas kapal",
+      "kedudukan": "Kementerian Kelautan dan Perikanan",
+      "status": { "pns": true, "pppk": false },
+      "rincian": [
+        {
+          "kategori": "Umum",
+          "pendidikan_minimal": "S-1 Manajemen Sumber Daya Perairan / Teknologi Hasil Kelautan/Perikanan / Perkapalan / Kelautan atau D-IV Teknologi Penangkapan Ikan/Mesin Perikanan",
+          "detail_studi": "N/A",
+          "sertifikat_keahlian": "Ankapim atau Atkapin I, Basic Safety Training, Diklat Syahbandar, Bimtek Pengelolaan Sumberdaya Ikan, Bimtek Kepelabuhanan Perikanan, Bimtek Kapal Perikanan dan API, Bimtek Perijinan dan Kenelayanan",
+          "sertifikat_keterampilan": "N/A",
+          "keterangan": "N/A"
+        }
+      ]
+    }
+  ]
+}

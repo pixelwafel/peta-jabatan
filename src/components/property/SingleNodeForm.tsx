@@ -1,17 +1,19 @@
 import React from 'react';
 import { OrgNode } from '@/models/node';
 import { useProjectStore } from '@/store/projectStore';
+import { childrenOf } from '@/selectors/navigation';
 import { ParentSelect } from './ParentSelect';
 import { ClassificationEditor } from './ClassificationEditor';
 import { KepalaUnitEditor } from './KepalaUnitEditor';
+import { JabatanNameField } from './JabatanNameField';
 import { JenjangChips } from './JenjangChips';
 import { RincianEditor } from './RincianEditor';
 import { CustomAttributesEditor } from './CustomAttributesEditor';
-import { RefreshCw, Lock, Unlock } from 'lucide-react';
+import { RefreshCw, Lock, Unlock, Layers } from 'lucide-react';
 
 interface SingleNodeFormProps {
   node: OrgNode;
-  /** Terkunci sendiri ATAU mengikuti unit induk yang terkunci (efektif). */
+  /** Status kunci node ini (individual — lihat selectors/guards.ts). */
   locked: boolean;
 }
 
@@ -21,6 +23,10 @@ export const SingleNodeForm: React.FC<SingleNodeFormProps> = ({ node, locked }) 
   const setLocked = useProjectStore(s => s.setLocked);
   const renumberFromStructure = useProjectStore(s => s.renumberFromStructure);
   const attributeSchema = useProjectStore(s => s.project?.attributeSchema ?? []);
+  const hasChildren = useProjectStore(s => {
+    if (!s.project) return false;
+    return childrenOf(s.project.nodes, s.project.edges, node.id).length > 0;
+  });
 
   const ownLocked = node.locked === true;
 
@@ -36,21 +42,32 @@ export const SingleNodeForm: React.FC<SingleNodeFormProps> = ({ node, locked }) 
       >
         <span className="flex items-center space-x-1.5">
           {locked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
-          <span>
-            {ownLocked
-              ? 'Node ini terkunci.'
-              : locked
-              ? 'Terkunci otomatis — unit induk terkunci.'
-              : 'Node ini tidak terkunci.'}
-          </span>
+          <span>{locked ? 'Node ini terkunci.' : 'Node ini tidak terkunci.'}</span>
         </span>
-        <button
-          type="button"
-          onClick={() => setLocked(node.id, !ownLocked)}
-          className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded font-medium"
-        >
-          {ownLocked ? 'Buka Kunci' : 'Kunci Node'}
-        </button>
+        <div className="flex items-center space-x-1.5">
+          {hasChildren && (
+            <button
+              type="button"
+              onClick={() => setLocked(node.id, !ownLocked, { cascade: true })}
+              title={
+                ownLocked
+                  ? 'Buka kunci node ini beserta seluruh turunannya'
+                  : 'Kunci node ini beserta seluruh turunannya'
+              }
+              className="flex items-center space-x-1 px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded font-medium"
+            >
+              <Layers className="w-3 h-3" />
+              <span>{ownLocked ? 'Buka + Turunan' : 'Kunci + Turunan'}</span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setLocked(node.id, !ownLocked)}
+            className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded font-medium"
+          >
+            {ownLocked ? 'Buka Kunci' : 'Kunci Node'}
+          </button>
+        </div>
       </div>
 
       <fieldset disabled={locked} className="space-y-4">
@@ -79,19 +96,23 @@ export const SingleNodeForm: React.FC<SingleNodeFormProps> = ({ node, locked }) 
         </div>
 
         {/* Name */}
-        <div className="space-y-1">
-          <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-            Nama {node.type === 'unit' ? 'Unit' : 'Jabatan'}
-          </label>
-          <input
-            type="text"
-            value={node.nama}
-            onChange={e =>
-              updateNode(node.id, { nama: e.target.value }, `field:${node.id}:nama`)
-            }
-            className="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded px-2.5 py-1.5 text-xs outline-none focus:border-blue-500 font-medium"
-          />
-        </div>
+        {node.type === 'jabatan' ? (
+          <JabatanNameField node={node} />
+        ) : (
+          <div className="space-y-1">
+            <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+              Nama Unit
+            </label>
+            <input
+              type="text"
+              value={node.nama}
+              onChange={e =>
+                updateNode(node.id, { nama: e.target.value }, `field:${node.id}:nama`)
+              }
+              className="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded px-2.5 py-1.5 text-xs outline-none focus:border-blue-500 font-medium"
+            />
+          </div>
+        )}
 
         {/* Nomor & Renumber button */}
         <div className="space-y-1">

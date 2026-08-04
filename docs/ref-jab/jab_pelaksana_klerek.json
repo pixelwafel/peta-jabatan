@@ -1,0 +1,546 @@
+{
+  "judul": "Lampiran I Keputusan Menteri PANRB Nomor 11 Tahun 2024",
+  "klasifikasi": "Klerek",
+  "data_jabatan": [
+    {
+      "no": 1,
+      "instansi_teknis": null,
+      "nomenklatur": "Penelaah Teknis Kebijakan",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat)",
+      "tugas_jabatan": "Melaksanakan dukungan teknis dalam rangka penyiapan bahan di lingkungan Instansi Pemerintah",
+      "kedudukan_jabatan": "Instansi Pemerintah",
+      "status": {
+        "pns": true,
+        "pppk": true
+      }
+    },
+    {
+      "no": 2,
+      "instansi_teknis": null,
+      "nomenklatur": "Pengolah Data dan Informasi",
+      "kualifikasi_pendidikan_minimal": "D-3 (Diploma-Tiga)",
+      "tugas_jabatan": "Melaksanakan pengelolaan, verifikasi, dan penyusunan terhadap data, dan laporan di lingkungan Instansi Pemerintah",
+      "kedudukan_jabatan": "Instansi Pemerintah",
+      "status": {
+        "pns": true,
+        "pppk": true
+      }
+    },
+    {
+      "no": 3,
+      "instansi_teknis": null,
+      "nomenklatur": "Pengadministrasi Perkantoran",
+      "kualifikasi_pendidikan_minimal": "SLTA Sederajat",
+      "tugas_jabatan": "Melaksanakan kegiatan dukungan administrasi perkantoran, pemerintahan, dan pelayanan publik (customer service)",
+      "kedudukan_jabatan": "Instansi Pemerintah",
+      "status": {
+        "pns": true,
+        "pppk": true
+      }
+    },
+    {
+      "no": 4,
+      "instansi_teknis": "Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi",
+      "nomenklatur": "Desainer Buku",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Desain Grafis/ Penerbitan atau bidang lain yang relevan dengan tugas jabatan",
+      "tugas_jabatan": "Melakukan kegiatan rancangan penataletakan/pelayoutan isi dan kover buku sesuai dengan kebutuhan buku, sasaran pembaca, gaya selingkung dan standar percetakan",
+      "kedudukan_jabatan": "Instansi Pemerintah",
+      "status": {
+        "pns": true,
+        "pppk": true
+      }
+    },
+    {
+      "no": 5,
+      "instansi_teknis": "Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi",
+      "nomenklatur": "Ilustrator Buku",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Desain Komunikasi Visual/Seni Rupa atau bidang lain yang relevan dengan tugas jabatan",
+      "tugas_jabatan": "Melakukan kegiatan pembuatan Ilustrasi untuk bagian isi dan kover buku sesuai dengan kebutuhan buku, gaya selingkung sasaran pembaca dan standar percetakan",
+      "kedudukan_jabatan": "Instansi Pemerintah",
+      "status": {
+        "pns": true,
+        "pppk": true
+      }
+    },
+    {
+      "no": 6,
+      "instansi_teknis": "Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi",
+      "nomenklatur": "Pengembang Buku Elektronik",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Teknologi Pendidikan/Desain Grafis/TIK/Sistem Komputer/Ilmu Komputer/Sistem Multimedia/Sistem Informasi atau bidang lain yang relevan dengan tugas jabatan",
+      "tugas_jabatan": "Melakukan kegiatan konversi buku cetak menjadi buku elektronik dan/atau membuat buku elektronik sesuai sasaran pembaca, gaya selingkung dan standar mutu buku elektronik",
+      "kedudukan_jabatan": "Instansi Pemerintah",
+      "status": {
+        "pns": true,
+        "pppk": true
+      }
+    },
+    {
+      "no": 7,
+      "instansi_teknis": "Kementerian Sekretariat Negara",
+      "nomenklatur": "Penata Keprotokolan",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat)",
+      "tugas_jabatan": "Melaksanakan kegiatan tata kelola keprotokolan di lingkungan instansi pemerintah",
+      "kedudukan_jabatan": "Instansi Pemerintah",
+      "status": {
+        "pns": true,
+        "pppk": true
+      }
+    },
+    {
+      "no": 8,
+      "instansi_teknis": "Kementerian Sekretariat Negara",
+      "nomenklatur": "Pengelola Keprotokolan",
+      "kualifikasi_pendidikan_minimal": "D-3 (Diploma-Tiga)",
+      "tugas_jabatan": "Melaksanakan kegiatan pengelolaan keprotokolan di lingkungan instansi pemerintah",
+      "kedudukan_jabatan": "Instansi Pemerintah",
+      "status": {
+        "pns": true,
+        "pppk": true
+      }
+    },
+    {
+      "no": 9,
+      "instansi_teknis": "Sekretariat Mahkamah Agung",
+      "nomenklatur": "Analis Perkara Peradilan",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Hukum",
+      "tugas_jabatan": "Melaksanakan analisis dan penelaahan dalam rangka penyusunan rekomendasi di bidang sengketa peradilan",
+      "kedudukan_jabatan": "Sekretariat Mahkamah Agung",
+      "status": {
+        "pns": true,
+        "pppk": false
+      }
+    },
+    {
+      "no": 10,
+      "instansi_teknis": "Kementerian Dalam Negeri",
+      "nomenklatur": "Penata Kelola Pemerintahan",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) Ilmu Pemerintahan",
+      "tugas_jabatan": "Melaksanakan kegiatan pengelolaan di bidang pemerintahan di lingkungan Instansi Pemerintah",
+      "kedudukan_jabatan": "Instansi Pemerintah",
+      "status": {
+        "pns": true,
+        "pppk": true
+      }
+    },
+    {
+      "no": 11,
+      "instansi_teknis": "Kejaksaan Agung",
+      "nomenklatur": "Penelaah Penuntutan dan Penegakan Hukum",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) Hukum",
+      "tugas_jabatan": "Melakukan kegiatan penelaahan dalam rangka penyusunan rekomendasi di bidang penuntutan, intelijen penegakan hukum perdata dan Tata Usaha Negara, tindak pidana militer dan pemulihan aset",
+      "kedudukan_jabatan": "Kejaksaan Agung",
+      "status": {
+        "pns": true,
+        "pppk": false
+      }
+    },
+    {
+      "no": 12,
+      "instansi_teknis": "Kejaksaan Agung",
+      "nomenklatur": "Pengelola Penanganan Perkara",
+      "kualifikasi_pendidikan_minimal": "D-3 (Diploma-Tiga) Umum/Bidang Administrasi",
+      "tugas_jabatan": "Melakukan kegiatan penyiapan bahan dan pengelolaan administrasi penanganan perkara di bidang pidana, intelijen penyelenggara penegakan hukum, perdata dan TUN, tindak pidana militer",
+      "kedudukan_jabatan": "Kejaksaan Agung",
+      "status": {
+        "pns": true,
+        "pppk": false
+      }
+    },
+    {
+      "no": 13,
+      "instansi_teknis": "Kejaksaan Agung",
+      "nomenklatur": "Petugas Barang Bukti",
+      "kualifikasi_pendidikan_minimal": "D-3 (Diploma-Tiga) Umum/Bidang Manajemen",
+      "tugas_jabatan": "Melakukan kegiatan pengelolaan barang bukti dan aset tindak pidana",
+      "kedudukan_jabatan": "Kejaksaan Agung",
+      "status": {
+        "pns": true,
+        "pppk": false
+      }
+    },
+    {
+      "no": 14,
+      "instansi_teknis": "Kementerian Hukum dan Hak Asasi Manusia",
+      "nomenklatur": "Penata Kelola Pemasyarakatan",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Kesehatan Masyarakat Kebijakan Kesehatan/ Manajemen atau bidang lain yang relevan dengan tugas jabatan",
+      "tugas_jabatan": "Melakukan kegiatan tata kelola pada pelayanan tahanan/anak, pembinaan narapidana/anak binaan, pembimbingan kemasyarakatan klien, pengelolaan benda sitaan, dan perawatan kesehatan Tahanan/anak dan Warga Binaan",
+      "kedudukan_jabatan": "Kementerian Hukum dan Hak Asasi Manusia",
+      "status": {
+        "pns": true,
+        "pppk": false
+      }
+    },
+    {
+      "no": 15,
+      "instansi_teknis": "Kementerian Hukum dan Hak Asasi Manusia",
+      "nomenklatur": "Penata Kelola Hukum dan Perundang-undangan",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Hukum/ Kebijakan Publik/ Sosial dan Politik/ Administrasi atau bidang lain yang relevan dengan tugas jabatan",
+      "tugas_jabatan": "Melakukan kegiatan pengelolaan dalam bentuk telaah dan evaluasi di bidang hukum dan perundang-undangan",
+      "kedudukan_jabatan": "Instansi Pemerintah",
+      "status": {
+        "pns": true,
+        "pppk": false
+      }
+    },
+    {
+      "no": 16,
+      "instansi_teknis": "Kementerian Hukum dan Hak Asasi Manusia",
+      "nomenklatur": "Penyusun Materi Hukum dan Perundang-undangan",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Hukum",
+      "tugas_jabatan": "Melakukan kegiatan pengumpulan dan pengklasifikasian data, informasi, dan materi pengharmonisan peraturan perundang-undangan sesuai dengan ketentuan yang berlaku",
+      "kedudukan_jabatan": "Instansi Pemerintah",
+      "status": {
+        "pns": true,
+        "pppk": false
+      }
+    },
+    {
+      "no": 17,
+      "instansi_teknis": "Kementerian Hukum dan Hak Asasi Manusia",
+      "nomenklatur": "Pengelola Administrasi Pemasyarakatan",
+      "kualifikasi_pendidikan_minimal": "D-3 (Diploma-Tiga) bidang Hukum/Manajemen Perkantoran/ Administrasi perkantoran/Tata Perkantoran atau bidang lain yang relevan dengan tugas jabatan",
+      "tugas_jabatan": "Melakukan kegiatan pengelolaan administrasi pada pelayanan tahanan/anak, pembinaan narapidana/anak binaan, pembimbingan kemasyarakatan klien, pengelolaan benda sitaan, dan perawatan kesehatan Tahanan/anak dan Warga Binaan",
+      "kedudukan_jabatan": "Kementerian Hukum dan Hak Asasi Manusia",
+      "status": {
+        "pns": true,
+        "pppk": false
+      }
+    },
+    {
+      "no": 18,
+      "instansi_teknis": "Kementerian Hukum dan Hak Asasi Manusia",
+      "nomenklatur": "Pengelola Sarana Pemasyarakatan",
+      "kualifikasi_pendidikan_minimal": "D-3 (Diploma-Tiga) bidang Hukum/Manajemen Perkantoran/ Administrasi perkantoran/Tata Perkantoran atau bidang lain yang relevan dengan tugas jabatan",
+      "tugas_jabatan": "Melakukan kegiatan pengelolaan terhadap sarana dan penyiapan dukungan kegiatan pelayanan tahanan/anak, pembinaan narapidana/anak binaan, pembimbingan kemasyarakatan klien, pengelolaan benda sitaan, dan perawatan kesehatan Tahanan/anak dan Warga Binaan",
+      "kedudukan_jabatan": "Kementerian Hukum dan Hak Asasi Manusia",
+      "status": {
+        "pns": true,
+        "pppk": false
+      }
+    },
+    {
+      "no": 19,
+      "instansi_teknis": "Kementerian Hukum dan Hak Asasi Manusia",
+      "nomenklatur": "Dokumentalis Hukum",
+      "kualifikasi_pendidikan_minimal": "D-3 (Diploma-Tiga) bidang Hukum/ Manajemen Perkantoran/ Administrasi perkantoran/Tata Perkantoran atau bidang lain yang relevan dengan tugas jabatan",
+      "tugas_jabatan": "Melaksanakan kegiatan dokumentasi hukum yang meliputi analisis konteks dan isi peraturan perundang-undangan serta pengelolaan dokumen dan informasi hukum dan pengembangan sistem dokumentasi dan informasi hukum sesuai dengan prosedur dan ketentuan yang berlaku",
+      "kedudukan_jabatan": "Instansi Pemerintah",
+      "status": {
+        "pns": true,
+        "pppk": false
+      }
+    },
+    {
+      "no": 20,
+      "instansi_teknis": "Kementerian Dalam Negeri",
+      "nomenklatur": "Pengasuh Praja",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) di bidang Sosial dan Politik/Psikologi/Ekonomi/Manajemen/Administrasi Negara/ Administrasi Pemerintahan/Hukum atau bidang lain yang relevan dengan tugas jabatan",
+      "tugas_jabatan": "Melakukan kegiatan pengasuhan, pembimbingan, dan pengawasan praja",
+      "kedudukan_jabatan": "Instansi Pemerintah",
+      "status": {
+        "pns": true,
+        "pppk": false
+      }
+    },
+    {
+      "no": 21,
+      "instansi_teknis": "Badan Intelijen Negara",
+      "nomenklatur": "Penelaah Teknis Intelijen",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Hukum/Ekonomi/Manajemen/Sistem Informasi/Ilmu Komputer/Teknik Informatika/Ilmu Politik/Hubungan Internasional/Psikologi atau bidang lain yang relevan dengan tugas jabatan",
+      "tugas_jabatan": "Melakukan kegiatan penelahaan teknis dalam rangka penyusunan rekomendasi kebijakan di bidang intelijen",
+      "kedudukan_jabatan": "BIN, Instansi Pusat tertentu",
+      "status": {
+        "pns": true,
+        "pppk": false
+      }
+    },
+    {
+      "no": 22,
+      "instansi_teknis": "Badan Intelijen Negara",
+      "nomenklatur": "Pengolah Data Intelijen",
+      "kualifikasi_pendidikan_minimal": "D-3 (Diploma-Tiga) bidang Teknik Informatika/Manajemen Teknik Informatika/Sistem Informasi/Administrasi Perkantoran/Manajemen atau bidang lain yang relevan dengan tugas jabatan",
+      "tugas_jabatan": "Melakukan kegiatan pengolahan dan pendokumentasian data di bidang intelijen",
+      "kedudukan_jabatan": "BIN, Instansi Pusat tertentu",
+      "status": {
+        "pns": true,
+        "pppk": false
+      }
+    },
+    {
+      "no": 23,
+      "instansi_teknis": "Badan Intelijen Negara",
+      "nomenklatur": "Pengelola Administrasi Intelijen",
+      "kualifikasi_pendidikan_minimal": "SLTA/D-1 (Diploma-Satu)/D-2 (Diploma-Dua)/ D-3 (Diploma-Tiga) bidang Administrasi/Komputer/Informatika/Sosial atau bidang lain yang relevan dengan tugas jabatan",
+      "tugas_jabatan": "Melakukan kegiatan pengelolaan dokumen intelijen dan melakukan pengiriman bahan keterangan atau produk intelijen hingga sampai ke pengguna",
+      "kedudukan_jabatan": "BIN, Instansi Pusat tertentu",
+      "status": {
+        "pns": true,
+        "pppk": false
+      }
+    },
+    {
+      "no": 24,
+      "instansi_teknis": "Badan Kepegawaian Negara",
+      "nomenklatur": "Konselor SDM",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat bidang Psikologi/Manajemen SDM/Psikologi Pendidikan dan Bimbingan",
+      "tugas_jabatan": "Memberikan layanan bimbingan dan konseling",
+      "kedudukan_jabatan": "Instansi Pemerintah",
+      "status": {
+        "pns": true,
+        "pppk": "N/A"
+      }
+    },
+    {
+      "no": 25,
+      "instansi_teknis": "Kementerian Perdagangan",
+      "nomenklatur": "Penelaah Pengembangan Jasa Sertifikasi dan Pengujian",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Ilmu Keteknikan Industri/ atau bidang lain yang relevan dengan tugas jabatan",
+      "tugas_jabatan": "Melakukan pengumpulan, pengklasifikasian dan penelaahan untuk menyimpulkan dan menyusun rekomendasi di bidang pengembangan jasa sertifikasi dan pengujian",
+      "kedudukan_jabatan": "Instansi Pemerintah",
+      "status": {
+        "pns": true,
+        "pppk": true
+      }
+    },
+    {
+      "no": 26,
+      "instansi_teknis": "Kementerian Perdagangan",
+      "nomenklatur": "Fasilitator Perdagangan",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Ekonomi Pembangunan/Manajemen / Akuntansi/Hubungan Internasional/Komunikasi/atau bidang lain yang relevan dengan tugas jabatan",
+      "tugas_jabatan": "Melakukan kegiatan pengumpulan, pengklasifikasian dan penelaahan untuk menyimpulkan dan menyusun rekomendasi di bidang perdagangan",
+      "kedudukan_jabatan": "Instansi Pemerintah",
+      "status": {
+        "pns": true,
+        "pppk": true
+      }
+    },
+    {
+      "no": 27,
+      "instansi_teknis": "Lembaga Perlindungan Saksi dan Korban",
+      "nomenklatur": "Pengelola Rumah Aman",
+      "kualifikasi_pendidikan_minimal": "SMA/D-3 (Diploma-Tiga) bidang Administrasi Perkantoran/ Manajemen Perkantoran/Administrasi Pemerintahan atau bidang lain yang relevan dengan tugas jabatan",
+      "tugas_jabatan": "Melakukan kegiatan pengelolaan rumah aman",
+      "kedudukan_jabatan": "Lembaga Perlindungan Saksi dan Korban",
+      "status": {
+        "pns": true,
+        "pppk": false
+      }
+    },
+    {
+      "no": 28,
+      "instansi_teknis": "Lembaga Kebijakan Pengadaan Barang/Jasa Pemerintah",
+      "nomenklatur": "Pengelola Layanan Pengadaan",
+      "kualifikasi_pendidikan_minimal": "D-3 (Diploma-Tiga) bidang Teknik Mesin/Manajemen/Administrasi/ Pemerintahan/ Teknik Infomatika/Manajemen Teknik Infomatika atau bidang lain yang relevan dengan tugas jabatan",
+      "tugas_jabatan": "Melakukan kegiatan penyusunan bahan dan penelahaan data di bidang pengadaan barang/jasa Pemerintah serta pengelolaan layanan pengadaan secara elektronik",
+      "kedudukan_jabatan": "Instansi Pemerintah",
+      "status": {
+        "pns": true,
+        "pppk": true
+      }
+    },
+    {
+      "no": 29,
+      "instansi_teknis": "Badan Standardisasi Nasional",
+      "nomenklatur": "Penelaah Pengembangan Standar",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Teknik Kimia/Teknik Metalurgi/Teknik Lingkungan/Pertanian/Teknologi Pangan/ Perikananan/Peternakan/Kesehatan Masyarakat/Kedokteran/ Kedokteran Hewan/ Matematika dan Ilmu Pengetahuan/ Teknik Sipil/ Teknik Geodesi/Geografi/ Manajemen/ Teknik Fisika/ Teknik Nuklir/ Manajemen SDM/ Ekonomi Pembangunan/Teknik Perencanaan Wilayah Kota (Planologi) / Teknik Elektro/ Teknik Industri",
+      "tugas_jabatan": "Melakukan kegiatan penelaahan pengembangan SNI dan standar internasional dalam rangka penyusunan rekomendasi kebijakan di bidang standardisasi dan penilaian kesesuaian",
+      "kedudukan_jabatan": "Instansi Pemerintah",
+      "status": {
+        "pns": true,
+        "pppk": true
+      }
+    },
+    {
+      "no": 30,
+      "instansi_teknis": "Badan Standardisasi Nasional",
+      "nomenklatur": "Penelaah Akreditasi Lembaga Penilaian Kesesuaian",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Teknik Elektro/Teknik Mesin/Teknik Sipil/Teknik Industri/Teknik Kimia/Teknik Fisika/Fisika/Kimia/Elektronika/Instrumentasi/Teknologi Pertanian/Pertanian/Perikanan/Farmasi/ Kedokteran Hewan/ Kedokteran/Biologi/ Geologi/Geodesi/ Geofisika/Geokimia/Pertambangan/Perminyakan/Kesehatan/Manajemen/Kehutanan",
+      "tugas_jabatan": "Melakukan kegiatan penelaahan dan evaluasi dalam rangka penyusunan rekomendasi kebijakan akreditasi Lembaga Penilaian Kesesuaian",
+      "kedudukan_jabatan": "Instansi Pemerintah",
+      "status": {
+        "pns": true,
+        "pppk": true
+      }
+    },
+    {
+      "no": 31,
+      "instansi_teknis": "Kementerian Komunikasi dan Informatika",
+      "nomenklatur": "Penata Kelola Sistem dan Teknologi Informasi",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Teknologi Informasi/Teknik Informatika/ Sistem Informasi/Ilmu Komputer/Teknik Elektro, atau bidang lain yang sesuai tugas jabatan",
+      "tugas_jabatan": "Melakukan kegiatan yang meliputi pengumpulan, pengklasifikasian, persiapan pelaksanaan penyuluhan, pemantauan, pengendalian, pemanfaatan, evaluasi dan pelaporan di bidang sistem dan teknologi informasi",
+      "kedudukan_jabatan": "Instansi Pemerintah",
+      "status": {
+        "pns": true,
+        "pppk": true
+      }
+    },
+    {
+      "no": 32,
+      "instansi_teknis": "Kementerian Pemberdayaan Perempuan dan Perlindungan Anak",
+      "nomenklatur": "Pengelola Pemberdayaan Perempuan dan Perlindungan Anak",
+      "kualifikasi_pendidikan_minimal": "D-3 (Diploma-Tiga) bidang Psikologi/Kesejahteraan Sosial/Sosiologi atau bidang lain yang relevan dengan tugas jabatan",
+      "tugas_jabatan": "Melaksanakan kegiatan pengelolaan pemberdayaan perempuan dan perlindungan anak",
+      "kedudukan_jabatan": "Instansi Pemerintah",
+      "status": {
+        "pns": true,
+        "pppk": true
+      }
+    },
+    {
+      "no": 33,
+      "instansi_teknis": "Kementerian Pemberdayaan Perempuan dan Perlindungan Anak",
+      "nomenklatur": "Penata Kelola Pemberdayaan Perempuan dan Perlindungan Anak",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Kesejahteraan Sosial/ Ilmu Komunikasi/ Sosiologi/ Bimbingan & Konseling/ Hukum",
+      "tugas_jabatan": "Melaksanakan kegiatan yang berkaitan dengan proses pengubahan perilaku melalui penyampaian informasi, komunikasi, motivasi dan edukasi dalam bentuk layanan yang diberikan berdasarkan kebutuhan perempuan dan anak",
+      "kedudukan_jabatan": "Instansi Pemerintah",
+      "status": {
+        "pns": true,
+        "pppk": true
+      }
+    },
+    {
+      "no": 34,
+      "instansi_teknis": "Sekretariat Jenderal Komisi Yudisial",
+      "nomenklatur": "Penelaah Kode Etik dan Perilaku Hakim",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Ilmu Hukum/ Hukum Islam/Filsafat/ Psikologi/ Ilmu Pemerintahan",
+      "tugas_jabatan": "Melakukan analisis terhadap laporan/informasi terkait dugaan pelanggaran kode etik dan pedoman perilaku hakim",
+      "kedudukan_jabatan": "Sekretariat Jenderal Komisi Yudisial",
+      "status": {
+        "pns": true,
+        "pppk": false
+      }
+    },
+    {
+      "no": 35,
+      "instansi_teknis": "Sekretariat Jenderal Komisi Yudisial",
+      "nomenklatur": "Penelaah Bahan Rekrutmen Hakim Agung",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Ilmu Hukum/ Hukum Islam/Filsafat/ Psikologi/ Ilmu Pemerintahan",
+      "tugas_jabatan": "Menyusun bahan penyelenggaraan rekrutmen Hakim Agung, Hakim Ad Hoc, dan Hakim",
+      "kedudukan_jabatan": "Sekretariat Jenderal Komisi Yudisial",
+      "status": {
+        "pns": true,
+        "pppk": false
+      }
+    },
+    {
+      "no": 36,
+      "instansi_teknis": "Sekretariat Jenderal Komisi Yudisial",
+      "nomenklatur": "Penelaah Advokasi Hakim",
+      "kualifikasi_pendidikan_minimal": "D-3 (Diploma-Tiga) bidang Ilmu Sosial/Ilmu Terapan/Akuntansi/Pajak/Kepabeanan dan Cukai/Manajemen Keuangan",
+      "tugas_jabatan": "Menerima pengaduan terkait perbuatan yang merendahkan kehormatan dan martabat hakim serta menyusun bahan penyiapan langkah hukum",
+      "kedudukan_jabatan": "Sekretariat Jenderal Komisi Yudisial",
+      "status": {
+        "pns": true,
+        "pppk": false
+      }
+    },
+    {
+      "no": 37,
+      "instansi_teknis": "Badan Pusat Statistik",
+      "nomenklatur": "Pengawas Pendataan Statistik",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Statistika, atau bidang lain yang relevan",
+      "tugas_jabatan": "Melaksanakan kegiatan pengawasan dan pemeriksaan yang berhubungan dengan pengumpulan, pengolahan dan analisis statistik",
+      "kedudukan_jabatan": "Instansi Pemerintah",
+      "status": {
+        "pns": true,
+        "pppk": true
+      }
+    },
+    {
+      "no": 38,
+      "instansi_teknis": "Badan Narkotika Nasional",
+      "nomenklatur": "Fasilitator Rehabilitasi",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu) / D-4 (Diploma-Empat) bidang yang relevan dengan tugas jabatan",
+      "tugas_jabatan": "Melakukan kegiatan fasilitasi peningkatan lembaga rehabilitasi dengan melaksanakan program peningkatan kompetensi teknis",
+      "kedudukan_jabatan": "Instansi Pemerintah",
+      "status": {
+        "pns": true,
+        "pppk": true
+      }
+    },
+    {
+      "no": 39,
+      "instansi_teknis": "Kementerian Agama",
+      "nomenklatur": "Penelaah Hisab Rukyat",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata Satu) / D-4 (Diploma-Empat) bidang Hukum islam/ astronomi/ Syariah / Hukum Keluarga / ilmu falak",
+      "tugas_jabatan": "Melakukan kegiatan penghitungan hisab, pemantauan hilal, kalibrasi arah kiblat, dan pembinaan pengelolaan hisab rukyat",
+      "kedudukan_jabatan": "Kementerian Agama",
+      "status": {
+        "pns": true,
+        "pppk": true
+      }
+    },
+    {
+      "no": 40,
+      "instansi_teknis": "Kementerian Agama",
+      "nomenklatur": "Penata Kelola Zakat dan Wakaf",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Hukum/Syariah/Filsafat Islam/ekonomi islam/akuntansi atau bidang lain yang relevan",
+      "tugas_jabatan": "Melakukan kegiatan tata kelola zakat dan wakaf",
+      "kedudukan_jabatan": "Kementerian Agama",
+      "status": {
+        "pns": true,
+        "pppk": true
+      }
+    },
+    {
+      "no": 41,
+      "instansi_teknis": "Kementerian Agama",
+      "nomenklatur": "Pranata Kerukunan Umat Beragama",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Syariah/Dakwah/KPI/ Sosial dan Politik/ Sosiologi/ Manajemen/ Pendidikan/ Hukum/TI/ Administrasi",
+      "tugas_jabatan": "Melakukan kegiatan pengkajian, pengamanan, penertiban, perlindungan, pembimbingan dan pengembangan konsep kerukunan umat beragama",
+      "kedudukan_jabatan": "Kementerian Agama",
+      "status": {
+        "pns": true,
+        "pppk": false
+      }
+    },
+    {
+      "no": 42,
+      "instansi_teknis": "Kementerian Agama",
+      "nomenklatur": "Pengawas Lembaga Ibadah Haji dan Umrah",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Syariah/Dakwah/KPI/ Sosiologi/ Manajemen Haji dan Umrah/ Administrasi",
+      "tugas_jabatan": "Melakukan kegiatan perencanaan, pelaksanaan pembinaan dan perizinan, penilaian akreditasi, dan pengawasan penyelenggara Ibadah Haji Khusus dan Umrah",
+      "kedudukan_jabatan": "Kementerian Agama",
+      "status": {
+        "pns": true,
+        "pppk": false
+      }
+    },
+    {
+      "no": 43,
+      "instansi_teknis": "Kementerian Agama",
+      "nomenklatur": "Pembimbing Teknis Urusan Agama",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Syariah/Manajemen/Sosiologi Agama/Filsafat Islam/ Teologi Agama",
+      "tugas_jabatan": "Melakukan kegiatan pendampingan, pembimbingan, penyusunan, dan evaluasi urusan agama dan lembaga dakwah keagamaan",
+      "kedudukan_jabatan": "Kementerian Agama",
+      "status": {
+        "pns": true,
+        "pppk": "N/A"
+      }
+    },
+    {
+      "no": 44,
+      "instansi_teknis": "Kementerian Agama",
+      "nomenklatur": "Penata Kelola Jaminan Produk Halal",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-satu)/ D-4 (Diploma-Empat) bidang Syariah, Ekonomi Islam, Hukum Islam, Kimia, Biologi, Gizi, Farmasi, Teknik Pangan",
+      "tugas_jabatan": "Melakukan kegiatan tata kelola, penataan, pengelolaan, and bimbingan di bidang jaminan produk halal",
+      "kedudukan_jabatan": "Kementerian Agama",
+      "status": {
+        "pns": true,
+        "pppk": false
+      }
+    },
+    {
+      "no": 45,
+      "instansi_teknis": "Kementerian Agama",
+      "nomenklatur": "Penata Kelola Madrasah, Pendidikan Agama, dan Keagamaan",
+      "kualifikasi_pendidikan_minimal": "S-1 (Strata-satu)/ D-4 (Diploma-Empat) bidang Pendidikan Agama atau bidang lain yang relevan",
+      "tugas_jabatan": "Melakukan kegiatan pengelolaan madrasah, pendidikan agama pada sekolah, pendidikan diniyah formal, dan program keagamaan lainnya",
+      "kedudukan_jabatan": "Kementerian Agama",
+      "status": {
+        "pns": true,
+        "pppk": false
+      }
+    }
+  ]
+}

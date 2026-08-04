@@ -1,0 +1,1325 @@
+[
+  {
+    "no": 1,
+    "instansi_teknis": "Umum (Lintas Instansi)",
+    "nomenklatur": "Penata Layanan Operasional",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan tata kelola layanan teknis",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 2,
+    "instansi_teknis": "Umum (Lintas Instansi)",
+    "nomenklatur": "Pengelola Layanan Operasional",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan pengelolaan layanan teknis",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 3,
+    "instansi_teknis": "Umum (Lintas Instansi)",
+    "nomenklatur": "Operator Layanan Operasional",
+    "kualifikasi_pendidikan_minimal": "SLTA sederajat",
+    "tugas_jabatan": "Melakukan kegiatan pengoperasian layanan teknis",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 4,
+    "instansi_teknis": "Umum (Lintas Instansi)",
+    "nomenklatur": "Pengelola Umum Operasional",
+    "kualifikasi_pendidikan_minimal": "SD sederajat/SLTP sederajat",
+    "tugas_jabatan": "Melakukan kegiatan pengelolaan layanan umum",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 5,
+    "instansi_teknis": "Umum (Lintas Instansi)",
+    "nomenklatur": "Operator Laboratorium",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan operasional laboratorium",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 6,
+    "instansi_teknis": "Umum (Lintas Instansi)",
+    "nomenklatur": "Teknisi Laboratorium",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan pemasangan, perbaikan dan pengecekan serta pemeliharaan laboratorium",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 7,
+    "instansi_teknis": "Kementerian Sekretariat Negara",
+    "nomenklatur": "Protokol Kenegaraan",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata Satu)/ D-4 (Diploma-Empat) bidang yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan keprotokolan bagi Presiden dan Wakil Presiden",
+    "kedudukan_jabatan": "Instansi Pusat Tertentu",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 8,
+    "instansi_teknis": "Kementerian Kelautan dan Perikanan",
+    "nomenklatur": "Penata Kelola Kelautan dan Perikanan",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Manajemen Sumberdaya Perikanan/Pemanfaatan Sumberdaya Perikanan/Pemanfaatan Sumberdaya Perairan/Teknologi Penangkapan Ikan/Mesin Perikanan/Penangkapan Ikan/Teknologi Pengelolaan Sumberdaya Perairan/Teknologi Penangkapan Ikan/Teknik Kelautan/Teknik Perkapalan/Teknik Sipil/Teknik Mesin/Ilmu Sosial/Ilmu Politik/Ilmu Ekonomi",
+    "tugas_jabatan": "Melakukan kegiatan tata kelola dan pengkajian di bidang kelautan dan perikanan",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 9,
+    "instansi_teknis": "Kementerian Kelautan dan Perikanan",
+    "nomenklatur": "Pengelola Layanan Kelautan dan Perikanan",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang Administrasi/Kelautan/Perikanan/Teknik Mesin/Teknik Perkapalan/Desain Kominikasi Visual/Komunikasi/ Komunikasi Massa/Teknik Informatika/Administrasi/Budidaya Ikan/Pembenihan Ikan/Teknologi dan Manajemen Perikanan Budidaya /Teknologi Budidaya Perikanan Analisis Kimia/Kesehatan Hewan/Teknik Mesin",
+    "tugas_jabatan": "Melakukan kegiatan pengelolaan operasional dan pelayanan di bidang kelautan dan perikanan",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 10,
+    "instansi_teknis": "Kementerian Kelautan dan Perikanan",
+    "nomenklatur": "Penata Sarana dan Prasarana Kelautan dan Perikanan",
+    "kualifikasi_pendidikan_minimal": "SMA, SLTA, SUPM, SMK Perikanan, SUPM Penangkapan Ikan, SUPM Perikanan Laut, SMK Teknika Perikanan Laut, SUPM Teknika Perikanan Laut/Permesinan Perikanan, SMK Teknologi Penangkapan Ikan, SUPM Teknologi Penangkapan Ikan, SUPM Nautika Perikanan Laut, SMK Perikanan dan Kelautan, STM",
+    "tugas_jabatan": "Melakukan kegiatan penataan administrasi sarana dan prasarana di bidang kelautan dan perikanan",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 11,
+    "instansi_teknis": "Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi",
+    "nomenklatur": "Editor Buku",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Ilmu Komunikasi/Bahasa/Sastra/Sosial Humaniora atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan mengedit naskah buku hingga siap cetak sesuai sasaran pembaca, gaya selingkung, dan standar percetakan",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 12,
+    "instansi_teknis": "Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi",
+    "nomenklatur": "Penyuluh Bahasa",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Bahasa/Sastra",
+    "tugas_jabatan": "Melakukan kegiatan penyuluhan dan evaluasi bahasa",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 13,
+    "instansi_teknis": "Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi",
+    "nomenklatur": "Konservator",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Kimia/Fisika/Biologi/Arkeologi/Teknik Sipil/Teknik Metalurgi/Teknik Kimia/Geologi/Teknik Arsitektur",
+    "tugas_jabatan": "Melakukan kegiatan pengawasan, pemeliharaan, dan pengembangan prosedur, teknik dan metode konservasi",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 14,
+    "instansi_teknis": "Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi",
+    "nomenklatur": "Kurator",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Arkeologi/Antropologi/Sejarah/Seni Rupa Murni/Desain Interior/Desain Komunikasi Visual/Desain Produk/Kriya Seni/Kriya/Sosiologi",
+    "tugas_jabatan": "Melakukan kurasi koleksi museum dan/atau koleksi karya seni serta penyiapan alur cerita, tata pamer di museum dan/atau galeri sesuai dengan kaidah yang berlaku",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 15,
+    "instansi_teknis": "Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi",
+    "nomenklatur": "Edukator",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Sejarah/Antropologi/Arkeologi/Ilmu Komunikasi/Pendidikan Seni/Pendidikan Sejarah",
+    "tugas_jabatan": "Melakukan kegiatan layanan edukasi sesuai dengan kaidah dan ketentuan yang berlaku",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 16,
+    "instansi_teknis": "Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi",
+    "nomenklatur": "Polisi Khusus Cagar Budaya",
+    "kualifikasi_pendidikan_minimal": "SLTA/SMK/Sederajat",
+    "tugas_jabatan": "Melakukan kegiatan pengamanan dan penindakan non yustisial dalam kegiatan pelestarian cagar budaya, koleksi dan objek yang diduga cagar budaya",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 17,
+    "instansi_teknis": "Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi",
+    "nomenklatur": "Juru Pelihara Cagar Budaya",
+    "kualifikasi_pendidikan_minimal": "SMP/Sederajat",
+    "tugas_jabatan": "Melakukan kegiatan pemeliharaan dan pengamanan objek yang diduga cagar budaya dan cagar budaya",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 18,
+    "instansi_teknis": "Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi",
+    "nomenklatur": "Juru Pugar Cagar Budaya",
+    "kualifikasi_pendidikan_minimal": "SMP/Sederajat",
+    "tugas_jabatan": "Melakukan pemugaran cagar budaya dan objek diduga cagar budaya meliputi kegiatan rekonstruksi, konsolidasi, rehabilitasi, dan restorasi sesuai dengan kaidah yang telah ditentukan",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 19,
+    "instansi_teknis": "Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi",
+    "nomenklatur": "Perevitalisasi Bahasa dan Sastra",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu / D-4 (Diploma-Empat bidang Bahasa/Sastra",
+    "tugas_jabatan": "Melakukan kegiatan revitalisasi di bidang pelindungan bahasa dan sastra",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 20,
+    "instansi_teknis": "Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi",
+    "nomenklatur": "Penata Pameran",
+    "kualifikasi_pendidikan_minimal": "SMK Teknik Bangunan/ Multimedia/Desain Grafis",
+    "tugas_jabatan": "Melakukan penataan pameran koleksi museum dan/atau koleksi karya seni sesuai desain layout tata pamer untuk kerapihan dan kelancaran pameran",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 21,
+    "instansi_teknis": "Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi",
+    "nomenklatur": "Registrar",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang Arkeologi/Sastra Indonesia Sastra Daerah /Sejarah",
+    "tugas_jabatan": "Melakukan kegiatan registrasi, inventarisasi, dan klasifikasi benda bernilai budaya berdasarkan jenis koleksi, objek diduga cagar budaya, cagar budaya, dan objek pemajuan kebudayaan berdasarkan kaidah yang berlaku",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 22,
+    "instansi_teknis": "Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi",
+    "nomenklatur": "Filolog",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Filologi/Arkeologi/ Sastra Indonesia / Sastra Daerah / Sastra Asing / Kajian Budaya / Religi dan Budaya",
+    "tugas_jabatan": "Melakukan alih aksara, alih bahasa, dan interpretasi pada teks yang ada di manuskrip atau prasasti sesuai dengan kaidah kajian filologi",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 23,
+    "instansi_teknis": "Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi",
+    "nomenklatur": "Pengawas Hasil Penyensoran",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Hukum / Administrasi Negara/Administrasi Publik/Film dan Televisi / Televisi dan Film/ Produksi Film dan Televisi/Teknologi Multimedia dan Broadcasting",
+    "tugas_jabatan": "Melakukan kegiatan pengawasan pertunjukan film, iklan film, film iklan, dan sarana publikasi sesuai dengan hasil putusan penyensoran",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 24,
+    "instansi_teknis": "Kementerian Hukum dan HAM",
+    "nomenklatur": "Penjaga Tahanan",
+    "kualifikasi_pendidikan_minimal": "SLTA sederajat/DI (Diploma-Satu)/ D-2 (Diploma-Dua)/ D-3 (Diploma-Tiga)",
+    "tugas_jabatan": "Melakukan penjagaan, pembinaan, pengawalan, dan pengelolaan tahanan",
+    "kedudukan_jabatan": "Kementerian Hukum dan HAM",
+    "status": { "pns": true, "pppk": false }
+  },
+  {
+    "no": 25,
+    "instansi_teknis": "Kementerian Hukum dan HAM",
+    "nomenklatur": "Petugas Pengamanan Pemasyarakatan",
+    "kualifikasi_pendidikan_minimal": "SLTA sederajat/DI (Diploma-Satu)/ D-2 (Diploma-Dua)/ D-3 (Diploma-Tiga)",
+    "tugas_jabatan": "Melakukan penjagaan, pengaturan, pengawalan, patroli dalam memelihara keamanan Narapidana/Anak/Anak Binaan/Benda Sitaan Negara",
+    "kedudukan_jabatan": "Kementerian Hukum dan HAM",
+    "status": { "pns": true, "pppk": false }
+  },
+  {
+    "no": 26,
+    "instansi_teknis": "Kementerian Kesehatan",
+    "nomenklatur": "Pengelola Layanan Kesehatan",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang Kesehatan",
+    "tugas_jabatan": "Melakukan kegiatan pengelolaan di bidang layanan kesehatan",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 27,
+    "instansi_teknis": "Kementerian Kesehatan",
+    "nomenklatur": "Operator Layanan Kesehatan",
+    "kualifikasi_pendidikan_minimal": "SMA/SLTA segala jurusan",
+    "tugas_jabatan": "Melakukan kegiatan persiapan dukungan di bidang layanan kesehatan",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 28,
+    "instansi_teknis": "Kementerian Kesehatan",
+    "nomenklatur": "Penata Kelola Layanan Kesehatan",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empatbidang ) Kesehatan",
+    "tugas_jabatan": "Melakukan kegiatan tata kelola di bidang layanan kesehatan",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 29,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Pengawas Satuan Pelayanan",
+    "detail_hierarki": [
+      {
+        "kelas": "Kelas I",
+        "cakupan": "Terminal Penumpang Tipe A Kelas I dan Pelabuhan Penyeberangan Komersial"
+      },
+      {
+        "kelas": "Kelas II",
+        "cakupan": "Terminal Penumpang Tipe A Kelas 2, UPPKB Kelas 1, atau Pelabuhan Penyeberangan Perintis Kelas 1"
+      },
+      {
+        "kelas": "Kelas III",
+        "cakupan": "Terminal Penumpang Tipe A Kelas 3, UPPKB Kelas 2, Pelabuhan Penyeberangan Perintis Kelas 2, atau Pelabuhan Sungai dan Danau"
+      }
+    ],
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Transportasi / Teknik Sipil Manajemen / bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melaksanakan kegiatan perencanaan, pengelolaan, pemeliharaan, pemanfaatan prasarana transportasi, dan pengawasan penyelenggaraan sarana transportasi",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": false }
+  },
+  {
+    "no": 30,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Petugas Transportasi",
+    "bidang_spesifik": ["Perkeretaapian", "Transportasi Darat"],
+    "kualifikasi_pendidikan_minimal": {
+      "umum": "D-III (Diploma-Tiga) bidang LLAJ/LLASDP/PKB atau kualifikasi pendidikan lain yang relevan",
+      "perkeretaapian": "D-III (Diploma-Tiga) bidang Perkeretaapian/ Transportasi atau bidang lain yang relevan"
+    },
+    "tugas_jabatan": "Melaksanakan kegiatan operasional di bidang transportasi",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 31,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Pengawas Transportasi",
+    "bidang_spesifik": ["Perkeretaapian", "Transportasi Darat"],
+    "kualifikasi_pendidikan_minimal": {
+      "transportasi_darat": "S-1 (Strata-Satu / D-4 (Diploma-Empat) bidang Transportasi Darat/ Manajemen Keselamatan Transportasi Jalan/Teknik Keselamatan Otomotif/Teknik Sipil / Teknik Mesin atau kualifikasi relevan",
+      "perkeretaapian": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Perkeretaapian/ Transportasi atau bidang lain yang relevan"
+    },
+    "tugas_jabatan": "Melakukan pengawasan penyelenggaraan kegiatan operasional di bidang transportasi",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 32,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Petugas Sarana dan Prasarana Transportasi",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang LLAJ/LLASDP/PKB/ Teknik Sipil/Teknik Mesin atau kualifikasi pendidikan lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melaksanakan kegiatan operasional di bidang sarana dan prasarana transportasi",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 33,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Petugas Lalu Lintas dan Angkutan Transportasi",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang LLAJ/LLASDP/PKB/ Teknik Sipil/Teknik Mesin atau kualifikasi pendidikan lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melaksanakan kegiatan operasional di bidang lalu lintas dan angkutan transportasi",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 34,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Pengatur Perjalanan Kereta Api",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang Perkeretaapian/Transportasi atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Membuat perencanaan, penyusunan, pengaturan, pengendalian pergerakan perjalanan kereta api",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 35,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Awak Sarana Perkeretaapian",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang Perkeretaapian/Transportasi atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan persiapan dan pengoperasian menjalankan sarana perkeretaspian.",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 36,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Teknisi Perkeretaapian",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang Perkeretaapian/Transportasi atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan teknis perawatan, pemasangan. perbaikan dan pengecekan serta pemeliharaan sarana, prasarana, lalu lintas, angkutan, dan keselamatan perkeretaapian",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 37,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Penguji Sumber Daya Manusia Perkeretaapian",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Perkeretaapian/ Transportasi atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan analisa, pengujian, penelahaan, dan penyusunan rekomendasi SDM perkeretaapian",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 38,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Pemerikaa Kecelakaan Kereta Api",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Perkeretaapian/ Transportasi atau bidang lain yang relevan dengan tugas jabatan.",
+    "tugas_jabatan": "Melakukan kegiatan pemeriksaan kecelakaan kereta api, identifikasi sebab dan akibat kecelakaan dari sisi prasarana, sarana, lalu lintas dan SDM, dokumentasi dan pelaporan kecelakaan kereta api.",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 39,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Personel Operasional Bandar Udara",
+    "kualifikasi_pendidikan_minimal": "SMA/MA/Paket C (IPA/IPS) SMK (Teknik Mesin/SMK Listrik/ SMK Mekanikal/ SMK Teknik Sipil/ SMK Penerbangan/SMK Teknik Konstruksi/ SMK Teknik Elektronika/SMK Batıgunan/SMK Komputer)",
+    "tugas_jabatan": "Melaksanakan kegiatan pengendalian dan penyiapan peralatan di bidang keamanan dan keselamatan penerbangan pada bandar udara",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 40,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Personel Teknik dan Operasional Penerbangan",
+    "bidang_spesifik": ["Bidang Faskampen", "Bidang Teknisi Peralatan dan Mesin"],
+    "kualifikasi_pendidikan_minimal": {
+      "bidang_faskampen": "SMK/Sederajat",
+      "bidang_teknisi": "SMA IPA/SMK Mesin/SMK Listrik"
+    },
+    "tugas_jabatan": "Melaksanakan perawatan fasilitas keamanan, menjaga keamanan dan kenyamanan operasional penerbangan baik di sisi darat maupun udara, dan menjaga kebersihan.",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 41,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Pengevaluasi Penerbangan",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Teknik Elektro, Teknologi Rekayasa Navigasi Udara, Teknik Listrik Bandar Udara, Teknologi Rekayasa Bandar Udara, Teknik Mekanikal Bandar Udara, Teknik Bangunan dan Landasan, Teknik Mesin, Teknik Sipil, Teknik Arsitek, Teknik Geodesi, Ekonomi Akuntansi, Manajemen Transportasi, Teknik Industri, Teknik Penerbangan, Teknik Elektronika. Teknik Navigasi Udara, Teknik Pesawat Udara, Lalu Lintas Udara, Teknik Komputer, Teknik Pesawat Udara, Teknik Informatika, Hukum, Ekonomi, Akutanai, Manajemen, Manajemen Transportasi, Komputer, Keuangan",
+    "tugas_jabatan": "Melaksanakan kegiatan analisis dan evaluasi terhadap bahan teknis pengaturan, pengendalian dan pengawasan serta peningkatan pelayanan di bidang penerbangan",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 42,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Pengawas Penerbangan",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang teknik sipil, teknik arsitektur, teknik elektro, teknik mesin, teknik geodesi, ekonomi akuntansi, Teknik Penerbangan. manajemen transportasi;",
+    "tugas_jabatan": "Melaksanakan kegiatan penyiapan bahan teknis pengaturan, pengendalian dan pengawasan serta peningkatan pelayanan di bidang penerbangan",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 43,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Personel Perawatari Pesawat Udara",
+    "kualifikasi_pendidikan_minimal": "D-II (Diploma-Dua) bidang Teknik Pesawat Udara, Teknik Mesin, Teknik Elektronika, Teknik Penerbangan",
+    "tugas_jabatan": "Melaksanakan penyiapan peralatan dan melaksanakan kegiatan perawatan pesawat udara",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 44,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Pengawas Operasional Bandar Udara",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang Teknik Mesin, Listrik, Mekanika, Teknik Sipil, Penerbangan, Teknik Konstruksi, Teknik Elektronika, Bangunan, Komputer",
+    "tugas_jabatan": "Melaksanakan kegiatan pengawasan terhadap pelaksanaan kegiatan pengendalian dan penyiapan peralatan di bidang keamanan dan keselamatan penerbangan pada bandar udara",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 45,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Pengawas Personel Perawatan Pesawat Udara",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang Teknik Pesawat Udara, Teknik Mesin, Teknik Elektronika, Teknik Penerbangan",
+    "tugas_jabatan": "Melaksanakan pengawasan terhadap pelaksanaan penyiapan peralatan dan pelaksanaan kegiatan perawatan pesawat udara",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 46,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Pengevaluasi Perawatan Pesawat Udara",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Teknik Pesawat Udara, Teknik Mesin, Teknik Elektronika, Teknik Penerbangan",
+    "tugas_jabatan": "Melaksanakan analisis dan evaluasi terhadap pelaksanaan penyiapan peralatan dan pelaksanaan kegiatan perawatan pesawat udara",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 47,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Personel Perawatan Peralatan Kalibrasi Penerbangan",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang Teknik Telekomunikası, Teknik Elektronika, Teknik Komputer, Teknik Navigasi Udara, Teknologi Navigasi Udara",
+    "tugas_jabatan": "Melaksanakan penyiapan peralatan pengujian dan peneraan Kalibrasi Penerbangan",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 48,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Personel Pengujian dan Peneraan",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Teknik Telekomunikasi, Teknik Elektronika, Teknik Komputer, Teknik Navigasi Udara, Teknik Penerbangan",
+    "tugas_jabatan": "Melaksanakan kegiatan pengujian dan peneraan Kalibrasi Penerbangan",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 49,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Pengevaluasi Pengujian dan Peneraan",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empatį bidang Teknik Telekomunikasi, Teknik Elektronika. Teknik Komputer, Teknik Navigasi Udara, Teknik Penerbangan",
+    "tugas_jabatan": "Melaksanakan kegiatan evaluasi dan kajian terkait penyiapan peralatan dan pelaksanaan pengujian dan peneraan Kalibrasi Penerbangan",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 50,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Petugas Unit Bengkel Keselamatan Pelayaran",
+    "kualifikasi_pendidikan_minimal": "S-1  Strata-Satuj/ D-4 (Diploma-Empatį bidang Teknik Industri / Teknik produksi/Teknik Sipil / Akuntansi / Manajemen / Administrasi",
+    "tugas_jabatan": "Melakukan kegiatan penyusunan dan koordinasi yang meliputi perencanaan, pengumpulan, penyusunan, verifikasi data dan penyempurnaan hasil olahan serta pembuatan laporan sementara pada instalasi bengkel agar tersedia laporan yang baik dan akurat di lingkungan Balai Teknologi Keselamatan Pelayaran",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 51,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Penguji Peralatan Keselamatan Pelayaran",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Teknik Mesin/ATT.II",
+    "tugas_jabatan": "Melakukan pengujian, pemeriksaan dan percobaan alat keselamatan pelayaran dengan mencatat/merekam hasil pengujian, pemeriksaan dan dan percobaan terkait peralatan keselamatan pelayaran yang akurat",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 52,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Petugas Laboratorium Peralatan Keselamatan Pelayaran",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata Satu)/ D-4 (Diploma-Empat) bidang Manajemen Transportasi",
+    "tugas_jabatan": "Melakukan kegiatan penyusunan dan koordinasi yang meliputi perencanaan, pengumpulan, penyusunan. verifikasi data dan penyempurnaan hasil olahan serta pembuatan laporan sementara pada instalasi laborotorium keselamatan pelayaran",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 53,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Petugas Telkompel",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang Elektro/Elektronika/Transportasi",
+    "tugas_jabatan": "Melakukan koordinasi atas berita bahaya, perawatan pencegahan, korektif, dan detektif secara berkala untuk keandalan telekomunikasi pelayaran dan sarana telekomukasi pelayaran",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 54,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Pengawas Pemanduan Kapal",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang Nautika",
+    "tugas_jabatan": "Melakukan pengawasan teknis kegiatan pemanduan kapal meliputi pengawasan keselamatan pemanduan dan penertiban pelayanan pemanduan dengan upaya penanggulangan hambatan operasional",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 55,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Pengawas Kegiatan Kepelabuhanan",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tigaj bidang Teknik Transportasi/ KALK/ Manajemen",
+    "tugas_jabatan": "Melakukan pengawasan aspek-aspek terkait kegiatan di pelabuhan dalam pelayanan jasa kepelabuhanan",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 56,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Pengawas Sarana dan Prasarana Kenavigasian",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) semua jurusan",
+    "tugas_jabatan": "Mengelola penyimpanan, pengawasan, kebutuhan perbaikan, serta memperbaharui data peralatan instalasi Sarana Bantu Navigasi Pelayaran.",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 57,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Pengawas Keselamatan dan Keamanan Pelayaran",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Teknik Perkapalan/ Nautika",
+    "tugas_jabatan": "Menyiapkan pelaksanaan pemeriksaan terhadap peralatan pencegahan pencemaran dan penerbitan sertifikat marpol, melaksanakan pengawasan dan memberikan persetujuan terhadap olah gerak kapal, melaksanakan pengecekan fisik kapal serta mengawasi perbaikan kapal di wilayah perairan bandar",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 58,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Pengawas Penanggulangan pencemaran dan Musibah SAR",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Transportasi / Teknik Lingkungan",
+    "tugas_jabatan": "Merencanakan, menetapkan dan melaksanakan strategi operasi penanggulangan pencemaran, mengumpulkan informasi data pencemaran, dan memberi dukungan sumber daya, serta memberi bantuan pencarian orang yang hilang di laut, menyelamatkan dan mengevakuasi korban, dan melakukan pemeriksaan peralatan SAR.",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 59,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Pengawas Salvage dan Pekerjaan Bawah Air",
+    "kualifikasi_pendidikan_minimal": "SMA/SLTA segala jurusan.",
+    "tugas_jabatan": "Menyiapkan hasil pengawasan salvage dan pekerjaan bawah air.",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 60,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Penata Keselamatan Pelayaran",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Hukum/Pelayaran",
+    "tugas_jabatan": "Melakukan pengembangan, evaluasi dan monitoring atas spesifikasi dan penetapan kualifikasi teknis dalam bidang Keselamatan Pelayaran.",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 61,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Penata Penegakan Hukum dan Diseminasi",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu / D-4 (Diploma-Empat) bidang Ilmu Hukum",
+    "tugas_jabatan": "Melakukan pengawasan atas pelaksanaan aturan hukum dalam rangka penegakan tindak Pidana Pelayaran",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 62,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Penata Keselamatan dan Keamanan Pelayaran",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma Empat bidang Teknik Perkapalan / Perkapalan / Nautika/Teknika",
+    "tugas_jabatan": "Melaksanakan pengawasan atas perlindungan lingkungan maritim berupa manajemen keselamatan, standar kompetensi, sertifikasi pelaut, standar pengujian keahlian pelaut tingkat manajerial, standar pengujian keahlian pelaut tingkat operasional",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 63,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Penilik Angkutan Laut",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Tata Laksana Angkutan Laut/Manajemen Transportasi Laut / Manajemen Logistik/Pelayaran",
+    "tugas_jabatan": "Melakukan kegiatan bimbingan teknis, evaluasi dan pelaporan di bidang lalu lintas dan angkutan laut dengan trayek berjadwal tetap dan teratur di bidang lalu lintas dan angkutan laut dengan trayek tidak berjadwal tetap dan tidak teratur",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 64,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Teknisi Menara Suar",
+    "kualifikasi_pendidikan_minimal": "SLTA/SMK Umum",
+    "tugas_jabatan": "Mengkoordinir perawatan, menjaga peralatan dan fasilitas kerja, memperbaiki, menginventarisir bahan/suku cadang serta melakukan komunikasi dan koordinasi dengan UPT terkait menggunakan SSB sesuai dengan ketentuan dan peraturan yang berlaku untuk kelancaran. pekerjaan agar lampu menara suar tetap menyala, fasilitas dan alat tetap terpelihara dengan baik.",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 65,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Penjaga Menara Suar",
+    "kualifikasi_pendidikan_minimal": "SLTA/SMK Umum",
+    "tugas_jabatan": "Melaksanakan komunikasi antar stasiun radio pantai dan mengadakan pengamatan terhadap kapal-kapal di sekitar menara suar, menjaga serta merawat fasilitas lingkungan dan sewaktu-waktu apabila lampumenara suar padam segera membantu perbaikan keandalan SBNP dalam rangka menjaga keselamatan pelayaran",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 66,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Marine Radio",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang Teknik Elektro/Teknik Mesin",
+    "tugas_jabatan": "Memeriksa dan melakukan sertifikasi fasilitas dan alat kelengkapan radio di kapal",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 67,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Perekayasa Teknologi dan Pemberitaan",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Teknik Mesin/ Teknik Sipil,/ Teknik Perkapalan/ Teknik Elektro",
+    "tugas_jabatan": "Melakukan penyiapan rekayasa teknologi dan pemberitaan keselamatan pelayaran yang meliputi perencanaan, penggunaan, pemanfaatan, pengamanan dan pemeliharaan, penghapusan, dan pemindahtanganan BMN, agar tersedia bahan rekayasa teknologi dan pemberitaan keselamatan pelayaran yang baik dan akurat di lingkungan kantor Balai Teknologi Keselamatan Pelayaran.",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 68,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Surveyor Kenavigasian",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu) /D-4 (Diploma-Empat) bidang Pelayaran/Nautika/Teknik Geodesi",
+    "tugas_jabatan": "Melaksanakan survey terkait kenavigasian, memetakan potensi bahaya kenavigasian, memelihara peralatan survey kenavigasian, serta melakukan kalibrasi dan perbaikan terhadap peralatan survey",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 69,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Pengelola Peralatan Keselamatan Pelayaran",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang Teknika",
+    "tugas_jabatan": "Menyiapkan, mengoperasikan, menyusun rencana perawatan, serta melakukan perbaikan terhadap peralatan keselamatan pelayaran.",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 70,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Investigator Keselamatan Pelayaran",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma- Empat) bidang Ilmu Hukum / Teknik Perkapalan/Kelautan /Nautika",
+    "tugas_jabatan": "Mengusut tindak pidana pelayaran, kecelakaan kapal, serta pelanggaran disiplin dan ketertiban di wilayah kerja Direktorat Jenderal Perhubungan Laut",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 71,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Auditor ISPS Code",
+    "kualifikasi_pendidikan_minimal": "S-I (Strata-Satu)/D-4 (Diploma-Empat) bidang Teknik Transportasi",
+    "tugas_jabatan": "Melakukan audit pada sistem keamanan pelabuhan sesuai dengan ketetapan yang disepakati oleh IMO, memberikan penilaian dan memastikan sistem keamanan pelabuhan sudah memenuhi ketetapan tersebut.",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 72,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Surveyor Pengangkutan Barang Berbahaya",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang Transportasi/Teknik Lingkungan",
+    "tugas_jabatan": "Melakukan pengawasan kegiatan Bongkar/Muat Barang Berbahaya Dan Barang Khusus di wilayah kerja Direktorat Jenderal Perhubungan Laut",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 73,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Penilik Kenavigasian",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Teknik Sipil/ Teknik Mesin/Perkapalan/ Nautika",
+    "tugas_jabatan": "Melakukan pengembangan, monitoring dan evaluasi terhadap Sarana Bantu Navigasi Pelayaran sehingga terwujudnya kehandalan Sarana Bantu Navigasi Pelayaran",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": false }
+  },
+  {
+    "no": 74,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Penilik Kepelabuhanan",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu /D-4 (Diploma-Empat) bidang Teknik Sipil/Tata Laksana Angkutan Laut dan Kepelabuhanan/Nautika/Teknik Bangunan/Teknik Lingkungan/Planologi (tata kota)/Hukum/Transportasi",
+    "tugas_jabatan": "Melaksanakan kegiatan perancangan teknis dan perawatan fasilitas pelabuhan laut serta kegiatan bimbingan teknis, evaluasi dan pelaporan di bidang kepelabuhanan",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 75,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Penilik Kelaiklautan Kapal",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu) /D-4 (Diploma-Empat) bidang Teknik Perkapalan/ Perkapalan/Pelayaran / Nautika/Teknika/Hukum",
+    "tugas_jabatan": "Melaksanaan pengembangan, monitoring dan evaluasi terhadap rancang bangun kapal, status hukum kapal, perlengkapan keselamatan kapal, sistem keamanan kapal, Kepelautan, pencegahan pencemaran perairan dari kapal, dan manajemen keselamatan kapal",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": false }
+  },
+  {
+    "no": 76,
+    "instansi_teknis": "Kementerian Perhubungan",
+    "nomenklatur": "Petugas Laboratorium Uji Tipe Kendaraan Bermotor",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang PKB/ Teknik Sipil/Teknik Mesin/Teknik Otomotif atau kualifikasi pendidikan lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melaksanakan kegiatan pengujian tipe kendaraan bermotor pada laboratorium indoor dan outdoor",
+    "kedudukan_jabatan": "Kementerian Perhubungan",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 77,
+    "instansi_teknis": "Kementerian Lingkungan Hidup dan Kehutanan",
+    "nomenklatur": "Pelatih dan Perawat Satwa Liar",
+    "kualifikasi_pendidikan_minimal": "SLTA/SMK sederajat",
+    "tugas_jabatan": "Melakukan kegiatan pengawasan, perawatan, dan atau pelatihan keterampilan satwa liar yang menjadi tanggung jawabnya sesuai dengan prosedur dan ketentuan peraturan perundang-undangan sehingga satwa liar lebih dapat dikendalikan dan terawat dengan hasil yang optimal",
+    "kedudukan_jabatan": "Instansi Pemerintah.",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 78,
+    "instansi_teknis": "Kementerian Lingkungan Hidup dan Kehutanan",
+    "nomenklatur": "Pemelihara Tumbuhan",
+    "kualifikasi_pendidikan_minimal": "SLTA/SMK sederajat",
+    "tugas_jabatan": "Melakukan kegiatan pengawasan dan pemeliharaan tumbuhan yang menjadi tanggung jawabnya sesuai dengan prosedur dan ketentuan peraturan perundang- undangan sehingga tumbuhan terpelihara dengan hasil yang optimal",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 79,
+    "instansi_teknis": "Kementerian Lingkungan Hidup dan Kehutanan",
+    "nomenklatur": "Petugas Pengaman Hutan dan Hasil Hutan",
+    "kualifikasi_pendidikan_minimal": "SLTA/SMK sederajat",
+    "tugas_jabatan": "Melaksanakan kegiatan perlindungan dan pengamanan hutan serta pengawasan peredaran hasil hutan di wilayah kerjanya sesuai dengan prosedur dan ketentuan peraturan perundang-undangan dalam rangka mewujudkan kelestarian sumber daya alam dan ekosistem",
+    "kedudukan_jabatan": "Instanai Pemerintah.",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 80,
+    "instansi_teknis": "Kementerian Pekerjaan Umum dan Perumahan Rakyat",
+    "nomenklatur": "Pengawas Jaringan Utilitas",
+    "kualifikasi_pendidikan_minimal": "8-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Teknik Sipil/Teknik Elektro atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan pengawasan jaringan utilitas di bidang pekerjaan umum",
+    "kedudukan_jabatan": "Instansi Pemerintah.",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 81,
+    "instansi_teknis": "Kementerian Pekerjaan Umum dan Perumahan Rakyat",
+    "nomenklatur": "Teknisi Sarana dan Prasarana",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Teknik Kimia/Teknik Mesin/Teknik Sipil atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan pemasangan, perbaikan dan pengecekan serta pemeliharaan sarana dan prasarana",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 82,
+    "instansi_teknis": "Kementerian Pekerjaan Umum dan Perumahan Rakyat",
+    "nomenklatur": "Pengamat Operasi dan Pemeliharaan Sumber Daya Air",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Teknik Sipil/Teknik Pengairan atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan pengamatan operasi dan pemeliharaan sumber daya air",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 83,
+    "instansi_teknis": "Kementerian Pekerjaan Umum dan Perumahan Rakyat",
+    "nomenklatur": "Operator Pengelolaan Sumber Daya Air",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang Teknik Sipil/Teknik Geologi/Teknik Geodesi/Teknik Pengairan atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan pengelolaan sumber daya air di bidang pekerjaan umum.",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 84,
+    "instansi_teknis": "Kementerian Pekerjaan Umum dan Perumahan Rakyat",
+    "nomenklatur": "Juru Operasi dan Pemeliharaan Sumber Daya Air",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang Teknik Sipil atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan pengoperasian dan pemeliharaan sumber daya air di bidang pekerjaan umum",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 85,
+    "instansi_teknis": "Kementerian Pekerjaan Umum dan Perumahan Rakyat",
+    "nomenklatur": "Operator Sumber Daya Air",
+    "kualifikasi_pendidikan_minimal": "SMK Teknik/SMA IPA atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan pengelolaan dan pengolahan sumber daya air di bidang pekerjaan umum.",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 86,
+    "instansi_teknis": "Kementerian Pekerjaan Umum dan Perumahan Rakyat",
+    "nomenklatur": "Petugas Operasi dan Pemeliharaan",
+    "kualifikasi_pendidikan_minimal": "SMK Teknik/SMA IPA atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan persiapan, pengecekan, pengoperasian, dan pemeliharaan sumber daya air",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 87,
+    "instansi_teknis": "Kementerian Pekerjaan Umum dan Perumahan Rakyat",
+    "nomenklatur": "Penata Kelola Leger Jalan",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Teknik Sipil/Teknik Arsitektur/Teknik Lingkungan atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan penelaahan pengelolaan leger jalan di bidang pekerjaan umum",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 88,
+    "instansi_teknis": "Kementerian Pekerjaan Umum dan Perumahan Rakyat",
+    "nomenklatur": "Penilik Jalan",
+    "kualifikasi_pendidikan_minimal": "SMK Teknik/SMA IPA atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan pengecekan kualitas, pengendalian mutu, dan evaluasi pemanfaatan jalan",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 89,
+    "instansi_teknis": "Kementerian Pekerjaan Umum dan Perumahan Rakyat",
+    "nomenklatur": "Penata Bangunan Gedung dan Permukiman",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang Teknik Sipil/ Teknik Arsitektur/ Teknik Lingkungan atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan penataan karakteristik dan spesifikasi serta pemeliharaan bangunan gedung dan pemukiman di bidang pekerjaan umum",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 90,
+    "instansi_teknis": "Kementerian Pekerjaan Umum dan Perumahan Rakyat",
+    "nomenklatur": "Penata Penyehatan Lingkungan Permukiman",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang Teknik Sipil/Teknik Arsitektur/ Teknik Lingkungan atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan penataan penyehatan lingkungan permukiman di bidang pekerjaan umum",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 91,
+    "instansi_teknis": "Kementerian Pekerjaan Umum dan Perumahan Rakyat",
+    "nomenklatur": "Penata Kelola Pengadaan Tanah",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Pertanahan/Teknik Sipil/ Arsitek/Administrasi Publik atau bidang lain yang relevan",
+    "tugas_jabatan": "Melakukan kegiatan pengelolaan pengadaan tanah",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 92,
+    "instansi_teknis": "Kementerian Pekerjaan Umum dan Perumahan Rakyat",
+    "nomenklatur": "Operator Alat Berat",
+    "kualifikasi_pendidikan_minimal": "SLTA/DI /D-2 (Diploma-Dua)/D-3 (Diploma-Tiga) bidang kualifikasi pendidikan yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan pemeriksaan kelengkapan dan pengoperasian alat berat",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 93,
+    "instansi_teknis": "Kementerian Keuangan",
+    "nomenklatur": "Account Representative",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang Ilmu Sosial/Ilmu Terapan/Akuntansi/Pajak/ Kepabeanan dan Cukai/Manajemen Keuangan/atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melaksanakan pemberian bimbingan, konsultasi, analisis dan pengawasan terhadap wajib pajak yang bertujuan untuk menggali potensi penerimaan negara di bidang perpajakan",
+    "kedudukan_jabatan": "Kementerian Keuangan",
+    "status": { "pns": true, "pppk": false }
+  },
+  {
+    "no": 94,
+    "instansi_teknis": "Kementerian Keuangan",
+    "nomenklatur": "Juru Sita Keuangan Negara",
+    "kualifikasi_pendidikan_minimal": "SMA/SMK sederajat",
+    "tugas_jabatan": "Melakukan tindakan penagihan yang meliputi penagihan seketika dan sekaligus, pemberitahuan surat paksa, penyitaan berdasarkan surat perintah melakukan Penyitaan, dan penyanderaan berdasarkan surat perintah penyanderaan terhadap hasil sitaan pajak, bea dan cukai, dan/atau kekayaan negara",
+    "kedudukan_jabatan": "Kementerian Keuangan",
+    "status": { "pns": true, "pppk": false }
+  },
+  {
+    "no": 95,
+    "instansi_teknis": "Kementerian Keuangan",
+    "nomenklatur": "Penelaah Keberatan",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang limu Sosial/Ilmu Terapan/Akuntansi/Pajak/Kepabeanan dan Cukai/Manajemen Keuangan/atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan penelaahan terhadap pemohonan keberatan, pengurangan atau penghapusan sanksi administrasi, dan pengurangan atau pembatalan ketetapan pajak yang tidak benar yang diajukan oleh Wajib Pajak",
+    "kedudukan_jabatan": "Kementerian Keuangan",
+    "status": { "pns": true, "pppk": false }
+  },
+  {
+    "no": 96,
+    "instansi_teknis": "Kementerian Keuangan",
+    "nomenklatur": "Penilai Anet",
+    "kualifikasi_pendidikan_minimal": "Diploma I (Diploma-Satu) bidang limu Sosial/Ilmu Terapan/Akuntansi/ Pajak/Kepabeanan dan Cukai/Manajemen Keuangan/atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan penilaian aset, menyiapkan bahan perencanaan penilaian, dan menyusun laporan periodik rekapitulasi hasil penilaian.",
+    "kedudukan_jabatan": "Kementerian Keuangan",
+    "status": { "pns": true, "pppk": false }
+  },
+  {
+    "no": 97,
+    "instansi_teknis": "Kementerian Keuangan",
+    "nomenklatur": "Instruktur Anjing Pelacak",
+    "kualifikasi_pendidikan_minimal": "SMA/SMK/sederajat",
+    "tugas_jabatan": "Melakukan operasional pelacakan dan pengelolaan Unit Anjing Pelacak, Pengawasan kegiatan Pawang & kondisi K-9, Pengelolaan Training Unit K-9, Pelatihan Dasar, Ulang, Teknis, Lanjutan, dan Pengawasan proficiency training unit pusat dan vertikal",
+    "kedudukan_jabatan": "Instansi Pusat",
+    "status": { "pns": true, "pppk": false }
+  },
+  {
+    "no": 98,
+    "instansi_teknis": "Kementerian Keuangan",
+    "nomenklatur": "Pawang Anjing Pelacak",
+    "kualifikasi_pendidikan_minimal": "SMA/SMK/sederajat",
+    "tugas_jabatan": "Melakukan kegiatan operasional pelacakan dan pengelolaan Unit Anjing Pelacak",
+    "kedudukan_jabatan": "Instansi Pusat",
+    "status": { "pns": true, "pppk": false }
+  },
+  {
+    "no": 99,
+    "instansi_teknis": "BASARNAS",
+    "nomenklatur": "Instruktur Pencarian dan Pertolongan",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Ilmu Keolahragaan/ Pendidikan Kepelatihan Olahraga/ Manajemen Sumber Daya Manusia/ Manajemen Pendidikan/Psikologi/ Sosiologi atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Merencanakan, menginventarisir, melaksanakan survey lokasi, menyampaikan materi pelatihan, melakukan penilaian, sosialiasi dan pemasyarkatan serta mengevaluasi pelaksanaan pelatihan sesuai prosedur dan ketentuan yang berlaku guna kelancaran pelaksanaan pendidikan dan Pelatihan Pencarian dan Pertolongan",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 100,
+    "instansi_teknis": "BASARNAS",
+    "bidang_spesifik": "Pencarian dan Pertolongan",
+    "nomenklatur": "Pengelola",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang Manajemen Logistik dan Material/Teknik Informatika/ Teknik Komputer/ Administrasi Perkantoran/Teknisi Perpustakaan/Teknik Perkapalan/Teknik Penerbangan/Teknik Elektro Arus Lemah",
+    "tugas_jabatan": "Mengelola, mengendalikan, mengkoordinasikan, memeriksa, dan mengevaluasi peralatan, logistik, sarana dan peralatan siaga, dan perangkat komunikasi sesuai prosedur dan ketentuan yang berlaku di bidang Pelatihan Pencarian dan Pertolongan",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 101,
+    "instansi_teknis": "Kementerian Dalam Negeri",
+    "nomenklatur": "Pengelola Trantibum",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tigal yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan pengamananpenertiban dan perlindungan masyarakat",
+    "kedudukan_jabatan": "Instansi Daerah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 102,
+    "instansi_teknis": "Kementerian Dalam Negeri",
+    "nomenklatur": "Pranata Trantibum",
+    "kualifikasi_pendidikan_minimal": "SLTA sederajat",
+    "tugas_jabatan": "Melakukan kegiatan penegakan peraturan daerah, penyelenggaraan ketertiban umum dan ketentraman masyarakat sesuai dengan prosedur dan ketentuan yang berlaku untuk kelancaran pelaksanaan tugas",
+    "kedudukan_jabatan": "Instansi Daerah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 103,
+    "instansi_teknis": "Kementerian Dalam Negeri",
+    "nomenklatur": "Fasilitator Pemerintahan",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Ekonomi/Manajemen/ Akuntansi/Ekonomi Studi Pembangunan/Sosial dan Politik/Administrasi Negara/ Administrasi Pemerintahan/Kebijakan Publik/Hukum/Komunikasi atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan fasilitasi, koordinasi, pengkajian, identifikasi, pengolahan, kompilasi data atau bahan informasi di bidang pemerintahan",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 104,
+    "instansi_teknis": "Kementerian Dalam Negeri",
+    "nomenklatur": "Pranata Kewilayahan",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Perencanaan Wilayah dan Kota/Ekonomi Studi Pembangunan/Pemetaan atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan pengolahan, pelayanan dan evaluasi hasil di bidang kewilayahan",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 105,
+    "instansi_teknis": "Kementerian Dalam Negeri",
+    "nomenklatur": "Pamong Pemerintahan",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Ekonomi/Manajemen/ Ekonomi Studi Pembangunan/Sosial dan Politik/Administrasi Negara/ Administrasi Pemerintahan/Kebijakan Publik/Hukum/Komunikasi atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan pemajuan, pengembangan dan pembinaan di bidang pemerintahan",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 106,
+    "instansi_teknis": "Kementerian Dalam Negeri",
+    "nomenklatur": "Pengawas Penyelenggara Pemilu",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Ekonomi/Manajemen/ Sosial dan Politik/Administrasi Negara/ Administrasi Pemerintahan/Kebijakan Publik/Hukum atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan penelaahan dan pengawasan penyelenggara pemilu",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 107,
+    "instansi_teknis": "Kementerian Perindustrian",
+    "nomenklatur": "Konsultan Industri",
+    "kualifikasi_pendidikan_minimal": "5-1 (Strata-Satu)/D-4 (Diploma-Empati bidang teknik industri, teknik elektro, teknik mesin, teknik kelautan, teknik perkapalan, teknik sipil, teknik instrumentasi dan kontrol, teknik fisika, teknik kimia, teknik biosistem, teknik biomedis, teknik material, teknik mekatronika, teknik lingkungan, teknik telekomunikasi, teknik informatika, teknik komputer, teknik sistem informasi, teknik dirgantara, teknik tekstil, perencanaan wilayah, matematika dan ilmu pengetahuan alam, statistika dan sains data, pangan, perikanan dan pertanian, kehutanan, ekonomi, hukum, manajemen bisnis, psikologi, desain, hubungan internasional, atau kebijakan publik atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan pendampingan dan konsultansi di bidang industri",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 108,
+    "instansi_teknis": "Kementerian Perindustrian",
+    "nomenklatur": "Pengawas Industri",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang teknik industri, teknik elektro, teknik mesin, teknik kelautan, teknik perkapalan, teknik sipil, teknik instrumentasi dan kontrol, teknik fisika, teknik kimia, teknik biosistern, teknik biomedis, teknik material, teknik mekatronika, teknik lingkungan, teknik telekomunikasi, teknik informatika, teknik komputer, teknik sistem informasi, teknik dirgantara, teknik tekstil, matematika dan ilmu pengetahuan alam, statistika dan sains data, pangan, perikanan dan pertanian, kehutanan, ekonomi, hukum atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan perencanaan, pelaksanaan. penilaian, pengawasan dan pengendalian di bidang usaha industri dan/atau usaha kawasan Industri",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 109,
+    "instansi_teknis": "Kementerian Perdagangan",
+    "nomenklatur": "Pengawas Perdagangan Berjangka Komoditi",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat bidang Hukum / Hubungan Internasional/Ekonomi/Akuntansi / Manajemen / Ekonomi Pembangunan atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan penerimaan dan penelaahan dokumen serta pengawasan di bidang perdagangan berjangka komoditi (PBK), sistem resi gudang (SRG), dan pasar lelang komoditas (PLK) sesuai dengan peraturan yang berlaku.",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 110,
+    "instansi_teknis": "Kementerian Perdagangan",
+    "nomenklatur": "Pengawas Barang Beredar dan Jasa",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Ekonomi Pembangunan / Manajemen / Akuntansi / Komunikasi / atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan penerimaan dan penelaahan dokumen serta pengawasan di bidang barang beredar dan jasa sesuai prosedur dan ketentuan yang berlaku untuk diproses lebih lanjut",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 111,
+    "instansi_teknis": "Kementerian Perdagangan",
+    "nomenklatur": "Surveyor Perdagangan",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Ekonomi Pembangunan / Manajemen / Akuntansi/ Hubungan Internasional / komunikasi / atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan pemetaan harga barang penting dan barang pokok, produk komoditi, dan produk perdagangan lain yang diatur dalam peraturan perundang-undangan",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 112,
+    "instansi_teknis": "Kementerian ATR/BPN",
+    "nomenklatur": "Penata Laksana Agraria dan Tata Ruang",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang hukum, administrasi negara, manajemen, geografi, geomatika, geodesi, planologi/perencanaan wilayah kota, pertanian, teknik informatika/sistem informasi, statistik, studi pembangunan dan manajemen, survei, pengukuran, pemetaan, bidang ilmu perencanaan wilayah dan kota, planologi, teknik arsitektur, teknik sipil, teknik lingkungan",
+    "tugas_jabatan": "Melakukan kegiatan pengelolaan, pengolahan, dan inventarisasi data agraria/pertanahan dan tata ruang",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 113,
+    "instansi_teknis": "Badan Standardisasi Nasional",
+    "nomenklatur": "Fasilitator Penerapan Standar dan Penilaian Kesesuaian",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang ilmu manajemen, teknik, ilmu hayat, MIPA, teknik industri, teknik lingkungan, kimia, fisika, statistik, teknologi parigan, agribisnis, desain komunikasi visual, ilmu komunikasi, manajemen industri, mekanisasi pertanian, ilmu komunikasi, manajemen pemasaran, biologi dan bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan fasilitasi dan pendampingan pembinaan penerapan standar dan penilaian kesesuaian kepada stakeholder seperti usaha mikro kecil, industri. organisasi publik, lembaga penilaian kesesuaian",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 114,
+    "instansi_teknis": "Badan Standardisasi Nasional",
+    "nomenklatur": "Penelaah Ketertelusuran Standar Pengukuran",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Fisika, Teknik Mesin, Teknik Fisika, Fisika instrumentasi, Metrologi dan Instrumentasi. Teknik Kimia, Biologi, Teknik Nuklir, Teknik Elektro, atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan pengklasifikasian dan evaluasi serta penyusunan laporan di bidang ketertelusuran standar pengukuran dengan cara pengumpulan bahan-bahan, pengusulan rencana, pengusulan pembentukan tim. memfasilitasi pelaksanaan pertemuan tim, dan pengusulan penetapan dokumen pengembangan sistem standar nasional satuan ukuran sesuai dengan prosedur dan peraturan yang berlaku",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 115,
+    "instansi_teknis": "Kementerian Sosial",
+    "nomenklatur": "Penyusun Buku Braille dan Buku Bicara",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Ilmu Sosial/Ilmu Terapan, atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melaksanakan penyiapan bahan, pengumpulan, pengolahan naskah dan standarisasi yang bertujuan menyediakan naskah braille siap cetak dan naskah bicara",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 116,
+    "instansi_teknis": "Kementerian Sosial",
+    "nomenklatur": "Fasilitator Bahasa Isyarat",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Saru)/D-4 (Diploma-Empat) bidang limu Sosial/Ilmu Terapan. atau bidang lain yang relevan dengan tugas jahatan",
+    "tugas_jabatan": "Melaksanakan fasilitasi, literasi serta layanan komunikasi dan informasi bahasa isyarat",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 117,
+    "instansi_teknis": "Kementerian Komunikasi dan Informatika",
+    "nomenklatur": "Pengendali Konten Internet",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D 4 (Diploma-Empat) bidang Teknologi Informasi/Teknik Informatika/Sistem Informasi/Ilmu Komputer/Teknik Elektro, atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan yang meliputi koordinasi, penerimaan dan pengumpulan aduan, pengklasifikasian, analisa serta verifikasi data konten internet untuk menyimpulkan dan menyusun pemblokiran konten internet ilegal",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 118,
+    "instansi_teknis": "Kementerian Komunikasi dan Informatika",
+    "nomenklatur": "Pemeriksa Forensik Digital",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Teknologi Informasi/Teknik Informatika/Sistem Informasi/Ilmu Komputer/Teknik Elektro, atau bidang lain yang sesuai tugas jabatan",
+    "tugas_jabatan": "Melakukan serangkaian kegiatan penanganan pertama bukti elektronik meliputi Identifikasi, Koleksi, Akuisisi dan Preservasi serta melakukan pengujian, pemeriksaan, analisa, dan membuat laporan hasil pemeriksaan bukti elektronik di Laboratorium Forensik Digital",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 119,
+    "instansi_teknis": "Komnas HAM",
+    "nomenklatur": "Komediator",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Hukum/Sosial/ Politik",
+    "tugas_jabatan": "Melakukan kegiatan dukungan teknis dalam pelaksanaan penyelesaian kasus pelanggaran Hak Asasi Manusia.",
+    "kedudukan_jabatan": "Komnas HAM",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 120,
+    "instansi_teknis": "Komnas HAM",
+    "nomenklatur": "Pemantau Aktivitas Hak Asasi Manusia.",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empatbidang ) Hukum/Sosial/ Politik",
+    "tugas_jabatan": "Melakukan kegiatan tindak lanjut pengaduan masyarakat terkait pelanggaran Hak Asasi Manusia dibidang penegakan Hak Asasi Manusia dan penyuluhan ilmu pengetahuan di bidang hak-hak sipil, politik, ekonomi. dan sosial",
+    "kedudukan_jabatan": "Komnas HAM",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 121,
+    "instansi_teknis": "Kementerian Ketenagakerjaan",
+    "nomenklatur": "Pengawas Kesehatan dan Keselamatan Kerja",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Teknik Industri/Manajemen/Psikologi/Kesehatan Masyarakat/Kesehatan Lingkungan atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan pengawasan ketenagakerjaan dan keselamatan kesehatan kerja",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 122,
+    "instansi_teknis": "Setjen DPR",
+    "nomenklatur": "Penata Acara",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Komunikasi/Broadcasting atau bidang yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melaksanakan kegiatan produksi suatu acara dalam bentuk desain dan pengelolaan program acara secara keseluruhan",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 123,
+    "instansi_teknis": "Setjen DPR",
+    "nomenklatur": "Jurnalis",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang Sosial Politik/Komunikasi/Jurnalistik atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan jurnalistik dalam menghimpun bahan pemberitaan dan mendukung kegiatan program dan produksi acara",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 124,
+    "instansi_teknis": "Setjen DPR",
+    "nomenklatur": "Pengelola Siaran",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang Komunikasi/Penyiaran/ Broadcasting/Manajemen atau bidang yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melaksanakan kegiatan penyuntingan materi produksi serta penyiapan, pemeriksaan, dan pengoperasian aplikasi grafis dalam mendukung kegiatan pemberitaan",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 125,
+    "instansi_teknis": "Setjen DPR",
+    "nomenklatur": "Penata Kelola Sistem Jaringan Penyiaran",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Komunikasi/Broadcasting atau bidang yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan pengelolaan sistem Jaringan penyiaran dalam rangka mendukung kelancaran pelaksanaan pengelolan berita",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 126,
+    "instansi_teknis": "Setjen DPR",
+    "nomenklatur": "Pengelola Teknik Televisi dan Radio",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang Manajemen/ Administrasi/Pemerintahan/ Teknik Infomatika/ Manajemen Teknik Infomatika atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan pengelolaan pelaksanaan produksi program televisi dan radio dalam studio",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 127,
+    "instansi_teknis": "Kementerian Energi dan Sumber Daya Mineral",
+    "nomenklatur": "Operator Kilang dan Utilitas",
+    "kualifikasi_pendidikan_minimal": "SLTA/SMK/DI/D-2 (Diploma-Dua)/D-3 (Diploma-Tiga bidang yang dibutuhkan atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan pengoperasian, pemeriksaan dan pemeliharaan peralatan teknis serta penunjang kilang dan utilitas sebagai sarana penunjang pelatihan dan sertifikasi kompetensi bidang migas",
+    "kedudukan_jabatan": "Instansi Pemerintah.",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 128,
+    "instansi_teknis": "Kementerian Energi dan Sumber Daya Mineral",
+    "nomenklatur": "Operator Pemboran",
+    "kualifikasi_pendidikan_minimal": "SLTA/DI/ D-2 (Diploma-Dua)/D-3 (Diploma-Tiga) bidang yang dibutuhkan atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan pengeboran, pemeriksaan, dan pemeliharaan peralatan atau perlengkapan pemboran",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 129,
+    "instansi_teknis": "Kementerian Energi dan Sumber Daya Mineral",
+    "nomenklatur": "Pemantau Gunung Api",
+    "kualifikasi_pendidikan_minimal": "SLTA/SMK/DI/ D-2 (Diploma-Dua)/D-3 (Diploma-Tiga) bidang Geologi atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan pemantauan dan pengukuran gejala aktivitas gunung api",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 130,
+    "instansi_teknis": "Kementerian Energi dan Sumber Daya Mineral",
+    "nomenklatur": "Penyelidik Geologi",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/D-4 (Diploma-Empat) bidang Geologi atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan penyelidikan/pemetaan potensi sumber daya geologi dan kawasan rawan bencana geologi di laut dan darat",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 131,
+    "instansi_teknis": "Kementerian Energi dan Sumber Daya Mineral",
+    "nomenklatur": "Petugas Survei Geologi",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang Geologi atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan pemasangan, perbaikan dan pengecekan, serta pemeliharaan survei geologi",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 132,
+    "instansi_teknis": "Kementerian Energi dan Sumber Daya Mineral",
+    "nomenklatur": "Penata Kelola Pertambangan",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satuj/ D-4 (Diploma-Empatį bidang Teknik Pertambangan/ Teknik Geologi/ Metalurgi/Teknik Geodesi/ Teknik Geofisika/ Teknik Mesin/ Teknik Fisika/ Kimia/ Geokimia/ Geografi/Geodesi/ Kehutanan/ Hukum/ Ekonomi/ Manajemen/Akuntansi atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melaksanakan kegiatan tata kelola perizinan berusaha, tata kelola wilayah pertambangan mineral dan batubara, pembinaan, pengujian dan pengawasan terhadap pelaksanaan kegiatan pengusahaan/pemanfaatan mineral dan batubara, keteknikan, keselamatan pertambangan, pengelolaan lingkungan hidup, reklamasi, dan pasca tambang serta konservasi sumber daya mineral dan batubara",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 133,
+    "instansi_teknis": "Kementerian Energi dan Sumber Daya Mineral",
+    "nomenklatur": "Penata Kelola Usaha Ketenagalistrikan",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Teknik Elektro Arus Kuat/Teknik Tenaga Listrik/Teknik Elektro/Teknik Mesin/Teknik Industri/Ekonomi Akuntansi/Statistika atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan pengolahan data, evaluasi dokumen persyaratan administrasi dan teknis, serta melaksanakan. verifikasi lapangan atas permohonan perizinan usaha penyediaan tenaga listrik, usaha penunjang ketenagalistrikan, fasilitasi hubungan komersial, serta kegiatan pelayanan perlindungan konsumen dan usaha ketenagalistrikan",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 134,
+    "instansi_teknis": "Kementerian Energi dan Sumber Daya Mineral",
+    "nomenklatur": "Pengawas Energi Baru, Terbarukan, dan Konservasi Energi",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata Satu)/D-4 (Diploma Empat) bidang: Teknik Elektro, Teknik Sipil, Teknik Mesin, Teknik Industri, Teknik Kimia, Teknik Lingkungan atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan pengawasan pengusahaan/pemanfaatan, keteknikan, K3LL. di bidang EBT dan Pengawasan pelaksanaan Konservasi Energi",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 135,
+    "instansi_teknis": "Kementerian Energi dan Sumber Daya Mineral",
+    "nomenklatur": "Pengelola Keselamatan Ketenagalistrikan.",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat bidang Teknik Elektro Arus Kuat/Teknik Tenaga Listrik/Teknik Elektro/Teknik Mesin/Teknik Fisika atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan pengelolaan dan pengawasan atas penerapan Sistem Manajemen Keselamatan Ketenagalistrikan (SMK2) pada instalasi penyediaan dan pemanfaatan tenaga listrik",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 136,
+    "instansi_teknis": "Kementerian Energi dan Sumber Daya Mineral",
+    "nomenklatur": "Penata Kelola Kegiatan Usaha Hilir Minyak dan Gas Bumi",
+    "kualifikasi_pendidikan_minimal": "8-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Manajemen/Teknik Pertambangan/Teknik Perminyakan/Teknik Geologi/bidang Geologi/ Geodesi/ Geofisika/Geokimia/Teknik Kimia atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan pengelolaan pengangkutan, penyimpanan, niaga dan tata kelola kegiatan usaha minyak dan gas bumi serta harga dan subsidi bahan bakar",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 137,
+    "instansi_teknis": "Kementerian Energi dan Sumber Daya Mineral",
+    "nomenklatur": "Penata Kelola Keteknikan, Standardisasi, dan Keselamatan Minyak dan Gas Bumi",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Teknik Pertambangan/ Teknik Perminyakan/Teknik Geologi/ Geologi/Geodesi/Geofisika/ Geokimia/ Pertambangan/Perminyakan atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan standardisasi, keteknikan, keselamatan lingkungan, keselamatan hulu, keselamatan hilir dan usaha penunjang minyak dan gas bumi",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 138,
+    "instansi_teknis": "Kementerian Energi dan Sumber Daya Mineral",
+    "nomenklatur": "Penata Kelola Kegiatan Usaha Hulu Migas",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Geologi/ Geodesi/ Geofisika/ Geokimia/ Pertambangan/Perminyakan/Teknik Perminyakan/ Teknik Geologi/ Teknik Geofisika/ Teknik Geodesi/ Teknik Mesin atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan penataan dan pengelolaan pengembangan wilayah kerja konvensional dan non konvesional, pengawasan eksplorasi, penilaian usaha hulu dan pengawasan eksploitasi minyak dan gas bumi",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 139,
+    "instansi_teknis": "Kementerian Energi dan Sumber Daya Mineral",
+    "nomenklatur": "Penata Kelola Barang dan Jasa Kegiatan Operasi Minyak dan Gas Bumi",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satuj/ D-4 (Diploma-Empat) bidang Manajemen/ Teknik Pertambangan/Teknik Geologi/ Teknik Kimia/ Teknik Fisika atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan pemberdayaan potensi barang dan jasa dalam negeri pada kegiatan operasi minyak dan gas bumi",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 140,
+    "instansi_teknis": "Kementerian Pertahanan",
+    "nomenklatur": "Pengelola Senjata Api",
+    "kualifikasi_pendidikan_minimal": "D-III (Diploma-Tiga) bidang Hukum/Sosial dan Politik/Politik/Ketahanan Nasional/Pemerintahan",
+    "tugas_jabatan": "Melakukan kegiataan pengelolaan, penggunaan, pendistribusian, serta pelatihan terkait penggunaan senjata api dan amunisinya",
+    "kedudukan_jabatan": "Instansi Pemerintah Tertentu",
+    "status": { "pns": true, "pppk": false }
+  },
+  {
+    "no": 141,
+    "instansi_teknis": "Kementerian Pertahanan",
+    "nomenklatur": "Fasilitator Bela Negara",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang Pertahanan/Ekonomi/Manajemen/Akuntansi/Ekonomi Studi Pembangunan/Sosial dan Politik/Administrasi Negara/Administrasi Pemerintahan/Kebijakan Publik/Hukum/Komunikasi atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan fasilitasi, koordinasi, pengkajian, identifikasi, pengolahan, kompilasi data atau bahan informasi di bidang bela negara",
+    "kedudukan_jabatan": "Kementerian Pertahanan",
+    "status": { "pns": true, "pppk": false }
+  },
+  {
+    "no": 142,
+    "instansi_teknis": "Badan Narkotika Nasional",
+    "nomenklatur": "Penata Pemberantasan Narkotika",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu)/ D-4 (Diploma-Empat) bidang yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan penyelidikan dan penyidikan atas jaringan penyalahgunaan peredaran gelap narkotika, prekursor, psikotropika, dan bahan adiktif lainnya kecuali bahan adiktif untuk tembakau dan alkohol",
+    "kedudukan_jabatan": "Badan Narkotika Nasional",
+    "status": { "pns": true, "pppk": false }
+  },
+  {
+    "no": 143,
+    "instansi_teknis": "Badan Pengawas Obat dan Makanan",
+    "nomenklatur": "Penata Kelola Obat dan Makanan",
+    "kualifikasi_pendidikan_minimal": "S-1 (Strata-Satu bidang Ilmu Alam/Teknik atau rekayasa/llmu Sosial/Kesehatan dan jejaring keilmuan multi, inter atau trans disiplin. atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan pelaksanaan Pengawasan Farmasi dan Makanan yang meliputi pengujian laboratorium, pemeriksaan, penilaian, penyuluhan, pemantauan, dan penyidikan di bidang obat dan makanan",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  },
+  {
+    "no": 144,
+    "instansi_teknis": "Badan Pengawas Obat dan Makanan",
+    "nomenklatur": "Asisten Kelola Obat dan Makanan",
+    "kualifikasi_pendidikan_minimal": "Sekolah Menegah Farmasi/Sekolah Kejuruan Farmasi dan Kesehatan/D-3 (Diploma Tiga) bidang ilmu alam, teknik atau rekayasa, ilmu sosial, kesehatan, dan jejaring keilmuan multi, inter atau trans disiplin atau bidang lain yang relevan dengan tugas jabatan",
+    "tugas_jabatan": "Melakukan kegiatan penyiapan pelaksanaan Pengawasan Farmasi dan Makanan",
+    "kedudukan_jabatan": "Instansi Pemerintah",
+    "status": { "pns": true, "pppk": true }
+  }
+]
