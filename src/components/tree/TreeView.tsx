@@ -175,7 +175,6 @@ const TreeRow: React.FC<TreeRowProps> = ({
                 onStartRename(node.id);
               }}
             >
-              {node.nomor ? `${node.nomor} · ` : ''}
               {node.nama}
             </span>
           )}

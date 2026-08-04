@@ -26,7 +26,7 @@ export const ParentSelect: React.FC<ParentSelectProps> = ({ node }) => {
       .map(n => ({
         node: n,
         depth: depthOf(nodes, edges, n.id),
-        label: `${n.nomor ? n.nomor + ' · ' : ''}${n.nama}`,
+        label: n.nama,
       }))
       .sort((a, b) => {
         // Unit nodes sort above position nodes
@@ -40,11 +40,7 @@ export const ParentSelect: React.FC<ParentSelectProps> = ({ node }) => {
   const filteredParents = useMemo(() => {
     if (!searchTerm.trim()) return validParents;
     const term = searchTerm.toLowerCase();
-    return validParents.filter(
-      p =>
-        p.node.nama.toLowerCase().includes(term) ||
-        p.node.nomor.toLowerCase().includes(term)
-    );
+    return validParents.filter(p => p.node.nama.toLowerCase().includes(term));
   }, [validParents, searchTerm]);
 
   return (

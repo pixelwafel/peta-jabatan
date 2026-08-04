@@ -78,7 +78,6 @@ export const UnplacedPanel: React.FC = () => {
                     <FileText className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
                   )}
                   <span className="font-semibold text-slate-200 truncate group-hover:text-blue-300">
-                    {node.nomor ? `${node.nomor} · ` : ''}
                     {node.nama}
                   </span>
                 </div>
