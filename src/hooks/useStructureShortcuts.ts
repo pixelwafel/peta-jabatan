@@ -9,7 +9,8 @@ import { hierarchyEdges } from '@/utils/edges';
  * itu konsep kanvas, bukan struktur.
  */
 export function useStructureShortcuts(): void {
-  const edges = useProjectStore(s => s.project?.edges ?? []);
+  const project = useProjectStore(s => s.project);
+  const edges = project?.edges ?? [];
   const addNode = useProjectStore(s => s.addNode);
   const duplicateNode = useProjectStore(s => s.duplicateNode);
   const deleteNode = useProjectStore(s => s.deleteNode);
