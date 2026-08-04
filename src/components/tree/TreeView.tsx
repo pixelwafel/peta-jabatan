@@ -24,6 +24,7 @@ import {
   UserCog,
   Lock,
   Unlock,
+  Layers,
 } from 'lucide-react';
 
 type DropPosition = 'before' | 'after' | 'inside';
@@ -66,7 +67,7 @@ interface TreeRowProps {
   onConfirmAdd: (nodeId: string, kind: AddKind, type: NodeType) => void;
   onDuplicate: (id: string) => void;
   onDelete: (id: string) => void;
-  onToggleLock: (id: string, nextLocked: boolean) => void;
+  onToggleLock: (id: string, nextLocked: boolean, cascade?: boolean) => void;
   onDragStartRow: (id: string) => void;
   onDragOverRow: (id: string, position: DropPosition) => void;
   onDragEndRow: () => void;
@@ -145,8 +146,12 @@ const TreeRow: React.FC<TreeRowProps> = ({
   const hasChildren = treeNode.children.length > 0;
   const isEditing = editingId === node.id;
   const isDropTarget = dropIndicator?.id === node.id;
+  // Kunci individual per node — tidak ada lagi "terkunci otomatis" dari
+  // leluhur, jadi locked === ownLocked (lockedMap disamakan langsung).
   const locked = lockedMap.get(node.id) ?? false;
-  const ownLocked = node.locked === true;
+  const ownLocked = locked;
+  // parentLocked = parent langsung terkunci — dipakai untuk proteksi struktural
+  // (tidak bisa restrukturisasi anak dari Unit yang terkunci), bukan pewarisan.
   const parentLocked = parentLockedMap.get(node.id) ?? false;
 
   // Calculate figures summary
@@ -248,23 +253,33 @@ const TreeRow: React.FC<TreeRowProps> = ({
           {!isEditing && (
             <div className="hidden group-hover:flex items-center space-x-0.5 flex-shrink-0">
               <button
-                title={
-                  ownLocked
-                    ? 'Buka kunci node ini'
-                    : locked
-                    ? 'Terkunci otomatis (unit induk terkunci) — klik untuk mengunci eksplisit'
-                    : 'Kunci node ini'
-                }
+                title={ownLocked ? 'Buka kunci node ini' : 'Kunci node ini'}
                 onClick={e => {
                   e.stopPropagation();
                   onToggleLock(node.id, !ownLocked);
                 }}
                 className={`p-0.5 hover:bg-slate-700 rounded ${
-                  ownLocked ? 'text-amber-400' : locked ? 'text-slate-500' : 'text-slate-400'
+                  ownLocked ? 'text-amber-400' : 'text-slate-400'
                 }`}
               >
                 {locked ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
               </button>
+              {hasChildren && (
+                <button
+                  title={
+                    ownLocked
+                      ? 'Buka kunci node ini beserta seluruh turunannya'
+                      : 'Kunci node ini beserta seluruh turunannya'
+                  }
+                  onClick={e => {
+                    e.stopPropagation();
+                    onToggleLock(node.id, !ownLocked, true);
+                  }}
+                  className="p-0.5 hover:bg-slate-700 rounded text-slate-400"
+                >
+                  <Layers className="w-3 h-3" />
+                </button>
+              )}
               <button
                 title={locked ? 'Node terkunci' : 'Tambah anak'}
                 disabled={locked}
@@ -323,10 +338,8 @@ const TreeRow: React.FC<TreeRowProps> = ({
         <div className="flex items-center space-x-1 flex-shrink-0">
           {/* Lock indicator — selalu terlihat, tidak cuma saat hover */}
           {locked && (
-            <span title={ownLocked ? 'Terkunci' : 'Terkunci (mengikuti unit induk)'}>
-              <Lock
-                className={`w-3 h-3 flex-shrink-0 ${ownLocked ? 'text-amber-400' : 'text-slate-500'}`}
-              />
+            <span title="Terkunci">
+              <Lock className="w-3 h-3 flex-shrink-0 text-amber-400" />
             </span>
           )}
 
@@ -424,8 +437,7 @@ export const TreeView: React.FC = () => {
   const tree = useMemo(() => buildTree(nodes, edges), [nodes, edges]);
   const nodeByIdMap = useMemo(() => new Map(nodes.map(n => [n.id, n])), [nodes]);
 
-  // Kunci di level Unit otomatis melindungi seluruh cabang di bawahnya —
-  // dihitung sekali di sini (bukan per-baris) supaya efisien.
+  // Dihitung sekali di sini (bukan per-baris) supaya efisien.
   const lockedMap = useMemo(() => {
     const map = new Map<string, boolean>();
     for (const n of nodes) {
@@ -504,8 +516,8 @@ export const TreeView: React.FC = () => {
     setAddMenu(null);
   };
 
-  const handleToggleLock = (nodeId: string, nextLocked: boolean) => {
-    setLocked(nodeId, nextLocked);
+  const handleToggleLock = (nodeId: string, nextLocked: boolean, cascade?: boolean) => {
+    setLocked(nodeId, nextLocked, { cascade });
   };
 
   const handleDrop = (targetId: string, position: DropPosition) => {

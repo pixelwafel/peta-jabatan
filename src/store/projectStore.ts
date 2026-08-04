@@ -5,7 +5,14 @@ import { OrgNode, NodeType, Rumpun, Rincian, KepalaUnit } from '@/models/node';
 import { uuid } from '@/utils/uuid';
 import { canSetParent, isLocked, isSubtreeLocked } from '@/selectors/guards';
 import { hierarchyEdges } from '@/utils/edges';
-import { childrenOf, subtreeOf, designatedRoot, rootNodes, parentOf } from '@/selectors/navigation';
+import {
+  childrenOf,
+  subtreeOf,
+  descendantsOf,
+  designatedRoot,
+  rootNodes,
+  parentOf,
+} from '@/selectors/navigation';
 import { formatNomor } from '@/utils/numbering';
 import { useHistoryStore } from './historyStore';
 import { useUiStore } from './uiStore';
@@ -56,9 +63,12 @@ export interface ProjectState {
   // Kepala unit (posisi struktural, melekat di node Unit — bukan node terpisah)
   setKepalaUnit: (nodeId: string, patch: Partial<KepalaUnit> | null) => void;
 
-  // Kunci node — mencegah edit/hapus/pindah tidak sengaja. Kunci di Unit
-  // otomatis melindungi seluruh cabang di bawahnya (lihat selectors/guards.ts).
-  setLocked: (nodeId: string, locked: boolean) => void;
+  // Kunci node — mencegah edit/hapus/pindah tidak sengaja. Bersifat individual
+  // per node (lihat selectors/guards.ts). `cascade: true` adalah shortcut untuk
+  // menerapkan status kunci yang sama ke seluruh descendant sekaligus (mis.
+  // "kunci semua" pada level OPD/Unit) — tiap node tetap bisa dibuka/dikunci
+  // satu-satu sesudahnya karena tidak ada pewarisan.
+  setLocked: (nodeId: string, locked: boolean, opts?: { cascade?: boolean }) => void;
 
   // Layout & Position
   moveNodes: (
@@ -540,11 +550,20 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     });
   },
 
-  setLocked: (nodeId, locked) => {
+  setLocked: (nodeId, locked, opts) => {
+    const current = get().project;
+    const ids = new Set([nodeId]);
+    if (opts?.cascade && current) {
+      for (const d of descendantsOf(current.nodes, current.edges, nodeId)) {
+        ids.add(d.id);
+      }
+    }
+
     get().commit(locked ? 'Kunci node' : 'Buka kunci node', draft => {
-      const node = draft.nodes.find(n => n.id === nodeId);
-      if (node) {
-        node.locked = locked;
+      for (const n of draft.nodes) {
+        if (ids.has(n.id)) {
+          n.locked = locked;
+        }
       }
     });
   },

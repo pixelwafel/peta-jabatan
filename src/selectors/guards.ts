@@ -1,6 +1,6 @@
 import { OrgNode } from '@/models/node';
 import { OrgEdge } from '@/models/edge';
-import { descendantsOf, childrenOf, ancestorsOf } from './navigation';
+import { descendantsOf, childrenOf } from './navigation';
 
 /**
  * Invariant 4: No cycles in hierarchy edges.
@@ -24,19 +24,18 @@ export function canSetParent(
 }
 
 /**
- * Terkunci sendiri, ATAU salah satu leluhurnya terkunci (kunci di level Unit
- * otomatis melindungi seluruh cabang di bawahnya). Tidak menulis `locked` ke
- * tiap descendant — dihitung on-the-fly supaya membuka kunci unit induk
- * otomatis membuka semua yang cuma "terlindungi ikutan", sementara node yang
- * dikunci sendiri (locked eksplisit) tetap terkunci.
+ * Kunci bersifat individual per node — tidak diwarisi dari leluhur. Mengunci
+ * sebuah Unit/OPD tidak membuat descendant-nya ikut terkunci; itu hanya
+ * dicapai lewat aksi cascade terpisah (lihat `setLocked(..., { cascade: true })`
+ * di projectStore) yang menulis `locked: true` eksplisit ke tiap descendant,
+ * sehingga tiap node tetap bisa dibuka kuncinya satu-satu.
  */
-export function isLocked(nodes: OrgNode[], edges: OrgEdge[], nodeId: string): boolean {
+export function isLocked(nodes: OrgNode[], _edges: OrgEdge[], nodeId: string): boolean {
   const node = nodes.find(n => n.id === nodeId);
-  if (node?.locked) return true;
-  return ancestorsOf(nodes, edges, nodeId).some(a => a.locked);
+  return node?.locked === true;
 }
 
-/** true kalau node itu sendiri ATAU salah satu descendant-nya terkunci sendiri. */
+/** true kalau node itu sendiri ATAU salah satu descendant-nya terkunci. */
 export function isSubtreeLocked(nodes: OrgNode[], edges: OrgEdge[], nodeId: string): boolean {
   if (isLocked(nodes, edges, nodeId)) return true;
   return descendantsOf(nodes, edges, nodeId).some(d => d.locked);

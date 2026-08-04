@@ -77,8 +77,8 @@ export const UnitCard: React.FC<NodeCardProps> = memo(
 
             <div className="flex items-center space-x-1 flex-shrink-0">
               {locked && (
-                <span title={node.locked ? 'Terkunci' : 'Terkunci (mengikuti unit induk)'}>
-                  <Lock className={`w-3.5 h-3.5 ${node.locked ? 'text-amber-400' : 'text-slate-500'}`} />
+                <span title="Terkunci">
+                  <Lock className="w-3.5 h-3.5 text-amber-400" />
                 </span>
               )}
               {hasFindings && <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />}
