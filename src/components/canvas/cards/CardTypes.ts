@@ -8,6 +8,7 @@ export interface NodeCardData {
   childCount: number;
   hasFindings: boolean;
   showJenjang: boolean;
+  locked: boolean; // efektif — sendiri ATAU mengikuti unit induk yang terkunci
 }
 
 export interface NodeCardProps {

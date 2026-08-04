@@ -1,13 +1,13 @@
 import React, { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { AlertTriangle, UserCheck } from 'lucide-react';
+import { AlertTriangle, UserCheck, Lock } from 'lucide-react';
 import { NodeCardProps } from './CardTypes';
 import { kategoriWarna, jenjangLabel, jenjangSingkatan, getKategori } from '@/config/resolver';
 import { NODE_W } from '@/utils/layout';
 
 export const JabatanCard: React.FC<NodeCardProps> = memo(
   function JabatanCard({ data, selected }) {
-    const { node, totals, hasFindings, showJenjang } = data;
+    const { node, totals, hasFindings, showJenjang, locked } = data;
 
     const accentColor = kategoriWarna(node);
     const kategori = getKategori(node.kategoriId);
@@ -68,11 +68,18 @@ export const JabatanCard: React.FC<NodeCardProps> = memo(
               </p>
             </div>
 
-            {hasFindings ? (
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
-            ) : (
-              <UserCheck className="w-3.5 h-3.5 text-slate-600 flex-shrink-0 mt-0.5" />
-            )}
+            <div className="flex items-center space-x-1 flex-shrink-0 mt-0.5">
+              {locked && (
+                <span title={node.locked ? 'Terkunci' : 'Terkunci (mengikuti unit induk)'}>
+                  <Lock className={`w-3.5 h-3.5 ${node.locked ? 'text-amber-400' : 'text-slate-500'}`} />
+                </span>
+              )}
+              {hasFindings ? (
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+              ) : (
+                <UserCheck className="w-3.5 h-3.5 text-slate-600" />
+              )}
+            </div>
           </div>
 
           {/* Node Totals */}
@@ -105,5 +112,6 @@ export const JabatanCard: React.FC<NodeCardProps> = memo(
     prev.data.totals.eksisting === next.data.totals.eksisting &&
     prev.data.hasFindings === next.data.hasFindings &&
     prev.data.showJenjang === next.data.showJenjang &&
+    prev.data.locked === next.data.locked &&
     prev.selected === next.selected
 );

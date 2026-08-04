@@ -3,7 +3,7 @@ import { produceWithPatches, enablePatches, applyPatches, Patch } from 'immer';
 import { Project, ProjectMeta, CustomAttribute } from '@/models/project';
 import { OrgNode, NodeType, Rumpun, Rincian, KepalaUnit } from '@/models/node';
 import { uuid } from '@/utils/uuid';
-import { canSetParent } from '@/selectors/guards';
+import { canSetParent, isLocked, isSubtreeLocked } from '@/selectors/guards';
 import { hierarchyEdges } from '@/utils/edges';
 import { childrenOf, subtreeOf, designatedRoot, rootNodes, parentOf } from '@/selectors/navigation';
 import { formatNomor } from '@/utils/numbering';
@@ -55,6 +55,10 @@ export interface ProjectState {
 
   // Kepala unit (posisi struktural, melekat di node Unit — bukan node terpisah)
   setKepalaUnit: (nodeId: string, patch: Partial<KepalaUnit> | null) => void;
+
+  // Kunci node — mencegah edit/hapus/pindah tidak sengaja. Kunci di Unit
+  // otomatis melindungi seluruh cabang di bawahnya (lihat selectors/guards.ts).
+  setLocked: (nodeId: string, locked: boolean) => void;
 
   // Layout & Position
   moveNodes: (
@@ -130,6 +134,10 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     const id = uuid();
     const currentProject = get().project;
 
+    if (currentProject && parentId && isLocked(currentProject.nodes, currentProject.edges, parentId)) {
+      return ''; // Unit induk terkunci — tidak bisa menambah anak
+    }
+
     // Helper to calculate position below parent
     let pos = position;
     if (!pos && currentProject) {
@@ -187,6 +195,13 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   updateNode: (id, patch, txId) => {
+    const current = get().project;
+    const patchKeys = Object.keys(patch);
+    const onlyCollapsed = patchKeys.length === 1 && patchKeys[0] === 'collapsed';
+    if (!onlyCollapsed && current && isLocked(current.nodes, current.edges, id)) {
+      return; // Node terkunci — hanya expand/collapse (state UI) yang tetap diizinkan
+    }
+
     get().commit(
       'Ubah node',
       draft => {
@@ -206,6 +221,14 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   deleteNode: (id, mode) => {
     const current = get().project;
     if (!current) return;
+
+    if (
+      mode === 'node-only'
+        ? isLocked(current.nodes, current.edges, id)
+        : isSubtreeLocked(current.nodes, current.edges, id)
+    ) {
+      return; // Node (atau ada keturunan) terkunci
+    }
 
     if (mode === 'node-only') {
       // Direct children reattached to deleted node's parent (if any)
@@ -306,6 +329,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   setNodeType: (id, type) => {
+    const current = get().project;
+    if (current && isLocked(current.nodes, current.edges, id)) return;
+
     get().commit('Ubah tipe node', draft => {
       const node = draft.nodes.find(n => n.id === id);
       if (node) {
@@ -335,6 +361,15 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       return; // Cycle guard
     }
 
+    const oldParentId = parentOf(current.nodes, current.edges, childId)?.id ?? null;
+    if (
+      isLocked(current.nodes, current.edges, childId) ||
+      (oldParentId && isLocked(current.nodes, current.edges, oldParentId)) ||
+      (parentId && isLocked(current.nodes, current.edges, parentId))
+    ) {
+      return; // Node atau salah satu unit induk (lama/baru) terkunci
+    }
+
     get().commit('Ubah parent', draft => {
       // Invariant 5: remove existing hierarchy edge targeting childId
       draft.edges = draft.edges.filter(
@@ -361,6 +396,14 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     }
 
     const oldParentId = parentOf(current.nodes, current.edges, nodeId)?.id ?? null;
+
+    if (
+      isLocked(current.nodes, current.edges, nodeId) ||
+      (oldParentId && isLocked(current.nodes, current.edges, oldParentId)) ||
+      (targetParentId && isLocked(current.nodes, current.edges, targetParentId))
+    ) {
+      return; // Node atau salah satu unit induk (lama/baru) terkunci
+    }
 
     const siblingsOf = (parentId: string | null) =>
       (parentId
@@ -398,6 +441,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   addRincian: (nodeId, jenjangId) => {
+    const current = get().project;
+    if (current && isLocked(current.nodes, current.edges, nodeId)) return;
+
     get().commit('Tambah rincian', draft => {
       const node = draft.nodes.find(n => n.id === nodeId);
       if (node && node.type === 'jabatan') {
@@ -412,6 +458,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   updateRincian: (nodeId, rincianId, patch, txId) => {
+    const current = get().project;
+    if (current && isLocked(current.nodes, current.edges, nodeId)) return;
+
     get().commit(
       'Ubah rincian',
       draft => {
@@ -428,6 +477,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   removeRincian: (nodeId, rincianId) => {
+    const current = get().project;
+    if (current && isLocked(current.nodes, current.edges, nodeId)) return;
+
     get().commit('Hapus rincian', draft => {
       const node = draft.nodes.find(n => n.id === nodeId);
       if (node) {
@@ -437,6 +489,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   setRumpun: (nodeId, rumpun) => {
+    const current = get().project;
+    if (current && isLocked(current.nodes, current.edges, nodeId)) return;
+
     get().commit('Ubah rumpun', draft => {
       const node = draft.nodes.find(n => n.id === nodeId);
       if (node) {
@@ -446,6 +501,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   setKategori: (nodeId, kategoriId) => {
+    const current = get().project;
+    if (current && isLocked(current.nodes, current.edges, nodeId)) return;
+
     get().commit('Ubah kategori', draft => {
       const node = draft.nodes.find(n => n.id === nodeId);
       if (node) {
@@ -459,6 +517,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   setKepalaUnit: (nodeId, patch) => {
+    const current = get().project;
+    if (current && isLocked(current.nodes, current.edges, nodeId)) return;
+
     get().commit('Ubah kepala unit', draft => {
       const node = draft.nodes.find(n => n.id === nodeId);
       if (!node || node.type !== 'unit') return;
@@ -476,6 +537,15 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         kode: node.kepalaUnit?.kode,
         ...patch,
       };
+    });
+  },
+
+  setLocked: (nodeId, locked) => {
+    get().commit(locked ? 'Kunci node' : 'Buka kunci node', draft => {
+      const node = draft.nodes.find(n => n.id === nodeId);
+      if (node) {
+        node.locked = locked;
+      }
     });
   },
 

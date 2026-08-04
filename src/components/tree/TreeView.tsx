@@ -6,6 +6,8 @@ import { buildTree } from '@/selectors/tree';
 import { TreeNode } from '@/models/derived';
 import { OrgNode, NodeType } from '@/models/node';
 import { ancestorsOf, childrenOf, parentOf, rootNodes } from '@/selectors/navigation';
+import { isLocked } from '@/selectors/guards';
+import { hierarchyEdges } from '@/utils/edges';
 import { NODE_W, nodeHeight } from '@/utils/layout';
 import { useReactFlow } from '@xyflow/react';
 import { useStructureShortcuts } from '@/hooks/useStructureShortcuts';
@@ -20,6 +22,8 @@ import {
   Copy,
   Trash2,
   UserCog,
+  Lock,
+  Unlock,
 } from 'lucide-react';
 
 type DropPosition = 'before' | 'after' | 'inside';
@@ -47,6 +51,8 @@ function computeDropPosition(e: React.DragEvent, rect: DOMRect): DropPosition {
 interface TreeRowProps {
   treeNode: TreeNode;
   nodeByIdMap: Map<string, OrgNode>;
+  lockedMap: Map<string, boolean>;
+  parentLockedMap: Map<string, boolean>;
   selectedIds: string[];
   editingId: string | null;
   dropIndicator: DropIndicator | null;
@@ -60,6 +66,7 @@ interface TreeRowProps {
   onConfirmAdd: (nodeId: string, kind: AddKind, type: NodeType) => void;
   onDuplicate: (id: string) => void;
   onDelete: (id: string) => void;
+  onToggleLock: (id: string, nextLocked: boolean) => void;
   onDragStartRow: (id: string) => void;
   onDragOverRow: (id: string, position: DropPosition) => void;
   onDragEndRow: () => void;
@@ -109,6 +116,8 @@ const AddTypeMenu: React.FC<AddTypeMenuProps> = ({ x, y, onPick }) =>
 const TreeRow: React.FC<TreeRowProps> = ({
   treeNode,
   nodeByIdMap,
+  lockedMap,
+  parentLockedMap,
   selectedIds,
   editingId,
   dropIndicator,
@@ -122,6 +131,7 @@ const TreeRow: React.FC<TreeRowProps> = ({
   onConfirmAdd,
   onDuplicate,
   onDelete,
+  onToggleLock,
   onDragStartRow,
   onDragOverRow,
   onDragEndRow,
@@ -135,6 +145,9 @@ const TreeRow: React.FC<TreeRowProps> = ({
   const hasChildren = treeNode.children.length > 0;
   const isEditing = editingId === node.id;
   const isDropTarget = dropIndicator?.id === node.id;
+  const locked = lockedMap.get(node.id) ?? false;
+  const ownLocked = node.locked === true;
+  const parentLocked = parentLockedMap.get(node.id) ?? false;
 
   // Calculate figures summary
   const keb = node.rincian.reduce((acc, r) => acc + r.kebutuhan, 0);
@@ -143,7 +156,7 @@ const TreeRow: React.FC<TreeRowProps> = ({
   return (
     <div className="space-y-0.5 select-none font-mono">
       <div
-        draggable={!isEditing}
+        draggable={!isEditing && !locked && !parentLocked}
         onDragStart={e => {
           e.dataTransfer.setData('text/plain', node.id);
           e.dataTransfer.effectAllowed = 'move';
@@ -223,6 +236,7 @@ const TreeRow: React.FC<TreeRowProps> = ({
               className="truncate min-w-0 shrink"
               onDoubleClick={e => {
                 e.stopPropagation();
+                if (locked) return;
                 onStartRename(node.id);
               }}
             >
@@ -234,22 +248,42 @@ const TreeRow: React.FC<TreeRowProps> = ({
           {!isEditing && (
             <div className="hidden group-hover:flex items-center space-x-0.5 flex-shrink-0">
               <button
-                title="Tambah anak"
+                title={
+                  ownLocked
+                    ? 'Buka kunci node ini'
+                    : locked
+                    ? 'Terkunci otomatis (unit induk terkunci) — klik untuk mengunci eksplisit'
+                    : 'Kunci node ini'
+                }
+                onClick={e => {
+                  e.stopPropagation();
+                  onToggleLock(node.id, !ownLocked);
+                }}
+                className={`p-0.5 hover:bg-slate-700 rounded ${
+                  ownLocked ? 'text-amber-400' : locked ? 'text-slate-500' : 'text-slate-400'
+                }`}
+              >
+                {locked ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+              </button>
+              <button
+                title={locked ? 'Node terkunci' : 'Tambah anak'}
+                disabled={locked}
                 onClick={e => {
                   e.stopPropagation();
                   onToggleAddMenu(node.id, 'child', e.currentTarget);
                 }}
-                className="p-0.5 hover:bg-slate-700 rounded text-slate-400"
+                className="p-0.5 hover:bg-slate-700 rounded text-slate-400 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
               >
                 <Plus className="w-3 h-3" />
               </button>
               <button
-                title="Tambah sibling"
+                title={parentLocked ? 'Unit induk terkunci' : 'Tambah sibling'}
+                disabled={parentLocked}
                 onClick={e => {
                   e.stopPropagation();
                   onToggleAddMenu(node.id, 'sibling', e.currentTarget);
                 }}
-                className="p-0.5 hover:bg-slate-700 rounded text-slate-400"
+                className="p-0.5 hover:bg-slate-700 rounded text-slate-400 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
               >
                 <CornerDownRight className="w-3 h-3" />
               </button>
@@ -264,12 +298,13 @@ const TreeRow: React.FC<TreeRowProps> = ({
                 <Copy className="w-3 h-3" />
               </button>
               <button
-                title="Hapus"
+                title={locked ? 'Node terkunci' : 'Hapus'}
+                disabled={locked}
                 onClick={e => {
                   e.stopPropagation();
                   onDelete(node.id);
                 }}
-                className="p-0.5 hover:bg-slate-700 rounded text-red-400"
+                className="p-0.5 hover:bg-slate-700 rounded text-red-400 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
               >
                 <Trash2 className="w-3 h-3" />
               </button>
@@ -286,6 +321,15 @@ const TreeRow: React.FC<TreeRowProps> = ({
         </div>
 
         <div className="flex items-center space-x-1 flex-shrink-0">
+          {/* Lock indicator — selalu terlihat, tidak cuma saat hover */}
+          {locked && (
+            <span title={ownLocked ? 'Terkunci' : 'Terkunci (mengikuti unit induk)'}>
+              <Lock
+                className={`w-3 h-3 flex-shrink-0 ${ownLocked ? 'text-amber-400' : 'text-slate-500'}`}
+              />
+            </span>
+          )}
+
           {/* Figures Badge */}
           {!isUnit && node.rincian.length > 0 && (
             <span className="text-[11px] text-slate-400 bg-slate-950/60 px-1.5 py-0.5 rounded">
@@ -315,6 +359,8 @@ const TreeRow: React.FC<TreeRowProps> = ({
             key={child.id}
             treeNode={child}
             nodeByIdMap={nodeByIdMap}
+            lockedMap={lockedMap}
+            parentLockedMap={parentLockedMap}
             selectedIds={selectedIds}
             editingId={editingId}
             dropIndicator={dropIndicator}
@@ -328,6 +374,7 @@ const TreeRow: React.FC<TreeRowProps> = ({
             onConfirmAdd={onConfirmAdd}
             onDuplicate={onDuplicate}
             onDelete={onDelete}
+            onToggleLock={onToggleLock}
             onDragStartRow={onDragStartRow}
             onDragOverRow={onDragOverRow}
             onDragEndRow={onDragEndRow}
@@ -347,6 +394,7 @@ export const TreeView: React.FC = () => {
   const duplicateNode = useProjectStore(s => s.duplicateNode);
   const deleteNode = useProjectStore(s => s.deleteNode);
   const moveNode = useProjectStore(s => s.moveNode);
+  const setLocked = useProjectStore(s => s.setLocked);
   const selectedNodeIds = useUiStore(s => s.selectedNodeIds);
   const selectNodes = useUiStore(s => s.selectNodes);
   const showJenjangOnCard = useUiStore(s => s.showJenjangOnCard);
@@ -375,6 +423,24 @@ export const TreeView: React.FC = () => {
 
   const tree = useMemo(() => buildTree(nodes, edges), [nodes, edges]);
   const nodeByIdMap = useMemo(() => new Map(nodes.map(n => [n.id, n])), [nodes]);
+
+  // Kunci di level Unit otomatis melindungi seluruh cabang di bawahnya —
+  // dihitung sekali di sini (bukan per-baris) supaya efisien.
+  const lockedMap = useMemo(() => {
+    const map = new Map<string, boolean>();
+    for (const n of nodes) {
+      map.set(n.id, isLocked(nodes, edges, n.id));
+    }
+    return map;
+  }, [nodes, edges]);
+
+  const parentLockedMap = useMemo(() => {
+    const map = new Map<string, boolean>();
+    for (const e of hierarchyEdges(edges)) {
+      map.set(e.target, lockedMap.get(e.source) ?? false);
+    }
+    return map;
+  }, [edges, lockedMap]);
 
   // Posisi mode preview di canvas dihitung otomatis (Dagre) — pakai layout
   // yang sama supaya "fokus ke canvas" akurat terhadap yang benar-benar dirender.
@@ -438,6 +504,10 @@ export const TreeView: React.FC = () => {
     setAddMenu(null);
   };
 
+  const handleToggleLock = (nodeId: string, nextLocked: boolean) => {
+    setLocked(nodeId, nextLocked);
+  };
+
   const handleDrop = (targetId: string, position: DropPosition) => {
     const dId = draggedId;
     setDraggedId(null);
@@ -475,6 +545,8 @@ export const TreeView: React.FC = () => {
           key={treeNode.id}
           treeNode={treeNode}
           nodeByIdMap={nodeByIdMap}
+          lockedMap={lockedMap}
+          parentLockedMap={parentLockedMap}
           selectedIds={selectedNodeIds}
           editingId={editingId}
           dropIndicator={dropIndicator}
@@ -488,6 +560,7 @@ export const TreeView: React.FC = () => {
           onConfirmAdd={handleConfirmAdd}
           onDuplicate={id => duplicateNode(id, 'node-only')}
           onDelete={id => deleteNode(id, 'node-only')}
+          onToggleLock={handleToggleLock}
           onDragStartRow={setDraggedId}
           onDragOverRow={(id, position) => setDropIndicator({ id, position })}
           onDragEndRow={() => {

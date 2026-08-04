@@ -2,6 +2,7 @@ import React from 'react';
 import { ChevronRight, ChevronLeft, Sliders } from 'lucide-react';
 import { useUiStore } from '@/store/uiStore';
 import { useProjectStore } from '@/store/projectStore';
+import { isLocked } from '@/selectors/guards';
 import { ProjectMetaForm } from '../property/ProjectMetaForm';
 import { SingleNodeForm } from '../property/SingleNodeForm';
 import { MultiSelectionPanel } from '../property/MultiSelectionPanel';
@@ -19,6 +20,11 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({ collapsed, onToggleC
   const selectedNode = useProjectStore(s => {
     if (selectedNodeIds.length !== 1) return null;
     return s.project?.nodes.find(n => n.id === selectedNodeIds[0]) ?? null;
+  });
+
+  const selectedNodeLocked = useProjectStore(s => {
+    if (selectedNodeIds.length !== 1 || !s.project) return false;
+    return isLocked(s.project.nodes, s.project.edges, selectedNodeIds[0]);
   });
 
   if (collapsed) {
@@ -63,7 +69,9 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({ collapsed, onToggleC
         {/* Dynamic Panel Content based on selection count */}
         <div className="flex-1 min-h-0 overflow-y-auto p-3 text-xs space-y-4">
           {selectedNodeIds.length === 0 && <ProjectMetaForm />}
-          {selectedNodeIds.length === 1 && selectedNode && <SingleNodeForm node={selectedNode} />}
+          {selectedNodeIds.length === 1 && selectedNode && (
+            <SingleNodeForm node={selectedNode} locked={selectedNodeLocked} />
+          )}
           {selectedNodeIds.length > 1 && <MultiSelectionPanel />}
         </div>
       </aside>

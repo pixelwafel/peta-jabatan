@@ -7,20 +7,53 @@ import { KepalaUnitEditor } from './KepalaUnitEditor';
 import { JenjangChips } from './JenjangChips';
 import { RincianEditor } from './RincianEditor';
 import { CustomAttributesEditor } from './CustomAttributesEditor';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Lock, Unlock } from 'lucide-react';
 
 interface SingleNodeFormProps {
   node: OrgNode;
+  /** Terkunci sendiri ATAU mengikuti unit induk yang terkunci (efektif). */
+  locked: boolean;
 }
 
-export const SingleNodeForm: React.FC<SingleNodeFormProps> = ({ node }) => {
+export const SingleNodeForm: React.FC<SingleNodeFormProps> = ({ node, locked }) => {
   const updateNode = useProjectStore(s => s.updateNode);
   const setNodeType = useProjectStore(s => s.setNodeType);
+  const setLocked = useProjectStore(s => s.setLocked);
   const renumberFromStructure = useProjectStore(s => s.renumberFromStructure);
   const attributeSchema = useProjectStore(s => s.project?.attributeSchema ?? []);
 
+  const ownLocked = node.locked === true;
+
   return (
     <div className="space-y-4">
+      {/* Lock banner */}
+      <div
+        className={`flex items-center justify-between px-2.5 py-2 rounded-lg border text-xs ${
+          locked
+            ? 'bg-amber-950/30 border-amber-900/60 text-amber-300'
+            : 'bg-slate-950/40 border-slate-800 text-slate-400'
+        }`}
+      >
+        <span className="flex items-center space-x-1.5">
+          {locked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+          <span>
+            {ownLocked
+              ? 'Node ini terkunci.'
+              : locked
+              ? 'Terkunci otomatis — unit induk terkunci.'
+              : 'Node ini tidak terkunci.'}
+          </span>
+        </span>
+        <button
+          type="button"
+          onClick={() => setLocked(node.id, !ownLocked)}
+          className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded font-medium"
+        >
+          {ownLocked ? 'Buka Kunci' : 'Kunci Node'}
+        </button>
+      </div>
+
+      <fieldset disabled={locked} className="space-y-4">
       {/* Identity Section */}
       <div className="space-y-3">
         <div className="flex items-center justify-between pb-2 border-b border-slate-800">
@@ -168,6 +201,7 @@ export const SingleNodeForm: React.FC<SingleNodeFormProps> = ({ node }) => {
 
       {/* Custom Attributes Section */}
       <CustomAttributesEditor node={node} attributes={attributeSchema} />
+      </fieldset>
     </div>
   );
 };

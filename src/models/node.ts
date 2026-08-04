@@ -66,4 +66,9 @@ export interface OrgNode {
 
   // ordering
   order: number; // urutan sibling, sumber kebenaran untuk sort & renumber
+
+  // protection
+  locked?: boolean; // kalau true, blokir edit/hapus/pindah pada node ini
+  // DAN seluruh keturunannya (dihitung dari rantai leluhur, lihat
+  // selectors/guards.ts isLocked — tidak ditulis ke tiap descendant).
 }

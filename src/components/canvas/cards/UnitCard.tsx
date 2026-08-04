@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { ChevronRight, ChevronDown, Folder, AlertTriangle, UserCog } from 'lucide-react';
+import { ChevronRight, ChevronDown, Folder, AlertTriangle, UserCog, Lock } from 'lucide-react';
 import { NodeCardProps } from './CardTypes';
 import { useProjectStore } from '@/store/projectStore';
 import { NODE_W } from '@/utils/layout';
@@ -8,7 +8,7 @@ import { jenjangLabel } from '@/config/resolver';
 
 export const UnitCard: React.FC<NodeCardProps> = memo(
   function UnitCard({ data, selected }) {
-    const { node, subtotals, childCount, hasFindings } = data;
+    const { node, subtotals, childCount, hasFindings, locked } = data;
     const updateNode = useProjectStore(s => s.updateNode);
 
     const handleToggleCollapse = (e: React.MouseEvent) => {
@@ -75,9 +75,14 @@ export const UnitCard: React.FC<NodeCardProps> = memo(
               </span>
             </div>
 
-            {hasFindings && (
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-            )}
+            <div className="flex items-center space-x-1 flex-shrink-0">
+              {locked && (
+                <span title={node.locked ? 'Terkunci' : 'Terkunci (mengikuti unit induk)'}>
+                  <Lock className={`w-3.5 h-3.5 ${node.locked ? 'text-amber-400' : 'text-slate-500'}`} />
+                </span>
+              )}
+              {hasFindings && <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />}
+            </div>
           </div>
 
           {/* Kepala unit (struktural), bila diisi */}
@@ -122,5 +127,6 @@ export const UnitCard: React.FC<NodeCardProps> = memo(
     prev.data.hasFindings === next.data.hasFindings &&
     prev.data.childCount === next.data.childCount &&
     prev.data.showJenjang === next.data.showJenjang &&
+    prev.data.locked === next.data.locked &&
     prev.selected === next.selected
 );

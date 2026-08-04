@@ -19,6 +19,7 @@ import { visibleNodeIds } from '@/selectors/visibility';
 import { hierarchyEdges } from '@/utils/edges';
 import { nodeTotals, subtreeTotals } from '@/selectors/totals';
 import { childrenOf } from '@/selectors/navigation';
+import { isLocked } from '@/selectors/guards';
 import { kategoriWarna } from '@/config/resolver';
 import { useLiveLayout } from '@/hooks/useLiveLayout';
 
@@ -72,6 +73,7 @@ const InnerCanvas: React.FC = () => {
           childCount: childrenOf(nodes, edges, n.id).length,
           hasFindings: false,
           showJenjang: showJenjangOnCard,
+          locked: isLocked(nodes, edges, n.id),
         },
         selected: selectedNodeIds.includes(n.id),
       }));
