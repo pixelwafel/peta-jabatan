@@ -1,9 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
 import { buildTree } from '@/selectors/tree';
 import { TreeNode } from '@/models/derived';
-import { OrgNode } from '@/models/node';
+import { OrgNode, NodeType } from '@/models/node';
 import { ancestorsOf, childrenOf, parentOf, rootNodes } from '@/selectors/navigation';
 import { NODE_W, nodeHeight } from '@/utils/layout';
 import { useReactFlow } from '@xyflow/react';
@@ -22,10 +22,16 @@ import {
 } from 'lucide-react';
 
 type DropPosition = 'before' | 'after' | 'inside';
+type AddKind = 'child' | 'sibling';
 
 interface DropIndicator {
   id: string;
   position: DropPosition;
+}
+
+interface AddMenuState {
+  nodeId: string;
+  kind: AddKind;
 }
 
 function computeDropPosition(e: React.DragEvent, rect: DOMRect): DropPosition {
@@ -46,8 +52,9 @@ interface TreeRowProps {
   onStartRename: (id: string) => void;
   onCommitRename: (id: string, nama: string) => void;
   onCancelRename: () => void;
-  onAddChild: (id: string) => void;
-  onAddSibling: (id: string) => void;
+  addMenu: AddMenuState | null;
+  onToggleAddMenu: (nodeId: string, kind: AddKind) => void;
+  onConfirmAdd: (nodeId: string, kind: AddKind, type: NodeType) => void;
   onDuplicate: (id: string) => void;
   onDelete: (id: string) => void;
   onDragStartRow: (id: string) => void;
@@ -55,6 +62,34 @@ interface TreeRowProps {
   onDragEndRow: () => void;
   onDropRow: (id: string, position: DropPosition) => void;
 }
+
+const AddTypeMenu: React.FC<{ onPick: (type: NodeType) => void }> = ({ onPick }) => (
+  <div
+    onClick={e => e.stopPropagation()}
+    className="absolute z-20 top-full left-0 mt-1 bg-slate-800 border border-slate-700 rounded shadow-lg overflow-hidden whitespace-nowrap"
+  >
+    <button
+      onClick={e => {
+        e.stopPropagation();
+        onPick('unit');
+      }}
+      className="w-full flex items-center space-x-2 px-3 py-1.5 hover:bg-slate-700 text-slate-200 text-left text-xs"
+    >
+      <Folder className="w-3.5 h-3.5 text-blue-400" />
+      <span>Unit Organisasi</span>
+    </button>
+    <button
+      onClick={e => {
+        e.stopPropagation();
+        onPick('jabatan');
+      }}
+      className="w-full flex items-center space-x-2 px-3 py-1.5 hover:bg-slate-700 text-slate-200 text-left text-xs"
+    >
+      <FileText className="w-3.5 h-3.5 text-slate-400" />
+      <span>Jabatan</span>
+    </button>
+  </div>
+);
 
 const TreeRow: React.FC<TreeRowProps> = ({
   treeNode,
@@ -67,8 +102,9 @@ const TreeRow: React.FC<TreeRowProps> = ({
   onStartRename,
   onCommitRename,
   onCancelRename,
-  onAddChild,
-  onAddSibling,
+  addMenu,
+  onToggleAddMenu,
+  onConfirmAdd,
   onDuplicate,
   onDelete,
   onDragStartRow,
@@ -204,26 +240,36 @@ const TreeRow: React.FC<TreeRowProps> = ({
           {/* Row action buttons — visible on hover */}
           {!isEditing && (
             <div className="hidden group-hover:flex items-center space-x-0.5">
-              <button
-                title="Tambah anak"
-                onClick={e => {
-                  e.stopPropagation();
-                  onAddChild(node.id);
-                }}
-                className="p-0.5 hover:bg-slate-700 rounded text-slate-400"
-              >
-                <Plus className="w-3 h-3" />
-              </button>
-              <button
-                title="Tambah sibling"
-                onClick={e => {
-                  e.stopPropagation();
-                  onAddSibling(node.id);
-                }}
-                className="p-0.5 hover:bg-slate-700 rounded text-slate-400"
-              >
-                <CornerDownRight className="w-3 h-3" />
-              </button>
+              <div className="relative">
+                <button
+                  title="Tambah anak"
+                  onClick={e => {
+                    e.stopPropagation();
+                    onToggleAddMenu(node.id, 'child');
+                  }}
+                  className="p-0.5 hover:bg-slate-700 rounded text-slate-400"
+                >
+                  <Plus className="w-3 h-3" />
+                </button>
+                {addMenu?.nodeId === node.id && addMenu.kind === 'child' && (
+                  <AddTypeMenu onPick={type => onConfirmAdd(node.id, 'child', type)} />
+                )}
+              </div>
+              <div className="relative">
+                <button
+                  title="Tambah sibling"
+                  onClick={e => {
+                    e.stopPropagation();
+                    onToggleAddMenu(node.id, 'sibling');
+                  }}
+                  className="p-0.5 hover:bg-slate-700 rounded text-slate-400"
+                >
+                  <CornerDownRight className="w-3 h-3" />
+                </button>
+                {addMenu?.nodeId === node.id && addMenu.kind === 'sibling' && (
+                  <AddTypeMenu onPick={type => onConfirmAdd(node.id, 'sibling', type)} />
+                )}
+              </div>
               <button
                 title="Duplikat"
                 onClick={e => {
@@ -264,8 +310,9 @@ const TreeRow: React.FC<TreeRowProps> = ({
             onStartRename={onStartRename}
             onCommitRename={onCommitRename}
             onCancelRename={onCancelRename}
-            onAddChild={onAddChild}
-            onAddSibling={onAddSibling}
+            addMenu={addMenu}
+            onToggleAddMenu={onToggleAddMenu}
+            onConfirmAdd={onConfirmAdd}
             onDuplicate={onDuplicate}
             onDelete={onDelete}
             onDragStartRow={onDragStartRow}
@@ -295,6 +342,15 @@ export const TreeView: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dropIndicator, setDropIndicator] = useState<DropIndicator | null>(null);
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [addMenu, setAddMenu] = useState<AddMenuState | null>(null);
+
+  // Tutup menu pilih tipe saat klik di luar menu (menu sendiri men-stopPropagation)
+  useEffect(() => {
+    if (!addMenu) return;
+    const close = () => setAddMenu(null);
+    window.addEventListener('click', close);
+    return () => window.removeEventListener('click', close);
+  }, [addMenu]);
 
   const nodes = project?.nodes ?? [];
   const edges = project?.edges ?? [];
@@ -346,13 +402,20 @@ export const TreeView: React.FC = () => {
     setEditingId(null);
   };
 
-  const handleAddChild = (nodeId: string) => {
-    addNode({ type: 'jabatan', parentId: nodeId });
+  const handleToggleAddMenu = (nodeId: string, kind: AddKind) => {
+    setAddMenu(prev =>
+      prev?.nodeId === nodeId && prev.kind === kind ? null : { nodeId, kind }
+    );
   };
 
-  const handleAddSibling = (nodeId: string) => {
-    const parentId = parentOf(nodes, edges, nodeId)?.id;
-    addNode({ type: 'jabatan', parentId });
+  const handleConfirmAdd = (nodeId: string, kind: AddKind, type: NodeType) => {
+    if (kind === 'child') {
+      addNode({ type, parentId: nodeId });
+    } else {
+      const parentId = parentOf(nodes, edges, nodeId)?.id;
+      addNode({ type, parentId });
+    }
+    setAddMenu(null);
   };
 
   const handleDrop = (targetId: string, position: DropPosition) => {
@@ -400,8 +463,9 @@ export const TreeView: React.FC = () => {
           onStartRename={setEditingId}
           onCommitRename={handleCommitRename}
           onCancelRename={() => setEditingId(null)}
-          onAddChild={handleAddChild}
-          onAddSibling={handleAddSibling}
+          addMenu={addMenu}
+          onToggleAddMenu={handleToggleAddMenu}
+          onConfirmAdd={handleConfirmAdd}
           onDuplicate={id => duplicateNode(id, 'node-only')}
           onDelete={id => deleteNode(id, 'node-only')}
           onDragStartRow={setDraggedId}

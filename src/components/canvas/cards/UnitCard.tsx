@@ -1,4 +1,5 @@
 import React, { memo } from 'react';
+import { Handle, Position } from '@xyflow/react';
 import { ChevronRight, ChevronDown, Folder, AlertTriangle, UserCog } from 'lucide-react';
 import { NodeCardProps } from './CardTypes';
 import { useProjectStore } from '@/store/projectStore';
@@ -32,6 +33,19 @@ export const UnitCard: React.FC<NodeCardProps> = memo(
             : 'border-slate-700 hover:border-slate-600'
         }`}
       >
+        {/* Titik jangkar garis edge (tersembunyi — nodesConnectable={false},
+            di sini murni supaya React Flow punya koordinat sambungan) */}
+        <Handle
+          type="target"
+          position={Position.Top}
+          className="!opacity-0 !pointer-events-none"
+        />
+        <Handle
+          type="source"
+          position={Position.Bottom}
+          className="!opacity-0 !pointer-events-none"
+        />
+
         {/* Accent bar */}
         <div className="h-1 bg-slate-500 rounded-t-lg" />
 

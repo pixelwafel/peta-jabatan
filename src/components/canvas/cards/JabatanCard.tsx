@@ -1,4 +1,5 @@
 import React, { memo } from 'react';
+import { Handle, Position } from '@xyflow/react';
 import { AlertTriangle, UserCheck } from 'lucide-react';
 import { NodeCardProps } from './CardTypes';
 import { kategoriWarna, jenjangLabel, jenjangSingkatan, getKategori } from '@/config/resolver';
@@ -36,6 +37,19 @@ export const JabatanCard: React.FC<NodeCardProps> = memo(
             : 'border-slate-700 hover:border-slate-600'
         }`}
       >
+        {/* Titik jangkar garis edge (tersembunyi — nodesConnectable={false},
+            di sini murni supaya React Flow punya koordinat sambungan) */}
+        <Handle
+          type="target"
+          position={Position.Top}
+          className="!opacity-0 !pointer-events-none"
+        />
+        <Handle
+          type="source"
+          position={Position.Bottom}
+          className="!opacity-0 !pointer-events-none"
+        />
+
         {/* Category Accent Bar */}
         <div className="h-1 rounded-t-lg" style={{ backgroundColor: accentColor }} />
 
