@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
 import { buildTree } from '@/selectors/tree';
@@ -32,6 +33,8 @@ interface DropIndicator {
 interface AddMenuState {
   nodeId: string;
   kind: AddKind;
+  x: number;
+  y: number;
 }
 
 function computeDropPosition(e: React.DragEvent, rect: DOMRect): DropPosition {
@@ -53,7 +56,7 @@ interface TreeRowProps {
   onCommitRename: (id: string, nama: string) => void;
   onCancelRename: () => void;
   addMenu: AddMenuState | null;
-  onToggleAddMenu: (nodeId: string, kind: AddKind) => void;
+  onToggleAddMenu: (nodeId: string, kind: AddKind, anchor: HTMLElement) => void;
   onConfirmAdd: (nodeId: string, kind: AddKind, type: NodeType) => void;
   onDuplicate: (id: string) => void;
   onDelete: (id: string) => void;
@@ -63,33 +66,45 @@ interface TreeRowProps {
   onDropRow: (id: string, position: DropPosition) => void;
 }
 
-const AddTypeMenu: React.FC<{ onPick: (type: NodeType) => void }> = ({ onPick }) => (
-  <div
-    onClick={e => e.stopPropagation()}
-    className="absolute z-20 top-full left-0 mt-1 bg-slate-800 border border-slate-700 rounded shadow-lg overflow-hidden whitespace-nowrap"
-  >
-    <button
-      onClick={e => {
-        e.stopPropagation();
-        onPick('unit');
-      }}
-      className="w-full flex items-center space-x-2 px-3 py-1.5 hover:bg-slate-700 text-slate-200 text-left text-xs"
+interface AddTypeMenuProps {
+  x: number;
+  y: number;
+  onPick: (type: NodeType) => void;
+}
+
+// Portal ke document.body dengan position:fixed — supaya tidak ter-clip oleh
+// container outline (overflow-y-auto secara implisit meng-clip sumbu X juga,
+// dan panel Properti di kolom sebelah bisa menutupi menu absolute biasa).
+const AddTypeMenu: React.FC<AddTypeMenuProps> = ({ x, y, onPick }) =>
+  createPortal(
+    <div
+      onClick={e => e.stopPropagation()}
+      style={{ position: 'fixed', top: y, left: x }}
+      className="z-[999] bg-slate-800 border border-slate-700 rounded shadow-lg overflow-hidden whitespace-nowrap"
     >
-      <Folder className="w-3.5 h-3.5 text-blue-400" />
-      <span>Unit Organisasi</span>
-    </button>
-    <button
-      onClick={e => {
-        e.stopPropagation();
-        onPick('jabatan');
-      }}
-      className="w-full flex items-center space-x-2 px-3 py-1.5 hover:bg-slate-700 text-slate-200 text-left text-xs"
-    >
-      <FileText className="w-3.5 h-3.5 text-slate-400" />
-      <span>Jabatan</span>
-    </button>
-  </div>
-);
+      <button
+        onClick={e => {
+          e.stopPropagation();
+          onPick('unit');
+        }}
+        className="w-full flex items-center space-x-2 px-3 py-1.5 hover:bg-slate-700 text-slate-200 text-left text-xs"
+      >
+        <Folder className="w-3.5 h-3.5 text-blue-400" />
+        <span>Unit Organisasi</span>
+      </button>
+      <button
+        onClick={e => {
+          e.stopPropagation();
+          onPick('jabatan');
+        }}
+        className="w-full flex items-center space-x-2 px-3 py-1.5 hover:bg-slate-700 text-slate-200 text-left text-xs"
+      >
+        <FileText className="w-3.5 h-3.5 text-slate-400" />
+        <span>Jabatan</span>
+      </button>
+    </div>,
+    document.body
+  );
 
 const TreeRow: React.FC<TreeRowProps> = ({
   treeNode,
@@ -161,7 +176,7 @@ const TreeRow: React.FC<TreeRowProps> = ({
           <div className="absolute left-0 right-0 bottom-0 h-0.5 bg-blue-400" />
         )}
 
-        <div className="flex items-center space-x-1.5 min-w-0 pr-2">
+        <div className="flex items-center space-x-1.5 min-w-0 flex-1 pr-2">
           {hasChildren ? (
             <button
               onClick={e => {
@@ -205,7 +220,7 @@ const TreeRow: React.FC<TreeRowProps> = ({
             />
           ) : (
             <span
-              className="truncate"
+              className="truncate min-w-0 shrink"
               onDoubleClick={e => {
                 e.stopPropagation();
                 onStartRename(node.id);
@@ -213,6 +228,60 @@ const TreeRow: React.FC<TreeRowProps> = ({
             >
               {node.nama}
             </span>
+          )}
+
+          {/* Row action buttons — tepat di sebelah nama, muncul saat hover */}
+          {!isEditing && (
+            <div className="hidden group-hover:flex items-center space-x-0.5 flex-shrink-0">
+              <button
+                title="Tambah anak"
+                onClick={e => {
+                  e.stopPropagation();
+                  onToggleAddMenu(node.id, 'child', e.currentTarget);
+                }}
+                className="p-0.5 hover:bg-slate-700 rounded text-slate-400"
+              >
+                <Plus className="w-3 h-3" />
+              </button>
+              <button
+                title="Tambah sibling"
+                onClick={e => {
+                  e.stopPropagation();
+                  onToggleAddMenu(node.id, 'sibling', e.currentTarget);
+                }}
+                className="p-0.5 hover:bg-slate-700 rounded text-slate-400"
+              >
+                <CornerDownRight className="w-3 h-3" />
+              </button>
+              <button
+                title="Duplikat"
+                onClick={e => {
+                  e.stopPropagation();
+                  onDuplicate(node.id);
+                }}
+                className="p-0.5 hover:bg-slate-700 rounded text-slate-400"
+              >
+                <Copy className="w-3 h-3" />
+              </button>
+              <button
+                title="Hapus"
+                onClick={e => {
+                  e.stopPropagation();
+                  onDelete(node.id);
+                }}
+                className="p-0.5 hover:bg-slate-700 rounded text-red-400"
+              >
+                <Trash2 className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+
+          {addMenu?.nodeId === node.id && (
+            <AddTypeMenu
+              x={addMenu.x}
+              y={addMenu.y}
+              onPick={type => onConfirmAdd(node.id, addMenu.kind, type)}
+            />
           )}
         </div>
 
@@ -235,62 +304,6 @@ const TreeRow: React.FC<TreeRowProps> = ({
                 {node.kepalaUnit.kebutuhan}/{node.kepalaUnit.eksisting}
               </span>
             </span>
-          )}
-
-          {/* Row action buttons — visible on hover */}
-          {!isEditing && (
-            <div className="hidden group-hover:flex items-center space-x-0.5">
-              <div className="relative">
-                <button
-                  title="Tambah anak"
-                  onClick={e => {
-                    e.stopPropagation();
-                    onToggleAddMenu(node.id, 'child');
-                  }}
-                  className="p-0.5 hover:bg-slate-700 rounded text-slate-400"
-                >
-                  <Plus className="w-3 h-3" />
-                </button>
-                {addMenu?.nodeId === node.id && addMenu.kind === 'child' && (
-                  <AddTypeMenu onPick={type => onConfirmAdd(node.id, 'child', type)} />
-                )}
-              </div>
-              <div className="relative">
-                <button
-                  title="Tambah sibling"
-                  onClick={e => {
-                    e.stopPropagation();
-                    onToggleAddMenu(node.id, 'sibling');
-                  }}
-                  className="p-0.5 hover:bg-slate-700 rounded text-slate-400"
-                >
-                  <CornerDownRight className="w-3 h-3" />
-                </button>
-                {addMenu?.nodeId === node.id && addMenu.kind === 'sibling' && (
-                  <AddTypeMenu onPick={type => onConfirmAdd(node.id, 'sibling', type)} />
-                )}
-              </div>
-              <button
-                title="Duplikat"
-                onClick={e => {
-                  e.stopPropagation();
-                  onDuplicate(node.id);
-                }}
-                className="p-0.5 hover:bg-slate-700 rounded text-slate-400"
-              >
-                <Copy className="w-3 h-3" />
-              </button>
-              <button
-                title="Hapus"
-                onClick={e => {
-                  e.stopPropagation();
-                  onDelete(node.id);
-                }}
-                className="p-0.5 hover:bg-slate-700 rounded text-red-400"
-              >
-                <Trash2 className="w-3 h-3" />
-              </button>
-            </div>
           )}
         </div>
       </div>
@@ -345,11 +358,16 @@ export const TreeView: React.FC = () => {
   const [addMenu, setAddMenu] = useState<AddMenuState | null>(null);
 
   // Tutup menu pilih tipe saat klik di luar menu (menu sendiri men-stopPropagation)
+  // atau saat area di belakangnya di-scroll (menu pakai position:fixed, tidak ikut scroll)
   useEffect(() => {
     if (!addMenu) return;
     const close = () => setAddMenu(null);
     window.addEventListener('click', close);
-    return () => window.removeEventListener('click', close);
+    window.addEventListener('scroll', close, true);
+    return () => {
+      window.removeEventListener('click', close);
+      window.removeEventListener('scroll', close, true);
+    };
   }, [addMenu]);
 
   const nodes = project?.nodes ?? [];
@@ -402,10 +420,12 @@ export const TreeView: React.FC = () => {
     setEditingId(null);
   };
 
-  const handleToggleAddMenu = (nodeId: string, kind: AddKind) => {
-    setAddMenu(prev =>
-      prev?.nodeId === nodeId && prev.kind === kind ? null : { nodeId, kind }
-    );
+  const handleToggleAddMenu = (nodeId: string, kind: AddKind, anchor: HTMLElement) => {
+    setAddMenu(prev => {
+      if (prev?.nodeId === nodeId && prev.kind === kind) return null;
+      const rect = anchor.getBoundingClientRect();
+      return { nodeId, kind, x: rect.left, y: rect.bottom + 4 };
+    });
   };
 
   const handleConfirmAdd = (nodeId: string, kind: AddKind, type: NodeType) => {
