@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Folder, Plus, Undo, Redo, ShieldCheck, Download } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Folder, FileText, Plus, Undo, Redo, ShieldCheck, Download } from 'lucide-react';
+import { NodeType } from '@/models/node';
 import { useProjectStore } from '@/store/projectStore';
 import { useHistoryStore } from '@/store/historyStore';
 import { useUiStore } from '@/store/uiStore';
@@ -12,6 +13,7 @@ export const Toolbar: React.FC = () => {
   const [showProjectManager, setShowProjectManager] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [showReadinessDialog, setShowReadinessDialog] = useState(false);
+  const [showAddMenu, setShowAddMenu] = useState(false);
 
   const project = useProjectStore(s => s.project);
   const addNode = useProjectStore(s => s.addNode);
@@ -28,9 +30,20 @@ export const Toolbar: React.FC = () => {
   const undoLabel = past.length > 0 ? `Batalkan: ${past.at(-1)?.label}` : 'Undo';
   const redoLabel = future.length > 0 ? `Ulangi: ${future[0]?.label}` : 'Redo';
 
-  const handleAddPosition = () => {
+  const hasSelection = selectedNodeIds.length > 0;
+
+  // Tutup menu pilih tipe saat klik di luar (menu sendiri men-stopPropagation)
+  useEffect(() => {
+    if (!showAddMenu) return;
+    const close = () => setShowAddMenu(false);
+    window.addEventListener('click', close);
+    return () => window.removeEventListener('click', close);
+  }, [showAddMenu]);
+
+  const handleAddPosition = (type: NodeType) => {
     const parentId = selectedNodeIds[0];
-    addNode({ type: 'jabatan', parentId });
+    addNode({ type, parentId });
+    setShowAddMenu(false);
   };
 
   return (
@@ -54,14 +67,45 @@ export const Toolbar: React.FC = () => {
               <span>Proyek</span>
             </button>
 
-            <button
-              onClick={handleAddPosition}
-              className="flex items-center space-x-1 px-2.5 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-slate-200"
-              title="Tambah Jabatan"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Tambah</span>
-            </button>
+            <div className="relative">
+              <button
+                onClick={e => {
+                  e.stopPropagation();
+                  if (hasSelection) setShowAddMenu(v => !v);
+                }}
+                disabled={!hasSelection}
+                className="flex items-center space-x-1 px-2.5 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-slate-700"
+                title={
+                  hasSelection
+                    ? 'Tambah node sebagai anak dari yang dipilih'
+                    : 'Pilih Unit/Jabatan di outline dulu'
+                }
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Tambah</span>
+              </button>
+              {showAddMenu && hasSelection && (
+                <div
+                  onClick={e => e.stopPropagation()}
+                  className="absolute z-30 top-full left-0 mt-1 bg-slate-800 border border-slate-700 rounded shadow-lg overflow-hidden whitespace-nowrap"
+                >
+                  <button
+                    onClick={() => handleAddPosition('unit')}
+                    className="w-full flex items-center space-x-2 px-3 py-1.5 hover:bg-slate-700 text-slate-200 text-left text-xs"
+                  >
+                    <Folder className="w-3.5 h-3.5 text-blue-400" />
+                    <span>Unit Organisasi</span>
+                  </button>
+                  <button
+                    onClick={() => handleAddPosition('jabatan')}
+                    className="w-full flex items-center space-x-2 px-3 py-1.5 hover:bg-slate-700 text-slate-200 text-left text-xs"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Jabatan</span>
+                  </button>
+                </div>
+              )}
+            </div>
 
             <div className="h-4 w-px bg-slate-700 mx-1" />
 
