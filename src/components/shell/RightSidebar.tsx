@@ -44,9 +44,9 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({ collapsed, onToggleC
 
   return (
     <>
-      <aside className="w-[380px] bg-slate-900 border-l border-slate-700 flex flex-col h-full select-none text-slate-300">
+      <aside className="w-[380px] min-h-0 bg-slate-900 border-l border-slate-700 flex flex-col h-full select-none text-slate-300">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-800 px-3 py-2">
+        <div className="flex items-center justify-between border-b border-slate-800 px-3 py-2 flex-shrink-0">
           <div className="flex items-center space-x-2 font-medium text-sm text-slate-200">
             <Sliders className="w-4 h-4 text-blue-400" />
             <span>Properti &amp; Detail</span>
@@ -61,7 +61,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({ collapsed, onToggleC
         </div>
 
         {/* Dynamic Panel Content based on selection count */}
-        <div className="flex-1 overflow-y-auto p-3 text-xs space-y-4">
+        <div className="flex-1 min-h-0 overflow-y-auto p-3 text-xs space-y-4">
           {selectedNodeIds.length === 0 && <ProjectMetaForm />}
           {selectedNodeIds.length === 1 && selectedNode && <SingleNodeForm node={selectedNode} />}
           {selectedNodeIds.length > 1 && <MultiSelectionPanel />}

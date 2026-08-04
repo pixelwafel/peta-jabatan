@@ -14,11 +14,18 @@ export interface ConfirmDialogState {
 
 export type DialogState = ConfirmDialogState | null;
 
+export interface ToastState {
+  id: string;
+  message: string;
+  tone: 'success' | 'error';
+}
+
 export interface UiState {
   selectedNodeIds: string[];
   showJenjangOnCard: boolean;
   leftPanel: LeftPanelTab;
   dialog: DialogState;
+  toast: ToastState | null;
   lastSavedAt: string | null;
   saveStatus: SaveStatus;
 
@@ -31,6 +38,8 @@ export interface UiState {
   setDialog: (dialog: DialogState) => void;
   openConfirm: (opts: Omit<ConfirmDialogState, 'kind'>) => void;
   closeDialog: () => void;
+  showToast: (message: string, tone?: 'success' | 'error') => void;
+  clearToast: () => void;
   setSaveStatus: (status: SaveStatus, at?: string) => void;
 }
 
@@ -39,6 +48,7 @@ export const useUiStore = create<UiState>(set => ({
   showJenjangOnCard: false,
   leftPanel: 'tree',
   dialog: null,
+  toast: null,
   lastSavedAt: null,
   saveStatus: 'saved',
 
@@ -62,6 +72,9 @@ export const useUiStore = create<UiState>(set => ({
   openConfirm: (opts: Omit<ConfirmDialogState, 'kind'>) =>
     set({ dialog: { kind: 'confirm', ...opts } }),
   closeDialog: () => set({ dialog: null }),
+  showToast: (message: string, tone: 'success' | 'error' = 'success') =>
+    set({ toast: { id: `${Date.now()}-${Math.random()}`, message, tone } }),
+  clearToast: () => set({ toast: null }),
   setSaveStatus: (status: SaveStatus, at?: string) =>
     set({ saveStatus: status, ...(at ? { lastSavedAt: at } : {}) }),
 }));

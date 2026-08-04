@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { processXlsxImport, ImportPreview } from '@/import/xlsxImporter';
 import { importJsonFile } from '@/import/jsonImporter';
 import { useProjectStore } from '@/store/projectStore';
-import { useHistoryStore } from '@/store/historyStore';
+import { useUiStore } from '@/store/uiStore';
 import { computeLayout } from '@/utils/layout';
 import { uuid } from '@/utils/uuid';
 import { saveProject } from '@/persistence/storage';
@@ -21,15 +21,18 @@ import {
 
 interface ImportDialogProps {
   onClose: () => void;
+  /** Dipanggil setelah impor berhasil di-commit — biasanya menutup ImportDialog
+   *  SEKALIGUS dialog induknya (Kelola Proyek), beda dari onClose (batal/tutup). */
+  onImported: () => void;
 }
 
-export const ImportDialog: React.FC<ImportDialogProps> = ({ onClose }) => {
+export const ImportDialog: React.FC<ImportDialogProps> = ({ onClose, onImported }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const setProject = useProjectStore(s => s.setProject);
-  const clearHistory = useHistoryStore(s => s.clear);
+  const showToast = useUiStore(s => s.showToast);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -170,9 +173,9 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({ onClose }) => {
     }
 
     await saveProject(newProject);
-    setProject(newProject);
-    clearHistory();
-    onClose();
+    setProject(newProject); // sudah membersihkan history & seleksi lama secara internal
+    showToast(`Proyek "${fileName}" berhasil diimpor (${newProject.nodes.length} node).`);
+    onImported();
   };
 
   const errors = preview?.findings.filter(f => f.severity === 'error') ?? [];

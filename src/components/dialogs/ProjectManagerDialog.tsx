@@ -371,6 +371,10 @@ export const ProjectManagerDialog: React.FC<ProjectManagerDialogProps> = ({ onCl
             setShowImportDialog(false);
             loadData();
           }}
+          onImported={() => {
+            setShowImportDialog(false);
+            onClose(); // proyek baru sudah aktif — langsung ke outline, bukan balik ke daftar
+          }}
         />
       )}
     </>

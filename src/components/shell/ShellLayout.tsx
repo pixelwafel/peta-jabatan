@@ -5,6 +5,7 @@ import { OpdListSidebar } from './OpdListSidebar';
 import { StructurePanel } from './StructurePanel';
 import { RightSidebar } from './RightSidebar';
 import { StatusBar } from './StatusBar';
+import { Toast } from '../common/Toast';
 
 const InnerShellLayout: React.FC = () => {
   const [rightCollapsed, setRightCollapsed] = useState(false);
@@ -34,6 +35,8 @@ const InnerShellLayout: React.FC = () => {
       <div className="col-span-3">
         <StatusBar />
       </div>
+
+      <Toast />
     </div>
   );
 };
