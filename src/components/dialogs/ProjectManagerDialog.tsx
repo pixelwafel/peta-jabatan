@@ -11,6 +11,7 @@ import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
 import { uuid } from '@/utils/uuid';
 import { ImportDialog } from './ImportDialog';
+import { BulkExportDialog } from './BulkExportDialog';
 import {
   Folder,
   Plus,
@@ -22,6 +23,7 @@ import {
   X,
   AlertTriangle,
   Upload,
+  Download,
 } from 'lucide-react';
 
 interface ProjectManagerDialogProps {
@@ -32,6 +34,8 @@ export const ProjectManagerDialog: React.FC<ProjectManagerDialogProps> = ({ onCl
   const [index, setIndex] = useState<ProjectIndex | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showImportDialog, setShowImportDialog] = useState(false);
+  const [selectedForExport, setSelectedForExport] = useState<Set<string>>(new Set());
+  const [showBulkExport, setShowBulkExport] = useState(false);
 
   const [storageUsage, setStorageUsage] = useState<{
     usedBytes: number;
@@ -181,6 +185,30 @@ export const ProjectManagerDialog: React.FC<ProjectManagerDialogProps> = ({ onCl
     return `${mb.toFixed(1)} MB`;
   };
 
+  const toggleSelected = (id: string) => {
+    setSelectedForExport(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const allFilteredSelected =
+    filteredEntries.length > 0 && filteredEntries.every(e => selectedForExport.has(e.id));
+
+  const toggleSelectAll = () => {
+    setSelectedForExport(prev => {
+      const next = new Set(prev);
+      if (allFilteredSelected) {
+        for (const e of filteredEntries) next.delete(e.id);
+      } else {
+        for (const e of filteredEntries) next.add(e.id);
+      }
+      return next;
+    });
+  };
+
   return (
     <>
       <div
@@ -237,6 +265,30 @@ export const ProjectManagerDialog: React.FC<ProjectManagerDialogProps> = ({ onCl
             </div>
           </div>
 
+          {/* Bulk export selection bar */}
+          {filteredEntries.length > 0 && (
+            <div className="flex items-center justify-between px-4 pt-3 -mb-1">
+              <label className="flex items-center space-x-2 text-[11px] text-slate-400 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={allFilteredSelected}
+                  onChange={toggleSelectAll}
+                  className="rounded bg-slate-800 border-slate-700 text-blue-600 focus:ring-0"
+                />
+                <span>Pilih Semua ({filteredEntries.length})</span>
+              </label>
+              {selectedForExport.size > 0 && (
+                <button
+                  onClick={() => setShowBulkExport(true)}
+                  className="flex items-center space-x-1.5 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-medium shadow-sm"
+                >
+                  <Download className="w-3 h-3" />
+                  <span>Ekspor Terpilih ({selectedForExport.size})</span>
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Project List */}
           <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
             {filteredEntries.length === 0 ? (
@@ -259,6 +311,13 @@ export const ProjectManagerDialog: React.FC<ProjectManagerDialogProps> = ({ onCl
                         : 'bg-slate-950/40 border-slate-800 hover:border-slate-700'
                     }`}
                   >
+                    <input
+                      type="checkbox"
+                      checked={selectedForExport.has(entry.id)}
+                      onChange={() => toggleSelected(entry.id)}
+                      className="rounded bg-slate-800 border-slate-700 text-blue-600 focus:ring-0 flex-shrink-0 mr-3"
+                    />
+
                     <div className="space-y-1 min-w-0 flex-1 pr-3">
                       <div className="flex items-center space-x-2">
                         {isActive ? (
@@ -385,6 +444,17 @@ export const ProjectManagerDialog: React.FC<ProjectManagerDialogProps> = ({ onCl
             // daftar (refresh) supaya user pilih sendiri OPD mana yang dibuka.
             setShowImportDialog(false);
             loadData();
+          }}
+        />
+      )}
+
+      {showBulkExport && (
+        <BulkExportDialog
+          selectedIds={[...selectedForExport]}
+          onClose={() => {
+            setShowBulkExport(false);
+            setSelectedForExport(new Set());
+            loadData(); // refresh status "belum diekspor" per proyek
           }}
         />
       )}
