@@ -2,8 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ProjectIndex } from '@/persistence/types';
 import { getProjectIndex, getProject, saveProject } from '@/persistence/storage';
 import { buildBlankProject } from '@/persistence/blankProject';
+import { requestDeleteProject } from '@/persistence/deleteProjectFlow';
 import { useProjectStore } from '@/store/projectStore';
-import { Folder, Search, Settings, Plus, Upload } from 'lucide-react';
+import { useUiStore } from '@/store/uiStore';
+import { Folder, Search, Settings, Plus, Upload, Trash2 } from 'lucide-react';
 import { ProjectManagerDialog } from '../dialogs/ProjectManagerDialog';
 import { ImportDialog } from '../dialogs/ImportDialog';
 
@@ -22,6 +24,7 @@ export const OpdListSidebar: React.FC = () => {
 
   const currentProject = useProjectStore(s => s.project);
   const setProject = useProjectStore(s => s.setProject);
+  const openConfirm = useUiStore(s => s.openConfirm);
 
   const loadIndex = () => {
     getProjectIndex().then(setIndex);
@@ -50,6 +53,19 @@ export const OpdListSidebar: React.FC = () => {
     const newProject = buildBlankProject();
     await saveProject(newProject);
     setProject(newProject);
+  };
+
+  const handleDelete = (e: React.MouseEvent, entryId: string) => {
+    e.stopPropagation();
+    const entry = index?.entries.find(x => x.id === entryId);
+    if (!entry) return;
+
+    requestDeleteProject(entry, openConfirm, async () => {
+      if (currentProject?.id === entry.id) {
+        setProject(null);
+      }
+      loadIndex();
+    });
   };
 
   return (
@@ -83,40 +99,49 @@ export const OpdListSidebar: React.FC = () => {
           filteredEntries.map(entry => {
             const isActive = currentProject?.id === entry.id;
             return (
-              <button
+              <div
                 key={entry.id}
-                onClick={() => handleSelect(entry.id)}
-                className={`w-full text-left px-2 py-2 rounded text-sm transition-colors ${
-                  isActive
-                    ? 'bg-blue-900/40 text-blue-200 font-semibold'
-                    : 'hover:bg-slate-800/60 text-slate-300'
+                className={`group w-full flex items-center rounded transition-colors ${
+                  isActive ? 'bg-blue-900/40' : 'hover:bg-slate-800/60'
                 }`}
               >
-                <div className="truncate font-medium">{entry.namaOPD}</div>
-                <div className="text-[11px] text-slate-500 font-mono">{entry.kodeOPD}</div>
-              </button>
+                <button
+                  onClick={() => handleSelect(entry.id)}
+                  className={`flex-1 min-w-0 text-left px-2 py-2 rounded text-sm ${
+                    isActive ? 'text-blue-200 font-semibold' : 'text-slate-300'
+                  }`}
+                >
+                  <div className="truncate font-medium">{entry.namaOPD}</div>
+                  <div className="text-[11px] text-slate-500 font-mono">{entry.kodeOPD}</div>
+                </button>
+                <button
+                  onClick={e => handleDelete(e, entry.id)}
+                  title="Hapus Proyek"
+                  className="flex-shrink-0 p-1.5 mr-1 rounded text-slate-500 opacity-0 group-hover:opacity-100 hover:bg-rose-900/40 hover:text-rose-300 transition-opacity"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
             );
           })
         )}
       </div>
 
       <div className="p-2 border-t border-slate-800 space-y-1.5">
-        <div className="flex items-center space-x-1.5">
-          <button
-            onClick={handleAddOpd}
-            className="flex-1 flex items-center justify-center space-x-1.5 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded shadow-sm"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Tambah OPD</span>
-          </button>
-          <button
-            onClick={() => setShowImportDialog(true)}
-            className="flex-1 flex items-center justify-center space-x-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded border border-slate-700"
-          >
-            <Upload className="w-3.5 h-3.5 text-blue-400" />
-            <span>Impor</span>
-          </button>
-        </div>
+        <button
+          onClick={handleAddOpd}
+          className="w-full flex items-center justify-center space-x-1.5 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded shadow-sm"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>Tambah OPD</span>
+        </button>
+        <button
+          onClick={() => setShowImportDialog(true)}
+          className="w-full flex items-center justify-center space-x-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded border border-slate-700"
+        >
+          <Upload className="w-3.5 h-3.5 text-blue-400" />
+          <span>Impor</span>
+        </button>
         <button
           onClick={() => setShowManager(true)}
           className="w-full flex items-center justify-center space-x-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded border border-slate-700"

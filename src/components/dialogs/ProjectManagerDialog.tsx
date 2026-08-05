@@ -4,13 +4,13 @@ import {
   getProjectIndex,
   getProject,
   saveProject,
-  deleteProjectData,
   estimateStorageUsage,
 } from '@/persistence/storage';
 import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
 import { uuid } from '@/utils/uuid';
 import { buildBlankProject } from '@/persistence/blankProject';
+import { requestDeleteProject } from '@/persistence/deleteProjectFlow';
 import { ImportDialog } from './ImportDialog';
 import { BulkExportDialog } from './BulkExportDialog';
 import {
@@ -43,11 +43,6 @@ export const ProjectManagerDialog: React.FC<ProjectManagerDialogProps> = ({ onCl
     quotaBytes: number;
     percentUsed: number;
   }>({ usedBytes: 0, quotaBytes: 50 * 1024 * 1024, percentUsed: 0 });
-
-  const [deleteConfirmTarget, setDeleteConfirmTarget] = useState<ProjectIndexEntry | null>(
-    null
-  );
-  const [typedNameInput, setTypedNameInput] = useState('');
 
   const currentProject = useProjectStore(s => s.project);
   const setProject = useProjectStore(s => s.setProject);
@@ -116,39 +111,12 @@ export const ProjectManagerDialog: React.FC<ProjectManagerDialogProps> = ({ onCl
   };
 
   const initiateDelete = (entry: ProjectIndexEntry) => {
-    if (!entry.lastExportedAt) {
-      setDeleteConfirmTarget(entry);
-      setTypedNameInput('');
-    } else {
-      openConfirm({
-        title: `Hapus Proyek ${entry.namaOPD}?`,
-        body: `Proyek ini memiliki ${entry.nodeCount} node dan terakhir diekspor pada ${new Date(
-          entry.lastExportedAt
-        ).toLocaleTimeString()}. Tindakan ini tidak dapat dibatalkan.`,
-        confirmLabel: 'Hapus Proyek',
-        danger: true,
-        onConfirm: async () => {
-          await deleteProjectData(entry.id);
-          if (currentProject?.id === entry.id) {
-            setProject(null);
-          }
-          await loadData();
-        },
-      });
-    }
-  };
-
-  const handleConfirmedTypedDelete = async () => {
-    if (!deleteConfirmTarget) return;
-    if (typedNameInput.trim() !== deleteConfirmTarget.namaOPD.trim()) return;
-
-    await deleteProjectData(deleteConfirmTarget.id);
-    if (currentProject?.id === deleteConfirmTarget.id) {
-      setProject(null);
-    }
-    setDeleteConfirmTarget(null);
-    setTypedNameInput('');
-    await loadData();
+    requestDeleteProject(entry, openConfirm, async () => {
+      if (currentProject?.id === entry.id) {
+        setProject(null);
+      }
+      await loadData();
+    });
   };
 
   const formatBytes = (bytes: number) => {
@@ -351,41 +319,6 @@ export const ProjectManagerDialog: React.FC<ProjectManagerDialogProps> = ({ onCl
               })
             )}
           </div>
-
-          {/* Typed Delete Confirmation Dialog (for never-exported projects) */}
-          {deleteConfirmTarget && (
-            <div className="p-4 bg-rose-950/40 border-t border-rose-900/60 space-y-2 text-xs">
-              <div className="flex items-center space-x-2 text-rose-300 font-semibold">
-                <AlertTriangle className="w-4 h-4 text-rose-400" />
-                <span>Konfirmasi Penghapusan Proyek Belum Diekspor</span>
-              </div>
-              <p className="text-slate-300">
-                Proyek <strong className="text-white">{deleteConfirmTarget.namaOPD}</strong> belum pernah diekspor. Ketik nama OPD untuk menghapus secara permanen:
-              </p>
-              <input
-                type="text"
-                placeholder={deleteConfirmTarget.namaOPD}
-                value={typedNameInput}
-                onChange={e => setTypedNameInput(e.target.value)}
-                className="w-full bg-slate-900 border border-rose-800/80 text-slate-100 rounded px-2.5 py-1.5 text-xs outline-none"
-              />
-              <div className="flex justify-end space-x-2 pt-1">
-                <button
-                  onClick={() => setDeleteConfirmTarget(null)}
-                  className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs"
-                >
-                  Batal
-                </button>
-                <button
-                  disabled={typedNameInput.trim() !== deleteConfirmTarget.namaOPD.trim()}
-                  onClick={handleConfirmedTypedDelete}
-                  className="px-3 py-1 bg-rose-600 hover:bg-rose-500 disabled:opacity-40 text-white rounded text-xs font-medium"
-                >
-                  Hapus Permanen
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* Footer Storage Meter */}
           <div className="px-4 py-2.5 border-t border-slate-800 bg-slate-950/60 flex items-center justify-between text-xs text-slate-400 font-mono">
