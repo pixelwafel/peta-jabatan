@@ -1,19 +1,24 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ProjectIndex } from '@/persistence/types';
-import { getProjectIndex, getProject } from '@/persistence/storage';
+import { getProjectIndex, getProject, saveProject } from '@/persistence/storage';
+import { buildBlankProject } from '@/persistence/blankProject';
 import { useProjectStore } from '@/store/projectStore';
-import { Folder, Search, Settings } from 'lucide-react';
+import { Folder, Search, Settings, Plus, Upload } from 'lucide-react';
 import { ProjectManagerDialog } from '../dialogs/ProjectManagerDialog';
+import { ImportDialog } from '../dialogs/ImportDialog';
 
 /**
  * Kolom 1: daftar OPD. Versi inline dari ProjectManagerDialog.tsx (buka/pindah
- * proyek) — tidak ada logic backend baru. Aksi lanjutan (buat/duplikat/hapus/
- * impor) tetap lewat dialog "Kelola...".
+ * proyek) — tidak ada logic backend baru. "+ Tambah OPD" dan "Impor" adalah
+ * akses langsung ke dua aksi yang paling sering dipakai, supaya tidak harus
+ * lewat dialog "Kelola..." dulu setiap kali. Aksi lanjutan (duplikat/hapus/
+ * ekspor massal/cari) tetap lewat "Kelola...".
  */
 export const OpdListSidebar: React.FC = () => {
   const [index, setIndex] = useState<ProjectIndex | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showManager, setShowManager] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
 
   const currentProject = useProjectStore(s => s.project);
   const setProject = useProjectStore(s => s.setProject);
@@ -39,6 +44,12 @@ export const OpdListSidebar: React.FC = () => {
     if (id === currentProject?.id) return;
     const p = await getProject(id);
     if (p) setProject(p);
+  };
+
+  const handleAddOpd = async () => {
+    const newProject = buildBlankProject();
+    await saveProject(newProject);
+    setProject(newProject);
   };
 
   return (
@@ -89,7 +100,23 @@ export const OpdListSidebar: React.FC = () => {
         )}
       </div>
 
-      <div className="p-2 border-t border-slate-800">
+      <div className="p-2 border-t border-slate-800 space-y-1.5">
+        <div className="flex items-center space-x-1.5">
+          <button
+            onClick={handleAddOpd}
+            className="flex-1 flex items-center justify-center space-x-1.5 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded shadow-sm"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Tambah OPD</span>
+          </button>
+          <button
+            onClick={() => setShowImportDialog(true)}
+            className="flex-1 flex items-center justify-center space-x-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded border border-slate-700"
+          >
+            <Upload className="w-3.5 h-3.5 text-blue-400" />
+            <span>Impor</span>
+          </button>
+        </div>
         <button
           onClick={() => setShowManager(true)}
           className="w-full flex items-center justify-center space-x-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded border border-slate-700"
@@ -103,6 +130,26 @@ export const OpdListSidebar: React.FC = () => {
         <ProjectManagerDialog
           onClose={() => {
             setShowManager(false);
+            loadIndex();
+          }}
+        />
+      )}
+
+      {showImportDialog && (
+        <ImportDialog
+          onClose={() => {
+            setShowImportDialog(false);
+            loadIndex();
+          }}
+          onImported={() => {
+            // 1 berkas -> sudah jadi proyek aktif (ImportDialog memanggil
+            // setProject sendiri), cuma perlu tutup dialognya.
+            setShowImportDialog(false);
+          }}
+          onImportedBatch={() => {
+            // Multi-berkas -> tidak ada yang otomatis aktif, refresh daftar
+            // supaya OPD baru langsung kelihatan & bisa dipilih dari sini.
+            setShowImportDialog(false);
             loadIndex();
           }}
         />

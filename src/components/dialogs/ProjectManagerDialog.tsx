@@ -10,6 +10,7 @@ import {
 import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
 import { uuid } from '@/utils/uuid';
+import { buildBlankProject } from '@/persistence/blankProject';
 import { ImportDialog } from './ImportDialog';
 import { BulkExportDialog } from './BulkExportDialog';
 import {
@@ -75,37 +76,7 @@ export const ProjectManagerDialog: React.FC<ProjectManagerDialogProps> = ({ onCl
   }, [index, searchTerm]);
 
   const handleCreateNew = async () => {
-    const newId = uuid();
-    const newProject = {
-      id: newId,
-      schemaVersion: '1.0.0',
-      configVersion: '2026.1',
-      meta: {
-        namaOPD: 'Proyek Baru',
-        kodeOPD: 'OPD.NEW',
-        penyusun: '',
-      },
-      attributeSchema: [],
-      nodes: [
-        {
-          id: uuid(),
-          type: 'unit' as const,
-          nama: 'Dinas / Unit Utama',
-          nomor: '1',
-          rumpun: [],
-          rincian: [],
-          custom: {},
-          position: { x: 200, y: 100 },
-          collapsed: false,
-          order: 0,
-        },
-      ],
-      edges: [],
-      viewport: { x: 0, y: 0, zoom: 1 },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
+    const newProject = buildBlankProject();
     await saveProject(newProject);
     setProject(newProject);
     onClose();
