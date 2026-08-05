@@ -1,6 +1,6 @@
 import { Project } from '@/models/project';
 
-function slug(s: string): string {
+export function slug(s: string): string {
   if (!s) return '';
   return s
     .trim()

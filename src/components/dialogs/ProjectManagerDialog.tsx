@@ -380,6 +380,12 @@ export const ProjectManagerDialog: React.FC<ProjectManagerDialogProps> = ({ onCl
             setShowImportDialog(false);
             onClose(); // proyek baru sudah aktif — langsung ke outline, bukan balik ke daftar
           }}
+          onImportedBatch={() => {
+            // Multi-berkas: tidak ada proyek yang otomatis aktif — tetap di
+            // daftar (refresh) supaya user pilih sendiri OPD mana yang dibuka.
+            setShowImportDialog(false);
+            loadData();
+          }}
         />
       )}
     </>
