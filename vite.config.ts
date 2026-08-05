@@ -6,8 +6,10 @@ import packageJson from './package.json';
 
 export default defineConfig(({ command }) => ({
   // GitHub Pages project site menyajikan app dari /peta-jabatan/, bukan root
-  // domain — cuma dipakai saat build, dev server tetap di / seperti biasa.
-  base: command === 'build' ? '/peta-jabatan/' : '/',
+  // domain — jadi base path itu cuma relevan waktu build jalan di GitHub
+  // Actions. Host lain (Vercel, Netlify, dev server lokal, dst) menyajikan
+  // dari root, jadi base tetap '/' secara default.
+  base: command === 'build' && process.env.GITHUB_ACTIONS === 'true' ? '/peta-jabatan/' : '/',
   plugins: [react()],
   resolve: {
     alias: {
