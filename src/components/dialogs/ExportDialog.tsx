@@ -7,6 +7,7 @@ import { exportCsv } from '@/export/csvExporter';
 import { exportJson } from '@/export/jsonExporter';
 import { exportPng } from '@/export/pngExporter';
 import { markProjectExported } from '@/persistence/reminder';
+import { downloadBlob } from '@/utils/download';
 import {
   Download,
   FileSpreadsheet,
@@ -47,15 +48,6 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ onClose }) => {
     (exportXlsxSelected ? 1 : 0) +
     (exportCsvSelected ? 1 : 0) +
     (exportPngSelected ? 1 : 0);
-
-  const downloadBlob = (blob: Blob, fileName: string) => {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
 
   const handleExport = async () => {
     if (selectedCount === 0) return;
