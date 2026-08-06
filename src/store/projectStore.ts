@@ -19,8 +19,33 @@ import { useUiStore } from './uiStore';
 import { useProjectIndexStore } from './projectIndexStore';
 import { canCreateLink } from '@/selectors/linkResolver';
 import { LinkRef } from '@/models/node';
+import { UnitInstance } from '@/models/project';
+import { getStructureIndex } from '@/selectors/structureIndex';
+import { buildTemplateUnitIds, containingTemplateUnitId } from '@/selectors/templateInstance';
 
 enablePatches();
+
+/**
+ * Hapus kolom (`rincianId` atau id unit kepala) dari `figures` seluruh
+ * instance milik `templateNodeId` (docs/15-template-instance.md §2
+ * "structure edits cascade with confirmation"). Konfirmasi blast-radius-nya
+ * sendiri adalah tanggung jawab UI (lihat selectors/templateInstance.ts
+ * export terkait) — fungsi ini murni eksekusi setelah dikonfirmasi.
+ */
+function purgeInstanceColumns(
+  draft: Project,
+  templateNodeId: string,
+  columnKeys: string[]
+): void {
+  if (!draft.instances || columnKeys.length === 0) return;
+  const keys = new Set(columnKeys);
+  for (const inst of draft.instances) {
+    if (inst.templateNodeId !== templateNodeId) continue;
+    for (const key of keys) {
+      delete inst.figures[key];
+    }
+  }
+}
 
 export interface ProjectState {
   project: Project | null;
@@ -69,8 +94,25 @@ export interface ProjectState {
   // Link nodes (docs/13-link-nodes.md). Link & children/kepalaUnit saling
   // eksklusif — makeLink menolak node yang punya children, dan menghapus
   // kepalaUnit sekaligus supaya tidak dobel-hitung dengan link.cached.
-  makeLink: (nodeId: string, ref: Omit<LinkRef, 'cached'>) => { ok: boolean; reason?: 'has-children' | 'cycle' | 'locked' };
+  makeLink: (nodeId: string, ref: Omit<LinkRef, 'cached'>) => { ok: boolean; reason?: 'has-children' | 'cycle' | 'locked' | 'is-template' };
   unlinkNode: (nodeId: string) => void;
+
+  // Template-instance (docs/15-template-instance.md). isTemplate & link saling
+  // eksklusif (TEMPLATE_LINK_CONFLICT); tidak boleh nested (TEMPLATE_NESTED).
+  makeTemplate: (
+    nodeId: string,
+    seed: 'seed' | 'zero'
+  ) => { ok: boolean; reason?: 'not-unit' | 'is-link' | 'nested' | 'locked' };
+  unmakeTemplate: (nodeId: string) => { ok: boolean; reason?: 'multiple-instances' };
+  addInstance: (templateNodeId: string, nama: string) => string;
+  duplicateInstance: (instanceId: string) => string;
+  removeInstance: (instanceId: string) => void;
+  updateInstanceFigure: (
+    instanceId: string,
+    columnKey: string,
+    patch: Partial<{ kebutuhan: number; eksisting: number }>,
+    txId?: string
+  ) => void;
 
   // Kunci node — mencegah edit/hapus/pindah tidak sengaja. Bersifat individual
   // per node (lihat selectors/guards.ts). `cascade: true` adalah shortcut untuk
@@ -249,10 +291,20 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       return; // Node (atau ada keturunan) terkunci
     }
 
+    // Template-instance cascade (docs/15-template-instance.md §2 "structure
+    // edits cascade"): kalau node yang dihapus ADALAH unit template, seluruh
+    // instance-nya ikut lenyap (tidak ada gunanya instance tanpa templatenya).
+    // Kalau cuma node BIASA di dalam subtree template, cukup kolom miliknya
+    // (rincianId / id unit kepala) yang dibuang dari tiap instance.
+    const idxForTemplate = getStructureIndex(current.nodes, current.edges);
+    const templateUnitIds = buildTemplateUnitIds(current.nodes);
+    const containingId = containingTemplateUnitId(id, idxForTemplate, templateUnitIds);
+
     if (mode === 'node-only') {
       // Direct children reattached to deleted node's parent (if any)
       const parentEdge = hierarchyEdges(current.edges).find(e => e.target === id);
       const parentId = parentEdge?.source ?? null;
+      const removedNode = current.nodes.find(n => n.id === id);
 
       get().commit('Hapus node', draft => {
         // Reattach direct children
@@ -273,6 +325,15 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
         // Remove node
         draft.nodes = draft.nodes.filter(n => n.id !== id);
+
+        if (containingId === id) {
+          draft.instances = (draft.instances ?? []).filter(i => i.templateNodeId !== id);
+        } else if (containingId && removedNode) {
+          const keys: string[] = [];
+          if (removedNode.type === 'unit' && removedNode.kepalaUnit) keys.push(removedNode.id);
+          if (removedNode.type === 'jabatan') keys.push(...removedNode.rincian.map(r => r.id));
+          purgeInstanceColumns(draft, containingId, keys);
+        }
       });
     } else {
       // Subtree delete
@@ -284,6 +345,17 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
           e => !subNodeIds.has(e.source) && !subNodeIds.has(e.target)
         );
         draft.nodes = draft.nodes.filter(n => !subNodeIds.has(n.id));
+
+        if (containingId === id) {
+          draft.instances = (draft.instances ?? []).filter(i => i.templateNodeId !== id);
+        } else if (containingId) {
+          const keys: string[] = [];
+          for (const n of subNodes) {
+            if (n.type === 'unit' && n.kepalaUnit) keys.push(n.id);
+            if (n.type === 'jabatan') keys.push(...n.rincian.map(r => r.id));
+          }
+          purgeInstanceColumns(draft, containingId, keys);
+        }
       });
     }
 
@@ -499,10 +571,24 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     const current = get().project;
     if (current && isLocked(current.nodes, current.edges, nodeId)) return;
 
+    // Template-instance cascade (doc 15 §2): baris ini dipakai sebagai kolom
+    // di instance kalau posisinya di dalam subtree template — hapus kolomnya
+    // sekalian, satu commit/satu undo step dengan penghapusan barisnya.
+    const templateId = current
+      ? containingTemplateUnitId(
+          nodeId,
+          getStructureIndex(current.nodes, current.edges),
+          buildTemplateUnitIds(current.nodes)
+        )
+      : null;
+
     get().commit('Hapus rincian', draft => {
       const node = draft.nodes.find(n => n.id === nodeId);
       if (node) {
         node.rincian = node.rincian.filter(r => r.id !== rincianId);
+      }
+      if (templateId) {
+        purgeInstanceColumns(draft, templateId, [rincianId]);
       }
     });
   },
@@ -539,12 +625,24 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     const current = get().project;
     if (current && isLocked(current.nodes, current.edges, nodeId)) return;
 
+    // Template-instance cascade (doc 15 §2): kolom kepala unit dikunci pakai
+    // id unit-nya sendiri (lihat selectors/templateInstance.ts) — hapus
+    // kolom itu dari semua instance kalau kepala unit ini dihapus.
+    const templateId = current
+      ? containingTemplateUnitId(
+          nodeId,
+          getStructureIndex(current.nodes, current.edges),
+          buildTemplateUnitIds(current.nodes)
+        )
+      : null;
+
     get().commit('Ubah kepala unit', draft => {
       const node = draft.nodes.find(n => n.id === nodeId);
       if (!node || node.type !== 'unit') return;
 
       if (patch === null) {
         delete node.kepalaUnit;
+        if (templateId) purgeInstanceColumns(draft, templateId, [nodeId]);
         return;
       }
 
@@ -569,6 +667,10 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
     const node = current.nodes.find(n => n.id === nodeId);
     if (!node || node.type !== 'unit') return { ok: false, reason: 'has-children' };
+
+    if (node.isTemplate) {
+      return { ok: false, reason: 'is-template' }; // TEMPLATE_LINK_CONFLICT (doc 15 §1)
+    }
 
     if (childrenOf(current.nodes, current.edges, nodeId).length > 0) {
       return { ok: false, reason: 'has-children' }; // Link & children saling eksklusif (doc 13 §1)
@@ -602,6 +704,156 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         delete node.link;
       }
     });
+  },
+
+  makeTemplate: (nodeId, seed) => {
+    const current = get().project;
+    if (!current) return { ok: false, reason: 'locked' };
+    if (isLocked(current.nodes, current.edges, nodeId)) return { ok: false, reason: 'locked' };
+
+    const node = current.nodes.find(n => n.id === nodeId);
+    if (!node || node.type !== 'unit') return { ok: false, reason: 'not-unit' };
+    if (node.link) return { ok: false, reason: 'is-link' }; // TEMPLATE_LINK_CONFLICT
+
+    // TEMPLATE_NESTED guard: node ini belum isTemplate, jadi kalau
+    // containingTemplateUnitId menemukan SESUATU, itu pasti leluhur —
+    // template tidak boleh ada di dalam subtree template lain (doc 15 §1).
+    const idx = getStructureIndex(current.nodes, current.edges);
+    const templateUnitIds = buildTemplateUnitIds(current.nodes);
+    if (containingTemplateUnitId(nodeId, idx, templateUnitIds)) {
+      return { ok: false, reason: 'nested' };
+    }
+
+    // Kumpulkan angka existing di seluruh subtree SEBELUM di-nol-kan (doc 15
+    // §2 "seed one instance from the existing figures, or zero them").
+    const subtreeNodes = subtreeOf(current.nodes, current.edges, nodeId);
+    const seedFigures: UnitInstance['figures'] = {};
+    for (const n of subtreeNodes) {
+      if (n.type === 'unit' && n.kepalaUnit) {
+        seedFigures[n.id] = { kebutuhan: n.kepalaUnit.kebutuhan, eksisting: n.kepalaUnit.eksisting };
+      } else if (n.type === 'jabatan') {
+        for (const r of n.rincian) {
+          seedFigures[r.id] = { kebutuhan: r.kebutuhan, eksisting: r.eksisting };
+        }
+      }
+    }
+    const newInstanceId = seed === 'seed' ? uuid() : null;
+
+    get().commit('Jadikan template', draft => {
+      const dNode = draft.nodes.find(n => n.id === nodeId);
+      if (!dNode) return;
+      dNode.isTemplate = true;
+
+      // Nol-kan seluruh baris di subtree — angka nyata sekarang di instance
+      // (invariant TEMPLATE_ROW_HAS_FIGURES, ditegakkan validator di M12.4).
+      for (const n of subtreeOf(draft.nodes, draft.edges, nodeId)) {
+        if (n.type === 'unit' && n.kepalaUnit) {
+          n.kepalaUnit.kebutuhan = 0;
+          n.kepalaUnit.eksisting = 0;
+        } else if (n.type === 'jabatan') {
+          for (const r of n.rincian) {
+            r.kebutuhan = 0;
+            r.eksisting = 0;
+          }
+        }
+      }
+
+      if (newInstanceId) {
+        if (!draft.instances) draft.instances = [];
+        draft.instances.push({
+          id: newInstanceId,
+          templateNodeId: nodeId,
+          nama: dNode.nama,
+          figures: seedFigures,
+        });
+      }
+    });
+
+    return { ok: true };
+  },
+
+  unmakeTemplate: nodeId => {
+    const current = get().project;
+    if (!current) return { ok: false };
+    if (isLocked(current.nodes, current.edges, nodeId)) return { ok: false };
+
+    // Dengan >1 instance, tolak sampai instance-nya diselesaikan (diekspor
+    // atau dihapus) — tepat 1 instance ditawarkan dilipat balik ke baris
+    // (doc 15 §2 "Unmarking").
+    const relevant = (current.instances ?? []).filter(i => i.templateNodeId === nodeId);
+    if (relevant.length > 1) return { ok: false, reason: 'multiple-instances' };
+    const foldInstance = relevant[0];
+
+    get().commit('Batalkan template', draft => {
+      const dNode = draft.nodes.find(n => n.id === nodeId);
+      if (!dNode) return;
+      delete dNode.isTemplate;
+
+      if (foldInstance) {
+        for (const n of subtreeOf(draft.nodes, draft.edges, nodeId)) {
+          if (n.type === 'unit' && n.kepalaUnit) {
+            const fig = foldInstance.figures[n.id];
+            if (fig) {
+              n.kepalaUnit.kebutuhan = fig.kebutuhan;
+              n.kepalaUnit.eksisting = fig.eksisting;
+            }
+          } else if (n.type === 'jabatan') {
+            for (const r of n.rincian) {
+              const fig = foldInstance.figures[r.id];
+              if (fig) {
+                r.kebutuhan = fig.kebutuhan;
+                r.eksisting = fig.eksisting;
+              }
+            }
+          }
+        }
+        draft.instances = (draft.instances ?? []).filter(i => i.id !== foldInstance.id);
+      }
+    });
+
+    return { ok: true };
+  },
+
+  addInstance: (templateNodeId, nama) => {
+    const id = uuid();
+    get().commit('Tambah satuan', draft => {
+      if (!draft.instances) draft.instances = [];
+      draft.instances.push({ id, templateNodeId, nama, figures: {} });
+    });
+    return id;
+  },
+
+  duplicateInstance: instanceId => {
+    const current = get().project;
+    const original = current?.instances?.find(i => i.id === instanceId);
+    if (!original) return '';
+
+    const newId = uuid();
+    const cloned = structuredClone(original); // di luar recipe — `original` bukan Immer draft/proxy
+    get().commit('Duplikat satuan', draft => {
+      if (!draft.instances) return;
+      draft.instances.push({ ...cloned, id: newId, nama: `${cloned.nama} — Salinan` });
+    });
+    return newId;
+  },
+
+  removeInstance: instanceId => {
+    get().commit('Hapus satuan', draft => {
+      draft.instances = (draft.instances ?? []).filter(i => i.id !== instanceId);
+    });
+  },
+
+  updateInstanceFigure: (instanceId, columnKey, patch, txId) => {
+    get().commit(
+      'Ubah angka satuan',
+      draft => {
+        const inst = draft.instances?.find(i => i.id === instanceId);
+        if (!inst) return;
+        const prev = inst.figures[columnKey] ?? { kebutuhan: 0, eksisting: 0 };
+        inst.figures[columnKey] = { ...prev, ...patch };
+      },
+      { txId }
+    );
   },
 
   setLocked: (nodeId, locked, opts) => {
