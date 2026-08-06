@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { OrgNode } from '@/models/node';
 import { useProjectStore } from '@/store/projectStore';
 import { childrenOf } from '@/selectors/navigation';
+import { getStructureIndex } from '@/selectors/structureIndex';
+import { buildTemplateUnitIds, containingTemplateUnitId, computeInstanceTotals } from '@/selectors/templateInstance';
 import { ParentSelect } from './ParentSelect';
 import { ClassificationEditor } from './ClassificationEditor';
 import { KepalaUnitEditor } from './KepalaUnitEditor';
@@ -10,6 +12,7 @@ import { JenjangChips } from './JenjangChips';
 import { RincianEditor } from './RincianEditor';
 import { CustomAttributesEditor } from './CustomAttributesEditor';
 import { LinkEditor } from './LinkEditor';
+import { TemplateEditor } from './TemplateEditor';
 import { RefreshCw, Lock, Unlock, Layers } from 'lucide-react';
 
 interface SingleNodeFormProps {
@@ -28,8 +31,22 @@ export const SingleNodeForm: React.FC<SingleNodeFormProps> = ({ node, locked }) 
     if (!s.project) return false;
     return childrenOf(s.project.nodes, s.project.edges, node.id).length > 0;
   });
+  const project = useProjectStore(s => s.project);
 
   const ownLocked = node.locked === true;
+
+  // Template-instance (docs/15-template-instance.md §3): kalau node ini
+  // adalah DESCENDANT (bukan unit template itu sendiri — itu ditangani
+  // TemplateEditor), angka baris/kepala-nya read-only, bersumber dari kolom
+  // instance milik template yang menaunginya.
+  const templateContext = useMemo(() => {
+    if (!project) return null;
+    const idx = getStructureIndex(project.nodes, project.edges);
+    const templateUnitIds = buildTemplateUnitIds(project.nodes);
+    const templateId = containingTemplateUnitId(node.id, idx, templateUnitIds);
+    if (!templateId || templateId === node.id) return null; // root-nya sendiri ditangani TemplateEditor
+    return { templateNodeId: templateId, totals: computeInstanceTotals(project.instances ?? [], templateId) };
+  }, [project, node.id]);
 
   return (
     <div className="space-y-4">
@@ -133,22 +150,37 @@ export const SingleNodeForm: React.FC<SingleNodeFormProps> = ({ node, locked }) 
             makeLink). */}
         {node.type === 'unit' && <LinkEditor node={node} hasChildren={hasChildren} />}
 
-        {/* Kepala Unit Section (unit biasa, bukan link) */}
-        {node.type === 'unit' && !node.link && <KepalaUnitEditor node={node} />}
+        {/* Template-instance (docs/15-template-instance.md) — link & template
+            saling eksklusif juga, jadi disembunyikan kalau sudah jadi tautan. */}
+        {node.type === 'unit' && !node.link && (
+          <TemplateEditor node={node} hasChildren={hasChildren} />
+        )}
+
+        {/* Kepala Unit Section (unit biasa: bukan link, bukan unit template
+            itu sendiri — kepala unit TEMPLATE ditampilkan sebagai kolom
+            pertama di TemplateEditor, bukan di sini) */}
+        {node.type === 'unit' && !node.link && !node.isTemplate && (
+          <KepalaUnitEditor node={node} templateContext={templateContext} />
+        )}
       </div>
 
-      {/* Figures Section — disembunyikan untuk link node: angkanya berasal
-          dari resolusi tautan (panel TAUTAN di atas), bukan rincian lokal. */}
-      {!node.link && (
+      {/* Figures Section — disembunyikan untuk link node (angka dari resolusi
+          tautan) dan untuk unit TEMPLATE itu sendiri (angka dari TemplateEditor
+          di atas). Untuk jabatan/sub-unit di DALAM subtree template (bukan
+          root-nya), tetap tampil tapi read-only lewat templateContext. */}
+      {!node.link && !node.isTemplate && (
         <div className="pt-2 border-t border-slate-800 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
               Angka Kebutuhan &amp; Eksisting
             </span>
+            {templateContext && (
+              <span className="text-[10px] text-teal-400">Kolom template — edit lewat panel Template</span>
+            )}
           </div>
 
           {node.type === 'jabatan' && <JenjangChips node={node} />}
-          <RincianEditor node={node} />
+          <RincianEditor node={node} templateContext={templateContext} />
         </div>
       )}
 

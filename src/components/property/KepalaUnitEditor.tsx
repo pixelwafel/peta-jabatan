@@ -1,5 +1,6 @@
 import React from 'react';
 import { OrgNode } from '@/models/node';
+import { NodeTotals } from '@/models/derived';
 import { useProjectStore } from '@/store/projectStore';
 import { getJenjangOptions } from '@/config/resolver';
 import { NumberInput } from './NumberInput';
@@ -7,6 +8,10 @@ import { Plus, Trash2 } from 'lucide-react';
 
 interface KepalaUnitEditorProps {
   node: OrgNode;
+  /** Terisi kalau unit ini sub-unit di DALAM subtree template (docs/15-template-instance.md
+   * §3) — bukan template root-nya sendiri (itu ditangani TemplateEditor).
+   * Angka kebutuhan/eksisting jadi read-only, bersumber dari kolom instance. */
+  templateContext?: { templateNodeId: string; totals: Map<string, NodeTotals> } | null;
 }
 
 /**
@@ -14,7 +19,7 @@ interface KepalaUnitEditorProps {
  * bukan node Jabatan terpisah. Node Jabatan (di bawah unit ini) hanya untuk
  * Fungsional & Pelaksana.
  */
-export const KepalaUnitEditor: React.FC<KepalaUnitEditorProps> = ({ node }) => {
+export const KepalaUnitEditor: React.FC<KepalaUnitEditorProps> = ({ node, templateContext }) => {
   const setKepalaUnit = useProjectStore(s => s.setKepalaUnit);
   const jenjangOptions = getJenjangOptions('struktural', []);
   const kepala = node.kepalaUnit;
@@ -86,20 +91,44 @@ export const KepalaUnitEditor: React.FC<KepalaUnitEditorProps> = ({ node }) => {
           className="col-span-2 w-full bg-slate-800 border border-slate-700 text-slate-100 rounded px-2.5 py-1.5 text-xs outline-none focus:border-blue-500 font-mono"
         />
 
-        <div className="space-y-1">
-          <label className="text-[10px] text-slate-500">Kebutuhan</label>
-          <NumberInput
-            value={kepala.kebutuhan}
-            onChange={v => setKepalaUnit(node.id, { kebutuhan: v })}
-          />
-        </div>
-        <div className="space-y-1">
-          <label className="text-[10px] text-slate-500">Eksisting</label>
-          <NumberInput
-            value={kepala.eksisting}
-            onChange={v => setKepalaUnit(node.id, { eksisting: v })}
-          />
-        </div>
+        {templateContext ? (
+          (() => {
+            const t = templateContext.totals.get(node.id) ?? { kebutuhan: 0, eksisting: 0, selisih: 0 };
+            return (
+              <>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-500">Kebutuhan (Σ satuan)</label>
+                  <div className="w-full bg-slate-900 border border-teal-900/50 text-teal-300 rounded px-2.5 py-1.5 text-xs font-mono text-center">
+                    {t.kebutuhan}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-500">Eksisting (Σ satuan)</label>
+                  <div className="w-full bg-slate-900 border border-teal-900/50 text-teal-300 rounded px-2.5 py-1.5 text-xs font-mono text-center">
+                    {t.eksisting}
+                  </div>
+                </div>
+              </>
+            );
+          })()
+        ) : (
+          <>
+            <div className="space-y-1">
+              <label className="text-[10px] text-slate-500">Kebutuhan</label>
+              <NumberInput
+                value={kepala.kebutuhan}
+                onChange={v => setKepalaUnit(node.id, { kebutuhan: v })}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] text-slate-500">Eksisting</label>
+              <NumberInput
+                value={kepala.eksisting}
+                onChange={v => setKepalaUnit(node.id, { eksisting: v })}
+              />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

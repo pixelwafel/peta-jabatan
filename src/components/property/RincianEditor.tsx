@@ -1,5 +1,6 @@
 import React from 'react';
 import { OrgNode, Rincian } from '@/models/node';
+import { NodeTotals } from '@/models/derived';
 import { jenjangLabel, getJenjangOptions } from '@/config/resolver';
 import { useProjectStore } from '@/store/projectStore';
 import { nodeTotals } from '@/selectors/totals';
@@ -7,6 +8,10 @@ import { NumberInput } from './NumberInput';
 
 interface RincianEditorProps {
   node: OrgNode;
+  /** Terisi kalau node ini di dalam subtree template (docs/15-template-instance.md
+   * §3) — baris jadi read-only, angkanya dari kolom instance, bukan dari
+   * `r.kebutuhan`/`r.eksisting` (yang selalu nol by invariant di sana). */
+  templateContext?: { templateNodeId: string; totals: Map<string, NodeTotals> } | null;
 }
 
 function sortRincian(node: OrgNode): Rincian[] {
@@ -17,12 +22,23 @@ function sortRincian(node: OrgNode): Rincian[] {
   );
 }
 
-export const RincianEditor: React.FC<RincianEditorProps> = ({ node }) => {
+const ZERO: NodeTotals = { kebutuhan: 0, eksisting: 0, selisih: 0 };
+
+export const RincianEditor: React.FC<RincianEditorProps> = ({ node, templateContext }) => {
   const updateRincian = useProjectStore(s => s.updateRincian);
 
   const sortedRows = sortRincian(node);
-  const totals = nodeTotals(node);
   const labeled = getJenjangOptions(node.kategoriId, node.rumpun).length > 0;
+
+  // Di dalam template: total sebenarnya = jumlah kolom instance per rincianId,
+  // bukan jumlah r.kebutuhan/r.eksisting (selalu nol by invariant di sana).
+  const totals = templateContext
+    ? sortedRows.reduce<NodeTotals>((acc, r) => {
+        const t = templateContext.totals.get(r.id) ?? ZERO;
+        return { kebutuhan: acc.kebutuhan + t.kebutuhan, eksisting: acc.eksisting + t.eksisting, selisih: 0 };
+      }, ZERO)
+    : nodeTotals(node);
+  if (templateContext) totals.selisih = totals.eksisting - totals.kebutuhan;
 
   if (node.type === 'unit') {
     return (
@@ -46,7 +62,10 @@ export const RincianEditor: React.FC<RincianEditorProps> = ({ node }) => {
           </thead>
           <tbody className="divide-y divide-slate-800/60">
             {sortedRows.map(r => {
-              const selisih = r.eksisting - r.kebutuhan;
+              // Di dalam template, r.kebutuhan/r.eksisting SELALU nol
+              // (invariant) — total sebenarnya dari kolom instance.
+              const colTotal = templateContext?.totals.get(r.id) ?? { kebutuhan: r.kebutuhan, eksisting: r.eksisting, selisih: 0 };
+              const selisih = templateContext ? colTotal.eksisting - colTotal.kebutuhan : r.eksisting - r.kebutuhan;
               const selisihColor =
                 selisih < 0
                   ? 'text-red-400 font-semibold'
@@ -59,22 +78,35 @@ export const RincianEditor: React.FC<RincianEditorProps> = ({ node }) => {
                   <td className="py-1 px-2.5 text-slate-300 truncate max-w-[110px]" title={labeled ? jenjangLabel(r.jenjangId, node.kategoriId) : '—'}>
                     {labeled ? jenjangLabel(r.jenjangId, node.kategoriId) : '—'}
                   </td>
-                  <td className="py-1 px-1 text-center">
-                    <NumberInput
-                      value={r.kebutuhan}
-                      onChange={v =>
-                        updateRincian(node.id, r.id, { kebutuhan: v }, `num:${r.id}:keb`)
-                      }
-                    />
-                  </td>
-                  <td className="py-1 px-1 text-center">
-                    <NumberInput
-                      value={r.eksisting}
-                      onChange={v =>
-                        updateRincian(node.id, r.id, { eksisting: v }, `num:${r.id}:eks`)
-                      }
-                    />
-                  </td>
+                  {templateContext ? (
+                    <>
+                      <td className="py-1 px-1 text-center text-teal-300" title="Jumlah lintas satuan — edit lewat panel Template">
+                        {colTotal.kebutuhan}
+                      </td>
+                      <td className="py-1 px-1 text-center text-teal-300" title="Jumlah lintas satuan — edit lewat panel Template">
+                        {colTotal.eksisting}
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="py-1 px-1 text-center">
+                        <NumberInput
+                          value={r.kebutuhan}
+                          onChange={v =>
+                            updateRincian(node.id, r.id, { kebutuhan: v }, `num:${r.id}:keb`)
+                          }
+                        />
+                      </td>
+                      <td className="py-1 px-1 text-center">
+                        <NumberInput
+                          value={r.eksisting}
+                          onChange={v =>
+                            updateRincian(node.id, r.id, { eksisting: v }, `num:${r.id}:eks`)
+                          }
+                        />
+                      </td>
+                    </>
+                  )}
                   <td className={`py-1 px-2 text-right ${selisihColor}`}>
                     {selisih > 0 ? `+${selisih}` : selisih}
                   </td>

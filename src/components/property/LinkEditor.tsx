@@ -136,6 +136,7 @@ export const LinkEditor: React.FC<LinkEditorProps> = ({ node, hasChildren }) => 
   }
 
   if (hasChildren) return null; // link & children saling eksklusif, doc 13 §1
+  if (node.isTemplate) return null; // link & template saling eksklusif, doc 15 §1 TEMPLATE_LINK_CONFLICT
 
   if (!picking) {
     return (
