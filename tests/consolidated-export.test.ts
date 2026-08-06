@@ -150,6 +150,75 @@ describe('buildConsolidatedWorkbook (M11.6, docs/14-recap-dashboard.md §5)', ()
   });
 });
 
+describe('buildConsolidatedWorkbook — template matrix sheets (M12.10, docs/15-template-instance.md §4 reconciliation)', () => {
+  it('includes a project\'s Satuan_<nomor> sheet, prefixed by kodeOPD to avoid collisions', async () => {
+    const templateNode: OrgNode = {
+      id: 'sekolah',
+      type: 'unit',
+      nama: 'SD (Template)',
+      nomor: '1.1',
+      rumpun: [],
+      rincian: [],
+      custom: {},
+      position: { x: 0, y: 0 },
+      collapsed: false,
+      order: 0,
+      isTemplate: true,
+    };
+    const guru: OrgNode = {
+      id: 'guru',
+      type: 'jabatan',
+      nama: 'Guru Kelas',
+      nomor: '1.1.1',
+      kategoriId: 'fungsional',
+      rumpun: ['keahlian'],
+      rincian: [{ id: 'r1', jenjangId: 'ahli_pertama', kebutuhan: 0, eksisting: 0 }],
+      custom: {},
+      position: { x: 0, y: 0 },
+      collapsed: false,
+      order: 0,
+    };
+    const root: OrgNode = {
+      id: 'root',
+      type: 'unit',
+      nama: 'Dinas Pendidikan',
+      nomor: '1',
+      rumpun: [],
+      rincian: [],
+      custom: {},
+      position: { x: 0, y: 0 },
+      collapsed: false,
+      order: 0,
+    };
+    const disdik: Project = {
+      id: 'disdik-id',
+      schemaVersion: '1.0.0',
+      configVersion: '2026.1',
+      meta: { namaOPD: 'Dinas Pendidikan', kodeOPD: 'DISDIK', penyusun: 'Admin' },
+      attributeSchema: [],
+      nodes: [root, templateNode, guru],
+      edges: [
+        { id: 'e1', source: 'root', target: 'sekolah', kind: 'hirarki' },
+        { id: 'e2', source: 'sekolah', target: 'guru', kind: 'hirarki' },
+      ],
+      instances: [{ id: 'i1', templateNodeId: 'sekolah', nama: 'SDN 01', figures: { r1: { kebutuhan: 4, eksisting: 3 } } }],
+      viewport: { x: 0, y: 0, zoom: 1 },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const readProject = async (id: string) => (id === 'disdik-id' ? disdik : null);
+    const index: ProjectIndex = { version: 1, activeId: null, entries: [entry('disdik-id', 'DISDIK')] };
+
+    const blob = await buildConsolidatedWorkbook(index, readProject);
+    const wb = XLSX.read(await blob.arrayBuffer(), { type: 'array' });
+
+    expect(wb.SheetNames).toContain('DISDIK_SATUAN_1.1');
+    const rows = XLSX.utils.sheet_to_json<(string | number)[]>(wb.Sheets['DISDIK_SATUAN_1.1'], { header: 1 });
+    expect(rows[3]).toEqual(['SDN 01', '', 4, 3]);
+  });
+});
+
 function entry(id: string, kodeOPD: string, linkedCodes: string[] = []): ProjectIndexEntry {
   return {
     id,

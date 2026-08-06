@@ -7,6 +7,7 @@ import { computeRecap } from '@/selectors/recap';
 import { taxonomy } from '@/config/taxonomy';
 import { slug } from './filename';
 import { computeTopLevel, sumTopLevelTotals } from '@/selectors/dashboard';
+import { buildMatrixSheets } from './matrixExporter';
 
 function forceTextFormat(ws: XLSX.WorkSheet, colIndex: number): void {
   if (colIndex < 0) return;
@@ -134,6 +135,17 @@ export async function buildConsolidatedWorkbook(
       const sheetName = uniqueSheetName(wb, slug(parentEntry.kodeOPD).toUpperCase() || parentEntry.kodeOPD);
       XLSX.utils.book_append_sheet(wb, buildProjectSheet(parentProject, fullIndex), sheetName);
 
+      // Sheet Satuan_<nomor> milik project ini (docs/15-template-instance.md
+      // §4) — dibawa masuk ke workbook konsolidasi juga, diprefiks kodeOPD
+      // supaya tidak bentrok kalau beberapa OPD sama-sama punya template.
+      for (const { name: matrixName, sheet: matrixSheet } of buildMatrixSheets(parentProject)) {
+        XLSX.utils.book_append_sheet(
+          wb,
+          matrixSheet,
+          uniqueSheetName(wb, `${slug(parentEntry.kodeOPD)}_${matrixName}`.toUpperCase())
+        );
+      }
+
       for (const childId of linkedUnder.get(parentEntry.id) ?? []) {
         const childEntry = entryById.get(childId);
         const childProject = childEntry ? await readProject(childEntry.id) : null;
@@ -145,6 +157,14 @@ export async function buildConsolidatedWorkbook(
             `${slug(parentEntry.kodeOPD)}_${slug(childEntry.kodeOPD)}`.toUpperCase()
           );
           XLSX.utils.book_append_sheet(wb, buildProjectSheet(childProject, fullIndex, linkNode?.nomor), childSheetName);
+
+          for (const { name: matrixName, sheet: matrixSheet } of buildMatrixSheets(childProject)) {
+            XLSX.utils.book_append_sheet(
+              wb,
+              matrixSheet,
+              uniqueSheetName(wb, `${slug(childEntry.kodeOPD)}_${matrixName}`.toUpperCase())
+            );
+          }
         }
 
         done++;

@@ -1,17 +1,24 @@
 import React from 'react';
 import { OrgNode } from '@/models/node';
+import { NodeTotals } from '@/models/derived';
 import { getJenjangOptions, jenjangLabel } from '@/config/resolver';
 import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
+import { columnBlastRadius } from '@/selectors/templateInstance';
 
 interface JenjangChipsProps {
   node: OrgNode;
+  /** Terisi kalau node ini di dalam subtree template (docs/15-template-instance.md
+   * §2/§7) — blast-radius konfirmasi hapus HARUS baca dari sini, bukan dari
+   * r.kebutuhan/r.eksisting (selalu nol by invariant di sana). */
+  templateContext?: { templateNodeId: string; totals: Map<string, NodeTotals> } | null;
 }
 
-export const JenjangChips: React.FC<JenjangChipsProps> = ({ node }) => {
+export const JenjangChips: React.FC<JenjangChipsProps> = ({ node, templateContext }) => {
   const options = getJenjangOptions(node.kategoriId, node.rumpun);
   const addRincian = useProjectStore(s => s.addRincian);
   const removeRincian = useProjectStore(s => s.removeRincian);
+  const project = useProjectStore(s => s.project);
   const openConfirm = useUiStore(s => s.openConfirm);
 
   if (options.length === 0) return null;
@@ -25,6 +32,25 @@ export const JenjangChips: React.FC<JenjangChipsProps> = ({ node }) => {
 
     if (!existing) {
       addRincian(node.id, jenjangId);
+      return;
+    }
+
+    if (templateContext) {
+      // Doc 15 §2/§7: blast radius = seluruh instance template ini yang
+      // punya angka di kolom (rincianId) ini, BUKAN r.kebutuhan/eksisting
+      // node-nya sendiri (selalu nol di dalam template).
+      const radius = columnBlastRadius(project?.instances ?? [], templateContext.templateNodeId, existing.id);
+      if (radius.instanceCount === 0) {
+        removeRincian(node.id, existing.id);
+        return;
+      }
+      openConfirm({
+        title: `Hapus jenjang ${jenjangLabel(jenjangId, node.kategoriId)}?`,
+        body: `Menghapus jenjang ini akan menghapus angka pada ${radius.instanceCount} satuan (total kebutuhan ${radius.totalKebutuhan}, eksisting ${radius.totalEksisting}).`,
+        confirmLabel: 'Hapus',
+        danger: true,
+        onConfirm: () => removeRincian(node.id, existing.id),
+      });
       return;
     }
 

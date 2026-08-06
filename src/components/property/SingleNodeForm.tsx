@@ -179,7 +179,9 @@ export const SingleNodeForm: React.FC<SingleNodeFormProps> = ({ node, locked }) 
             )}
           </div>
 
-          {node.type === 'jabatan' && <JenjangChips node={node} />}
+          {node.type === 'jabatan' && (
+            <JenjangChips node={node} templateContext={templateContext} />
+          )}
           <RincianEditor node={node} templateContext={templateContext} />
         </div>
       )}

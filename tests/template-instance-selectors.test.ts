@@ -6,6 +6,7 @@ import {
   computeInstanceTotals,
   sumInstanceTotals,
   countInstancesFor,
+  columnBlastRadius,
 } from '../src/selectors/templateInstance';
 import { getStructureIndex, resetRebuildCount } from '../src/selectors/structureIndex';
 import { OrgNode } from '../src/models/node';
@@ -130,6 +131,23 @@ describe('templateInstance selectors (M12.1, docs/15-template-instance.md §3)',
     it('countInstancesFor counts only instances belonging to the given template', () => {
       expect(countInstancesFor(instances, 'sekolah')).toBe(2);
       expect(countInstancesFor(instances, 'smp')).toBe(1);
+    });
+
+    it('columnBlastRadius (M12.10) counts only instances with non-zero data in that column and sums their totals', () => {
+      const radius = columnBlastRadius(instances, 'sekolah', 'r-ahli-pertama');
+      expect(radius.instanceCount).toBe(2); // kedua SDN punya angka di kolom ini
+      expect(radius.totalKebutuhan).toBe(9);
+      expect(radius.totalEksisting).toBe(8);
+    });
+
+    it('columnBlastRadius returns zero for a column with no data anywhere (safe to remove silently)', () => {
+      const radius = columnBlastRadius(instances, 'sekolah', 'kolom-tak-terpakai');
+      expect(radius).toEqual({ instanceCount: 0, totalKebutuhan: 0, totalEksisting: 0 });
+    });
+
+    it('columnBlastRadius ignores instances of a different template', () => {
+      const radius = columnBlastRadius(instances, 'smp', 'smp');
+      expect(radius.instanceCount).toBe(1);
     });
   });
 });

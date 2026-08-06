@@ -98,6 +98,41 @@ export function countInstancesFor(instances: UnitInstance[], templateNodeId: str
   return instances.filter(i => i.templateNodeId === templateNodeId).length;
 }
 
+export interface ColumnBlastRadius {
+  instanceCount: number; // satuan yang punya angka non-nol di kolom ini
+  totalKebutuhan: number;
+  totalEksisting: number;
+}
+
+/**
+ * Blast radius menghapus satu kolom (docs/15-template-instance.md §2
+ * "Structure edits cascade with confirmation" / §7 exit criteria) — dipakai
+ * UI (JenjangChips, KepalaUnitEditor) untuk menyatakan secara eksplisit
+ * berapa satuan & total angka yang akan hilang SEBELUM operator
+ * mengonfirmasi, karena `rincian.kebutuhan`/`kepalaUnit.kebutuhan` di node
+ * itu sendiri selalu nol di dalam template (invariant) — mengecek field itu
+ * langsung tidak akan pernah mendeteksi data yang sebenarnya ada.
+ */
+export function columnBlastRadius(
+  instances: UnitInstance[],
+  templateNodeId: string,
+  columnKey: string
+): ColumnBlastRadius {
+  let instanceCount = 0;
+  let totalKebutuhan = 0;
+  let totalEksisting = 0;
+  for (const inst of instances) {
+    if (inst.templateNodeId !== templateNodeId) continue;
+    const fig = inst.figures[columnKey];
+    if (fig && (fig.kebutuhan !== 0 || fig.eksisting !== 0)) {
+      instanceCount++;
+      totalKebutuhan += fig.kebutuhan;
+      totalEksisting += fig.eksisting;
+    }
+  }
+  return { instanceCount, totalKebutuhan, totalEksisting };
+}
+
 export interface TemplateColumnDef {
   key: string; // rincianId, atau id unit untuk kolom kepala unit
   label: string; // label level (kosong kalau kolom kepala unit / posisi 1 baris)

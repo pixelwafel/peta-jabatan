@@ -215,4 +215,54 @@ describe('buildIndexEntry — linkedCodes population (M10.4, docs/13 §2 cycle g
     expect(withIndex.totalKebutuhan).toBe(52);
     expect(withIndex.totalEksisting).toBe(47);
   });
+
+  it('totalKebutuhan/totalEksisting include template-instance contributions (M12.10 dashboard reconciliation, docs/15 §3)', async () => {
+    const projectWithTemplate: Project = {
+      ...baseProject,
+      nodes: [
+        ...baseProject.nodes,
+        {
+          id: 'sekolah',
+          type: 'unit',
+          nama: 'SD (Template)',
+          nomor: '1.1',
+          rumpun: [],
+          rincian: [],
+          custom: {},
+          position: { x: 0, y: 0 },
+          collapsed: false,
+          order: 0,
+          isTemplate: true,
+        },
+        {
+          id: 'guru',
+          type: 'jabatan',
+          nama: 'Guru Kelas',
+          nomor: '1.1.1',
+          kategoriId: 'fungsional',
+          rumpun: ['keahlian'],
+          rincian: [{ id: 'r1', jenjangId: 'ahli_pertama', kebutuhan: 0, eksisting: 0 }],
+          custom: {},
+          position: { x: 0, y: 0 },
+          collapsed: false,
+          order: 0,
+        },
+      ],
+      edges: [
+        { id: 'e-sekolah', source: 'node-root', target: 'sekolah', kind: 'hirarki' },
+        { id: 'e-guru', source: 'sekolah', target: 'guru', kind: 'hirarki' },
+      ],
+      instances: [
+        { id: 'i1', templateNodeId: 'sekolah', nama: 'SDN 01', figures: { r1: { kebutuhan: 4, eksisting: 3 } } },
+        { id: 'i2', templateNodeId: 'sekolah', nama: 'SDN 02', figures: { r1: { kebutuhan: 5, eksisting: 5 } } },
+      ],
+    };
+
+    const entry = await buildIndexEntry(projectWithTemplate);
+    // Dashboard (M11) & rekap konsolidasi harus melihat total INSTANCE
+    // (4+5=9, 3+5=8), bukan angka baris mentah (yang selalu nol) — tanpa
+    // dobel hitung dengan jumlah instance itu sendiri.
+    expect(entry.totalKebutuhan).toBe(9);
+    expect(entry.totalEksisting).toBe(8);
+  });
 });

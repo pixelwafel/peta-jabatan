@@ -2,7 +2,9 @@ import React from 'react';
 import { OrgNode } from '@/models/node';
 import { NodeTotals } from '@/models/derived';
 import { useProjectStore } from '@/store/projectStore';
+import { useUiStore } from '@/store/uiStore';
 import { getJenjangOptions } from '@/config/resolver';
+import { columnBlastRadius } from '@/selectors/templateInstance';
 import { NumberInput } from './NumberInput';
 import { Plus, Trash2 } from 'lucide-react';
 
@@ -21,8 +23,31 @@ interface KepalaUnitEditorProps {
  */
 export const KepalaUnitEditor: React.FC<KepalaUnitEditorProps> = ({ node, templateContext }) => {
   const setKepalaUnit = useProjectStore(s => s.setKepalaUnit);
+  const project = useProjectStore(s => s.project);
+  const openConfirm = useUiStore(s => s.openConfirm);
   const jenjangOptions = getJenjangOptions('struktural', []);
   const kepala = node.kepalaUnit;
+
+  const handleDelete = () => {
+    if (!templateContext) {
+      setKepalaUnit(node.id, null);
+      return;
+    }
+    // Doc 15 §2/§7: blast radius dari kolom instance (keyed id unit ini
+    // sendiri), BUKAN kepala.kebutuhan/eksisting (selalu nol di template).
+    const radius = columnBlastRadius(project?.instances ?? [], templateContext.templateNodeId, node.id);
+    if (radius.instanceCount === 0) {
+      setKepalaUnit(node.id, null);
+      return;
+    }
+    openConfirm({
+      title: 'Hapus kepala unit?',
+      body: `Menghapus kolom ini akan menghapus angka pada ${radius.instanceCount} satuan (total kebutuhan ${radius.totalKebutuhan}, eksisting ${radius.totalEksisting}).`,
+      confirmLabel: 'Hapus',
+      danger: true,
+      onConfirm: () => setKepalaUnit(node.id, null),
+    });
+  };
 
   if (!kepala) {
     return (
@@ -52,7 +77,7 @@ export const KepalaUnitEditor: React.FC<KepalaUnitEditorProps> = ({ node, templa
         </label>
         <button
           type="button"
-          onClick={() => setKepalaUnit(node.id, null)}
+          onClick={handleDelete}
           className="flex items-center space-x-1 text-[10px] text-rose-400 hover:text-rose-300"
           title="Hapus kepala unit"
         >
