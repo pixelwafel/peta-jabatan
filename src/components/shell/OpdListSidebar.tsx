@@ -5,9 +5,10 @@ import { buildBlankProject } from '@/persistence/blankProject';
 import { requestDeleteProject } from '@/persistence/deleteProjectFlow';
 import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
-import { Folder, Search, Settings, Plus, Upload, Trash2 } from 'lucide-react';
+import { Folder, Search, Settings, Plus, Upload, Trash2, LayoutDashboard } from 'lucide-react';
 import { ProjectManagerDialog } from '../dialogs/ProjectManagerDialog';
 import { ImportDialog } from '../dialogs/ImportDialog';
+import { RecapDashboard } from '../dashboard/RecapDashboard';
 
 /**
  * Kolom 1: daftar OPD. Versi inline dari ProjectManagerDialog.tsx (buka/pindah
@@ -21,6 +22,7 @@ export const OpdListSidebar: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showManager, setShowManager] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
 
   const currentProject = useProjectStore(s => s.project);
   const setProject = useProjectStore(s => s.setProject);
@@ -129,6 +131,14 @@ export const OpdListSidebar: React.FC = () => {
 
       <div className="p-2 border-t border-slate-800 space-y-1.5">
         <button
+          onClick={() => setShowDashboard(true)}
+          className="w-full flex items-center justify-center space-x-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded border border-slate-700"
+          title="Dashboard rekap seluruh OPD (docs/14-recap-dashboard.md)"
+        >
+          <LayoutDashboard className="w-3.5 h-3.5 text-blue-400" />
+          <span>Dashboard</span>
+        </button>
+        <button
           onClick={handleAddOpd}
           className="w-full flex items-center justify-center space-x-1.5 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded shadow-sm"
         >
@@ -150,6 +160,8 @@ export const OpdListSidebar: React.FC = () => {
           <span>Kelola...</span>
         </button>
       </div>
+
+      {showDashboard && <RecapDashboard onClose={() => setShowDashboard(false)} />}
 
       {showManager && (
         <ProjectManagerDialog
