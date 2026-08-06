@@ -13,6 +13,8 @@ import {
 } from '@/selectors/dashboard';
 import { computeGlobalBreakdown } from '@/selectors/globalBreakdown';
 import { buildConsolidatedWorkbook } from '@/export/consolidatedExporter';
+import { buildLaporanPemerintahWorkbook } from '@/export/laporanExporter';
+import { laporanPemerintahFilename } from '@/export/filename';
 import { RecapBucket } from '@/models/derived';
 import { useProjectStore } from '@/store/projectStore';
 import { ImportDialog } from '../dialogs/ImportDialog';
@@ -128,6 +130,7 @@ export const RecapDashboard: React.FC<RecapDashboardProps> = ({ onClose }) => {
   const [breakdown, setBreakdown] = useState<RecapBucket[] | null>(null);
   const [breakdownProgress, setBreakdownProgress] = useState<{ done: number; total: number } | null>(null);
   const [isExportingConsolidated, setIsExportingConsolidated] = useState(false);
+  const [isExportingLaporan, setIsExportingLaporan] = useState(false);
   const [showAddOpd, setShowAddOpd] = useState(false);
   const [newOpdKode, setNewOpdKode] = useState('');
   const [newOpdNama, setNewOpdNama] = useState('');
@@ -233,6 +236,17 @@ export const RecapDashboard: React.FC<RecapDashboardProps> = ({ onClose }) => {
     }
   };
 
+  const handleExportLaporan = async () => {
+    if (!index || !opdIdx || isExportingLaporan) return;
+    setIsExportingLaporan(true);
+    try {
+      const blob = await buildLaporanPemerintahWorkbook(index, opdIdx, getProject);
+      downloadBlob(blob, laporanPemerintahFilename('xlsx'));
+    } finally {
+      setIsExportingLaporan(false);
+    }
+  };
+
   /** "Daftarkan sebagai OPD Resmi" (docs/14-recap-dashboard.md §1.1) — kartu
    * "Lainnya" yang isUnregistered dapat aksi cepat langsung dari kartunya. */
   const handleRegisterOpd = async (kodeOPD: string, namaOPD: string) => {
@@ -297,6 +311,19 @@ export const RecapDashboard: React.FC<RecapDashboardProps> = ({ onClose }) => {
                 <Download className="w-3.5 h-3.5" />
               )}
               <span>Ekspor Konsolidasi</span>
+            </button>
+            <button
+              onClick={handleExportLaporan}
+              disabled={!index || !opdIdx || topLevel.length === 0 || isExportingLaporan}
+              title="Laporan ringkas se-pemda: ringkasan, per kategori, per OPD — untuk pimpinan (bukan data mentah)"
+              className="flex items-center space-x-1.5 px-2.5 py-1 bg-amber-700/80 hover:bg-amber-600 disabled:opacity-40 text-white rounded text-xs font-medium"
+            >
+              {isExportingLaporan ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Download className="w-3.5 h-3.5" />
+              )}
+              <span>Unduh Laporan</span>
             </button>
             <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded">
               <X className="w-4 h-4" />

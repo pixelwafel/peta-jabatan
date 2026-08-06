@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useProjectStore } from '@/store/projectStore';
 import { useRecap } from '@/selectors/recap';
-import { exportFilename } from '@/export/filename';
+import { exportFilename, laporanFilename } from '@/export/filename';
 import { exportXlsx } from '@/export/xlsxExporter';
 import { exportCsv } from '@/export/csvExporter';
 import { exportJson } from '@/export/jsonExporter';
 import { exportPng } from '@/export/pngExporter';
+import { exportLaporan } from '@/export/laporanExporter';
 import { markProjectExported } from '@/persistence/reminder';
 import { downloadBlob } from '@/utils/download';
 import {
@@ -14,6 +15,7 @@ import {
   FileCode,
   FileText,
   Image as ImageIcon,
+  FileBarChart,
   X,
   AlertTriangle,
   RefreshCw,
@@ -32,6 +34,10 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ onClose }) => {
   const [exportXlsxSelected, setExportXlsxSelected] = useState(true);
   const [exportCsvSelected, setExportCsvSelected] = useState(false);
   const [exportPngSelected, setExportPngSelected] = useState(true);
+  // Default TIDAK dicentang — opt-in, supaya kebiasaan ekspor yang sudah ada
+  // tidak mendadak menghasilkan file tambahan tak terduga (fitur "Laporan",
+  // dibahas & disepakati dengan user, lihat export/laporanExporter.ts).
+  const [exportLaporanSelected, setExportLaporanSelected] = useState(false);
 
   const [pngScale, setPngScale] = useState<number>(2);
   const [pngBg, setPngBg] = useState<'white' | 'transparent'>('white');
@@ -47,7 +53,8 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ onClose }) => {
     (exportJsonSelected ? 1 : 0) +
     (exportXlsxSelected ? 1 : 0) +
     (exportCsvSelected ? 1 : 0) +
-    (exportPngSelected ? 1 : 0);
+    (exportPngSelected ? 1 : 0) +
+    (exportLaporanSelected ? 1 : 0);
 
   const handleExport = async () => {
     if (selectedCount === 0) return;
@@ -75,6 +82,12 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ onClose }) => {
       if (exportPngSelected) {
         const pngBlob = await exportPng({ background: pngBg, scale: pngScale });
         downloadBlob(pngBlob, exportFilename(project, 'png'));
+      }
+
+      if (exportLaporanSelected) {
+        const laporanBlob = exportLaporan(project, recap);
+        downloadBlob(laporanBlob, laporanFilename(project, 'xlsx'));
+        await new Promise(r => setTimeout(r, 200));
       }
 
       await markProjectExported(project.id);
@@ -192,6 +205,20 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ onClose }) => {
                 <span className="font-medium">Gambar PNG (.png)</span>
               </div>
               <span className="text-[11px] text-slate-500">Gambar kanvas</span>
+            </label>
+
+            <label className="flex items-center justify-between p-2 rounded border border-slate-800 bg-slate-950/40 cursor-pointer hover:border-slate-700">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={exportLaporanSelected}
+                  onChange={e => setExportLaporanSelected(e.target.checked)}
+                  className="rounded bg-slate-800 border-slate-700 text-blue-600 focus:ring-0"
+                />
+                <FileBarChart className="w-4 h-4 text-amber-400" />
+                <span className="font-medium">Laporan Ringkas (.xlsx)</span>
+              </div>
+              <span className="text-[11px] text-slate-500">Untuk pimpinan OPD</span>
             </label>
           </div>
 
