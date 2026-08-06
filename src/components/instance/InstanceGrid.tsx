@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
 import { buildColumnGroups, TemplateColumnGroup } from '@/selectors/templateInstance';
@@ -11,7 +11,9 @@ type ColumnGroup = TemplateColumnGroup;
 
 const ROW_HEIGHT = 32;
 const OVERSCAN = 6;
-const VIEWPORT_HEIGHT = 420;
+// Tinggi awal sebelum ResizeObserver sempat mengukur kontainer sesungguhnya
+// (cuma dipakai sekilas saat render pertama) — bukan lagi tinggi tetap.
+const FALLBACK_VIEWPORT_HEIGHT = 420;
 
 /**
  * Grid instance virtualized (docs/15-template-instance.md §2, §6): satu baris
@@ -34,7 +36,24 @@ export const InstanceGrid: React.FC<{ templateNodeId: string }> = ({ templateNod
 
   const [scrollTop, setScrollTop] = useState(0);
   const [newName, setNewName] = useState('');
+  const [viewportHeight, setViewportHeight] = useState(FALLBACK_VIEWPORT_HEIGHT);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Container ini dulu dipaksa maxHeight: 420px tetap (bug dilaporkan: panel
+  // cuma setengah, sisa ruang di bawahnya kosong, baris terpotong lebih cepat
+  // dari yang seharusnya). Sekarang isi tinggi sungguhan lewat ResizeObserver
+  // supaya grid mengisi seluruh ruang tab "Satuan" yang tersedia, dan jumlah
+  // baris yang di-render virtualisasi menyesuaikan tinggi layar sesungguhnya.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(entries => {
+      const height = entries[0]?.contentRect.height;
+      if (height) setViewportHeight(height);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const templateNode = project?.nodes.find(n => n.id === templateNodeId);
   const nodes = project?.nodes ?? [];
@@ -50,7 +69,7 @@ export const InstanceGrid: React.FC<{ templateNodeId: string }> = ({ templateNod
     [project?.instances, templateNodeId]
   );
 
-  const { startIndex, endIndex } = computeVisibleRange(scrollTop, ROW_HEIGHT, VIEWPORT_HEIGHT, OVERSCAN, instances.length);
+  const { startIndex, endIndex } = computeVisibleRange(scrollTop, ROW_HEIGHT, viewportHeight, OVERSCAN, instances.length);
   const visibleInstances = instances.slice(startIndex, endIndex);
 
   if (!templateNode) return null;
@@ -120,8 +139,7 @@ export const InstanceGrid: React.FC<{ templateNodeId: string }> = ({ templateNod
         <div
           ref={scrollRef}
           onScroll={e => setScrollTop(e.currentTarget.scrollTop)}
-          className="flex-1 overflow-auto"
-          style={{ maxHeight: VIEWPORT_HEIGHT }}
+          className="flex-1 min-h-0 overflow-auto"
         >
           <table className="border-collapse font-mono text-[11px]" style={{ width: '100%' }}>
             <thead className="sticky top-0 z-10 bg-slate-950">
