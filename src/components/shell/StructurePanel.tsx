@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { FolderTree, Eye, AlertCircle, BarChart3, LayoutGrid } from 'lucide-react';
 import { RecapPanel } from '../recap/RecapPanel';
 import { UnplacedPanel } from '../unplaced/UnplacedPanel';
@@ -7,20 +7,23 @@ import { Canvas } from '../canvas/Canvas';
 import { InstanceGrid } from '../instance/InstanceGrid';
 import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
+import { useShallow } from 'zustand/react/shallow';
 
 export const StructurePanel: React.FC = () => {
   const activeTab = useUiStore(s => s.structureTab);
   const setActiveTab = useUiStore(s => s.setStructureTab);
   const selectedTemplateId = useUiStore(s => s.selectedTemplateId);
   const setSelectedTemplateId = useUiStore(s => s.setSelectedTemplateId);
-  const project = useProjectStore(s => s.project);
 
-  // Unit template (docs/15-template-instance.md) — tab "Satuan" cuma tampil
-  // kalau project punya minimal satu, konsisten dengan tab lain yang sudah
-  // ada (tidak menambah tab kosong tanpa isi).
-  const templateUnits = useMemo(
-    () => (project?.nodes ?? []).filter(n => n.isTemplate),
-    [project?.nodes]
+  // Fase 1.5: dulu StructurePanel subscribe ke SELURUH `project` cuma untuk
+  // menurunkan daftar unit template ini — re-render (dan filter O(N)) tiap
+  // keystroke walau template unit nyaris tidak pernah berubah. useShallow
+  // membandingkan ISI array hasil filter (bukan identitas project); berkat
+  // structural sharing Immer, node yang tidak disentuh tetap referensi yang
+  // sama antar-commit, jadi array ini stabil (dan re-render di-skip) kecuali
+  // keanggotaan/isi node template-nya sendiri yang berubah.
+  const templateUnits = useProjectStore(
+    useShallow(s => (s.project?.nodes ?? []).filter(n => n.isTemplate))
   );
 
   const effectiveTemplateId =
@@ -84,7 +87,12 @@ export const StructurePanel: React.FC = () => {
 
       {/* Tab Panel Content */}
       {activeTab === 'outline' && (
-        <div className="flex-1 min-h-0 overflow-y-auto p-3 text-xs">
+        // Fase 2.5 — TreeView sekarang punya scroll container (+ padding)
+        // sendiri untuk virtualisasi (butuh scrollTop & tinggi viewport
+        // sungguhan) — wrapper di sini tinggal beri ruang lewat flex,
+        // TIDAK overflow-y-auto lagi (dua scroll container bersarang akan
+        // membuat scrollbar dobel / matematika windowing salah).
+        <div className="flex-1 min-h-0 flex flex-col">
           <TreeView />
         </div>
       )}

@@ -80,6 +80,23 @@ export async function flushSave(): Promise<void> {
   }
 }
 
+/**
+ * Batalkan (tanpa menyimpan) pending save kalau targetnya adalah `id` ini.
+ * Dipakai deleteProjectFlow.ts SEBELUM deleteProjectData: kalau operator
+ * mengedit lalu langsung menghapus project yang sama dalam jendela debounce
+ * 500ms, timer autosave yang masih tertunda akan menulis ulang body yang
+ * baru saja dihapus (menghidupkannya kembali). Beda dari flushSave — di sini
+ * memang tidak boleh disimpan.
+ */
+export function discardPendingSaveFor(id: string): void {
+  if (pendingProject?.id !== id) return;
+  if (saveTimer) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+  pendingProject = null;
+}
+
 export function initSaveListeners() {
   initBroadcastChannel();
 

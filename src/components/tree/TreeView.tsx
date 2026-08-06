@@ -1,18 +1,17 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
-import { buildTree } from '@/selectors/tree';
-import { TreeNode } from '@/models/derived';
+import { buildTree, flattenVisibleTree } from '@/selectors/tree';
 import { OrgNode, NodeType } from '@/models/node';
 import { ancestorsOf, childrenOf, parentOf, rootNodes } from '@/selectors/navigation';
 import { isLocked } from '@/selectors/guards';
 import { hierarchyEdges } from '@/utils/edges';
-import { NODE_W, nodeHeight } from '@/utils/layout';
+import { NODE_W, nodeHeight, computeLayoutCached } from '@/utils/layout';
+import { computeVisibleRange } from '@/utils/virtualization';
 import { useReactFlow } from '@xyflow/react';
 import { useStructureShortcuts } from '@/hooks/useStructureShortcuts';
 import { useDeleteNodeRequest } from '@/hooks/useDeleteNodeRequest';
-import { useLiveLayout } from '@/hooks/useLiveLayout';
 import {
   ChevronDown,
   ChevronRight,
@@ -50,8 +49,18 @@ function computeDropPosition(e: React.DragEvent, rect: DOMRect): DropPosition {
   return 'inside';
 }
 
+// Fase 2.5 — tinggi baris tetap, dipakai virtualisasi (computeVisibleRange).
+// Baris aslinya (py-1.5 + text-sm, tanpa gap eksplisit lagi — lihat catatan
+// di TreeRow) tingginya ~34px; angka ini sengaja sedikit longgar (36px)
+// supaya konten tidak pernah terpotong kalau font rendering OS sedikit beda.
+const ROW_HEIGHT = 36;
+const OVERSCAN = 8;
+const FALLBACK_VIEWPORT_HEIGHT = 480;
+
 interface TreeRowProps {
-  treeNode: TreeNode;
+  id: string;
+  depth: number;
+  hasChildren: boolean;
   nodeByIdMap: Map<string, OrgNode>;
   lockedMap: Map<string, boolean>;
   parentLockedMap: Map<string, boolean>;
@@ -115,8 +124,15 @@ const AddTypeMenu: React.FC<AddTypeMenuProps> = ({ x, y, onPick }) =>
     document.body
   );
 
-const TreeRow: React.FC<TreeRowProps> = ({
-  treeNode,
+// Fase 1.5: React.memo — hanya efektif kalau SEMUA prop di bawah (termasuk
+// handler) punya identitas stabil antar-render; lihat useCallback di
+// TreeView di bawah dan fix di hooks/useDeleteNodeRequest.ts. Tanpa itu,
+// shallow-compare bawaan memo gagal tiap keystroke dan tiap baris tetap
+// re-render seperti sebelum di-memo.
+const TreeRow: React.FC<TreeRowProps> = React.memo(function TreeRow({
+  id,
+  depth,
+  hasChildren,
   nodeByIdMap,
   lockedMap,
   parentLockedMap,
@@ -138,13 +154,12 @@ const TreeRow: React.FC<TreeRowProps> = ({
   onDragOverRow,
   onDragEndRow,
   onDropRow,
-}) => {
-  const node = nodeByIdMap.get(treeNode.id);
+}) {
+  const node = nodeByIdMap.get(id);
   if (!node) return null;
 
   const isSelected = selectedIds.includes(node.id);
   const isUnit = node.type === 'unit';
-  const hasChildren = treeNode.children.length > 0;
   const isEditing = editingId === node.id;
   const isDropTarget = dropIndicator?.id === node.id;
   // Kunci individual per node — tidak ada lagi "terkunci otomatis" dari
@@ -160,7 +175,11 @@ const TreeRow: React.FC<TreeRowProps> = ({
   const eks = node.rincian.reduce((acc, r) => acc + r.eksisting, 0);
 
   return (
-    <div className="space-y-0.5 select-none font-mono">
+    // Fase 2.5 — tinggi tetap (ROW_HEIGHT) menggantikan `space-y-0.5` +
+    // tinggi konten-otomatis: virtualisasi (computeVisibleRange di TreeView)
+    // butuh matematika baris seragam. `overflow-hidden` menjaga rounding
+    // sub-pixel supaya tidak ada 1px konten row berikutnya yang bocor.
+    <div className="select-none font-mono" style={{ height: ROW_HEIGHT, overflow: 'hidden' }}>
       <div
         draggable={!isEditing && !locked && !parentLocked}
         onDragStart={e => {
@@ -186,7 +205,7 @@ const TreeRow: React.FC<TreeRowProps> = ({
             ? 'bg-blue-900/40 text-blue-200 font-semibold'
             : 'hover:bg-slate-800/60 text-slate-300'
         } ${isDropTarget && dropIndicator?.position === 'inside' ? 'ring-1 ring-blue-400' : ''}`}
-        style={{ paddingLeft: `${treeNode.depth * 12 + 6}px` }}
+        style={{ paddingLeft: `${depth * 12 + 6}px` }}
       >
         {isDropTarget && dropIndicator?.position === 'before' && (
           <div className="absolute left-0 right-0 top-0 h-0.5 bg-blue-400" />
@@ -365,39 +384,9 @@ const TreeRow: React.FC<TreeRowProps> = ({
           )}
         </div>
       </div>
-
-      {/* Children render recursively if not collapsed */}
-      {!node.collapsed &&
-        treeNode.children.map(child => (
-          <TreeRow
-            key={child.id}
-            treeNode={child}
-            nodeByIdMap={nodeByIdMap}
-            lockedMap={lockedMap}
-            parentLockedMap={parentLockedMap}
-            selectedIds={selectedIds}
-            editingId={editingId}
-            dropIndicator={dropIndicator}
-            onFocus={onFocus}
-            onToggleCollapse={onToggleCollapse}
-            onStartRename={onStartRename}
-            onCommitRename={onCommitRename}
-            onCancelRename={onCancelRename}
-            addMenu={addMenu}
-            onToggleAddMenu={onToggleAddMenu}
-            onConfirmAdd={onConfirmAdd}
-            onDuplicate={onDuplicate}
-            onDelete={onDelete}
-            onToggleLock={onToggleLock}
-            onDragStartRow={onDragStartRow}
-            onDragOverRow={onDragOverRow}
-            onDragEndRow={onDragEndRow}
-            onDropRow={onDropRow}
-          />
-        ))}
     </div>
   );
-};
+});
 
 export const TreeView: React.FC = () => {
   useStructureShortcuts();
@@ -419,6 +408,25 @@ export const TreeView: React.FC = () => {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [addMenu, setAddMenu] = useState<AddMenuState | null>(null);
 
+  // Fase 2.5 — virtualisasi: TreeView sekarang memiliki scroll container-nya
+  // sendiri (dulu dimiliki StructurePanel.tsx, lihat perubahan di sana) supaya
+  // bisa membaca scrollTop & tinggi viewport sungguhan lewat ResizeObserver,
+  // pola sama seperti InstanceGrid.tsx.
+  const [scrollTop, setScrollTop] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState(FALLBACK_VIEWPORT_HEIGHT);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(entries => {
+      const height = entries[0]?.contentRect.height;
+      if (height) setViewportHeight(height);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   // Tutup menu pilih tipe saat klik di luar menu (menu sendiri men-stopPropagation)
   // atau saat area di belakangnya di-scroll (menu pakai position:fixed, tidak ikut scroll)
   useEffect(() => {
@@ -438,6 +446,18 @@ export const TreeView: React.FC = () => {
   const tree = useMemo(() => buildTree(nodes, edges), [nodes, edges]);
   const nodeByIdMap = useMemo(() => new Map(nodes.map(n => [n.id, n])), [nodes]);
 
+  // Fase 2.5 — array datar top-down yang sudah melompati subtree collapsed
+  // (selectors/tree.ts flattenVisibleTree), dasar virtualisasi di bawah.
+  const flatRows = useMemo(() => flattenVisibleTree(tree, nodeByIdMap), [tree, nodeByIdMap]);
+  const { startIndex, endIndex } = computeVisibleRange(
+    scrollTop,
+    ROW_HEIGHT,
+    viewportHeight,
+    OVERSCAN,
+    flatRows.length
+  );
+  const visibleRows = flatRows.slice(startIndex, endIndex);
+
   // Dihitung sekali di sini (bukan per-baris) supaya efisien.
   const lockedMap = useMemo(() => {
     const map = new Map<string, boolean>();
@@ -455,93 +475,151 @@ export const TreeView: React.FC = () => {
     return map;
   }, [edges, lockedMap]);
 
-  // Posisi mode preview di canvas dihitung otomatis (Dagre) — pakai layout
-  // yang sama supaya "fokus ke canvas" akurat terhadap yang benar-benar dirender.
-  const liveLayout = useLiveLayout(nodes, edges, {
-    direction: 'TB',
-    scope: 'all',
-    showJenjang: showJenjangOnCard,
-  });
+  // Fase 1.6: TIDAK lagi useLiveLayout() di sini — liveLayout di tab Outline
+  // dulu HANYA dipakai handleFocus (klik baris -> center kanvas), tapi karena
+  // ia hook di top-level, Dagre lengkap jalan ulang tiap keystroke walau tab
+  // Preview tidak sedang aktif/mounted. computeLayoutCached() dipanggil
+  // langsung di dalam handler saat klik — 30-100ms saat itu wajar, dan kalau
+  // geometri tak berubah sejak Canvas terakhir render (cache dibagi lewat
+  // utils/layout.ts), panggilan ini malah gratis (cache hit).
 
-  const handleFocus = (nodeId: string) => {
-    // Auto expand collapsed ancestors
-    const collapsedAncestors = ancestorsOf(nodes, edges, nodeId).filter(a => a.collapsed);
-    if (collapsedAncestors.length > 0) {
-      for (const a of collapsedAncestors) {
-        updateNode(a.id, { collapsed: false });
+  // Fase 1.5: semua handler di bawah dibungkus useCallback dengan dependency
+  // MINIMAL (action ref Zustand yang stabil + state UI lokal), BUKAN `nodes`/
+  // `edges` — keduanya berganti referensi tiap commit (tiap keystroke), yang
+  // kalau masuk dependency array akan membuat handler-nya sendiri berganti
+  // identitas tiap keystroke, membatalkan React.memo(TreeRow) di atas untuk
+  // SEMUA baris. Baca nodes/edges terkini via getState() di dalam handler,
+  // bukan dari closure reaktif.
+  const handleFocus = useCallback(
+    (nodeId: string) => {
+      const proj = useProjectStore.getState().project;
+      const liveNodes = proj?.nodes ?? [];
+      const liveEdges = proj?.edges ?? [];
+
+      // Auto expand collapsed ancestors
+      const collapsedAncestors = ancestorsOf(liveNodes, liveEdges, nodeId).filter(a => a.collapsed);
+      if (collapsedAncestors.length > 0) {
+        for (const a of collapsedAncestors) {
+          updateNode(a.id, { collapsed: false });
+        }
       }
-    }
 
-    const target = nodeByIdMap.get(nodeId);
-    const pos = liveLayout.get(nodeId) ?? target?.position;
-    if (target && pos) {
+      const target = liveNodes.find(n => n.id === nodeId);
+      if (!target) return;
+      const layout = computeLayoutCached(liveNodes, liveEdges, {
+        direction: 'TB',
+        scope: 'all',
+        showJenjang: showJenjangOnCard,
+      });
+      const pos = layout.get(nodeId) ?? target.position;
       const h = nodeHeight(target, showJenjangOnCard);
       setCenter(pos.x + NODE_W / 2, pos.y + h / 2, {
         zoom: 1.2,
         duration: 300,
       });
       selectNodes([nodeId]);
-    }
-  };
+    },
+    [updateNode, showJenjangOnCard, setCenter, selectNodes]
+  );
 
-  const handleToggleCollapse = (nodeId: string) => {
-    const node = nodeByIdMap.get(nodeId);
-    if (node) {
-      updateNode(nodeId, { collapsed: !node.collapsed });
-    }
-  };
+  const handleToggleCollapse = useCallback(
+    (nodeId: string) => {
+      const node = useProjectStore.getState().project?.nodes.find(n => n.id === nodeId);
+      if (node) {
+        updateNode(nodeId, { collapsed: !node.collapsed });
+      }
+    },
+    [updateNode]
+  );
 
-  const handleCommitRename = (nodeId: string, nama: string) => {
-    const trimmed = nama.trim();
-    if (trimmed) {
-      updateNode(nodeId, { nama: trimmed });
-    }
-    setEditingId(null);
-  };
+  const handleCommitRename = useCallback(
+    (nodeId: string, nama: string) => {
+      const trimmed = nama.trim();
+      if (trimmed) {
+        updateNode(nodeId, { nama: trimmed });
+      }
+      setEditingId(null);
+    },
+    [updateNode]
+  );
 
-  const handleToggleAddMenu = (nodeId: string, kind: AddKind, anchor: HTMLElement) => {
+  const handleCancelRename = useCallback(() => setEditingId(null), []);
+
+  const handleToggleAddMenu = useCallback((nodeId: string, kind: AddKind, anchor: HTMLElement) => {
     setAddMenu(prev => {
       if (prev?.nodeId === nodeId && prev.kind === kind) return null;
       const rect = anchor.getBoundingClientRect();
       return { nodeId, kind, x: rect.left, y: rect.bottom + 4 };
     });
-  };
+  }, []);
 
-  const handleConfirmAdd = (nodeId: string, kind: AddKind, type: NodeType) => {
-    if (kind === 'child') {
-      addNode({ type, parentId: nodeId });
-    } else {
-      const parentId = parentOf(nodes, edges, nodeId)?.id;
-      addNode({ type, parentId });
-    }
-    setAddMenu(null);
-  };
+  const handleConfirmAdd = useCallback(
+    (nodeId: string, kind: AddKind, type: NodeType) => {
+      if (kind === 'child') {
+        addNode({ type, parentId: nodeId });
+      } else {
+        const proj = useProjectStore.getState().project;
+        const parentId = proj ? parentOf(proj.nodes, proj.edges, nodeId)?.id : undefined;
+        addNode({ type, parentId });
+      }
+      setAddMenu(null);
+    },
+    [addNode]
+  );
 
-  const handleToggleLock = (nodeId: string, nextLocked: boolean, cascade?: boolean) => {
-    setLocked(nodeId, nextLocked, { cascade });
-  };
+  const handleDuplicateRow = useCallback(
+    (id: string) => duplicateNode(id, 'node-only'),
+    [duplicateNode]
+  );
 
-  const handleDrop = (targetId: string, position: DropPosition) => {
-    const dId = draggedId;
+  const handleDeleteRow = useCallback((id: string) => requestDelete(id), [requestDelete]);
+
+  const handleToggleLock = useCallback(
+    (nodeId: string, nextLocked: boolean, cascade?: boolean) => {
+      setLocked(nodeId, nextLocked, { cascade });
+    },
+    [setLocked]
+  );
+
+  const handleDragOverRow = useCallback(
+    (id: string, position: DropPosition) => setDropIndicator({ id, position }),
+    []
+  );
+
+  const handleDragEndRow = useCallback(() => {
     setDraggedId(null);
     setDropIndicator(null);
-    if (!dId || dId === targetId) return;
+  }, []);
 
-    if (position === 'inside') {
-      moveNode(dId, targetId, 0);
-      return;
-    }
+  const handleDrop = useCallback(
+    (targetId: string, position: DropPosition) => {
+      const dId = draggedId;
+      setDraggedId(null);
+      setDropIndicator(null);
+      if (!dId || dId === targetId) return;
 
-    const targetParentId = parentOf(nodes, edges, targetId)?.id ?? null;
-    const siblings = (
-      targetParentId ? childrenOf(nodes, edges, targetParentId) : rootNodes(nodes, edges)
-    )
-      .slice()
-      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    const targetIndex = siblings.findIndex(s => s.id === targetId);
-    const insertIndex = position === 'after' ? targetIndex + 1 : targetIndex;
-    moveNode(dId, targetParentId, insertIndex);
-  };
+      if (position === 'inside') {
+        moveNode(dId, targetId, 0);
+        return;
+      }
+
+      const proj = useProjectStore.getState().project;
+      const liveNodes = proj?.nodes ?? [];
+      const liveEdges = proj?.edges ?? [];
+      const targetParentId = parentOf(liveNodes, liveEdges, targetId)?.id ?? null;
+      const siblings = (
+        targetParentId
+          ? childrenOf(liveNodes, liveEdges, targetParentId)
+          : rootNodes(liveNodes, liveEdges)
+      )
+        .slice()
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      const targetIndex = siblings.findIndex(s => s.id === targetId);
+      const insertIndex = position === 'after' ? targetIndex + 1 : targetIndex;
+      moveNode(dId, targetParentId, insertIndex);
+    },
+    [draggedId, moveNode]
+  );
 
   if (nodes.length === 0) {
     return (
@@ -551,38 +629,51 @@ export const TreeView: React.FC = () => {
     );
   }
 
+  // Fase 2.5 — TreeView memiliki scroll container-nya sendiri (dipindah dari
+  // StructurePanel.tsx, lihat perubahan di sana) supaya scrollTop/tinggi
+  // viewport bisa dibaca untuk windowing. Baris di luar [startIndex,
+  // endIndex) tidak dirender ke DOM sama sekali — spacer atas (tinggi
+  // startIndex*ROW_HEIGHT lewat translateY) menjaga tinggi scrollbar tetap
+  // benar tanpa perlu me-render placeholder kosong per baris.
   return (
-    <div className="space-y-1 py-1">
-      {tree.map(treeNode => (
-        <TreeRow
-          key={treeNode.id}
-          treeNode={treeNode}
-          nodeByIdMap={nodeByIdMap}
-          lockedMap={lockedMap}
-          parentLockedMap={parentLockedMap}
-          selectedIds={selectedNodeIds}
-          editingId={editingId}
-          dropIndicator={dropIndicator}
-          onFocus={handleFocus}
-          onToggleCollapse={handleToggleCollapse}
-          onStartRename={setEditingId}
-          onCommitRename={handleCommitRename}
-          onCancelRename={() => setEditingId(null)}
-          addMenu={addMenu}
-          onToggleAddMenu={handleToggleAddMenu}
-          onConfirmAdd={handleConfirmAdd}
-          onDuplicate={id => duplicateNode(id, 'node-only')}
-          onDelete={id => requestDelete(id)}
-          onToggleLock={handleToggleLock}
-          onDragStartRow={setDraggedId}
-          onDragOverRow={(id, position) => setDropIndicator({ id, position })}
-          onDragEndRow={() => {
-            setDraggedId(null);
-            setDropIndicator(null);
-          }}
-          onDropRow={handleDrop}
-        />
-      ))}
+    <div
+      ref={scrollRef}
+      onScroll={e => setScrollTop(e.currentTarget.scrollTop)}
+      className="h-full overflow-y-auto p-3 text-xs"
+    >
+      <div style={{ height: flatRows.length * ROW_HEIGHT, position: 'relative' }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, transform: `translateY(${startIndex * ROW_HEIGHT}px)` }}>
+          {visibleRows.map(row => (
+            <TreeRow
+              key={row.id}
+              id={row.id}
+              depth={row.depth}
+              hasChildren={row.hasChildren}
+              nodeByIdMap={nodeByIdMap}
+              lockedMap={lockedMap}
+              parentLockedMap={parentLockedMap}
+              selectedIds={selectedNodeIds}
+              editingId={editingId}
+              dropIndicator={dropIndicator}
+              onFocus={handleFocus}
+              onToggleCollapse={handleToggleCollapse}
+              onStartRename={setEditingId}
+              onCommitRename={handleCommitRename}
+              onCancelRename={handleCancelRename}
+              addMenu={addMenu}
+              onToggleAddMenu={handleToggleAddMenu}
+              onConfirmAdd={handleConfirmAdd}
+              onDuplicate={handleDuplicateRow}
+              onDelete={handleDeleteRow}
+              onToggleLock={handleToggleLock}
+              onDragStartRow={setDraggedId}
+              onDragOverRow={handleDragOverRow}
+              onDragEndRow={handleDragEndRow}
+              onDropRow={handleDrop}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

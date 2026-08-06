@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import {
   ReactFlow,
   Background,
@@ -16,16 +16,23 @@ import { LinkCard } from './cards/LinkCard';
 import { HierarchyEdge } from './edges/HierarchyEdge';
 import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
-import { visibleNodeIds } from '@/selectors/visibility';
+import { visibleNodeIds, guardVisibleByDepth } from '@/selectors/visibility';
 import { hierarchyEdges } from '@/utils/edges';
 import { nodeTotals, subtreeTotals } from '@/selectors/totals';
-import { childrenOf } from '@/selectors/navigation';
 import { isLocked } from '@/selectors/guards';
 import { kategoriWarna } from '@/config/resolver';
 import { useLiveLayout } from '@/hooks/useLiveLayout';
-import { useRecap } from '@/selectors/recap';
+import { useRecap } from '@/hooks/useRecap';
 import { getStructureIndex } from '@/selectors/structureIndex';
+import { allDepths } from '@/selectors/navigation';
 import { buildTemplateUnitIds, containingTemplateUnitId, countInstancesFor } from '@/selectors/templateInstance';
+import { Layers } from 'lucide-react';
+
+// Fase 2.6 — di atas ini, React Flow membukukan (bukan cuma render) SETIAP
+// node yang diserahkan lewat prop `nodes`, terlepas dari onlyRenderVisibleElements
+// (yang cuma menghindarkan cost render DOM, bukan cost pembukuan internal).
+// Lihat selectors/visibility.ts guardVisibleByDepth untuk mekanismenya.
+const VISIBLE_NODE_GUARD_LIMIT = 1500;
 
 const nodeTypes = {
   unit: UnitCard,
@@ -89,10 +96,32 @@ const InnerCanvas: React.FC = () => {
     return visibleNodeIds(nodes, edges);
   }, [nodes, edges]);
 
+  // Fase 2.6 — pagar pengaman: guard hanya AKTIF (memotong sesuatu) kalau
+  // `visible` melebihi VISIBLE_NODE_GUARD_LIMIT; di bawah itu guardedVisible
+  // === visible (referensi sama, tidak ada biaya tambahan). `forceShowAll`
+  // murni state UI lokal (tidak disimpan/di-undo) — direset tiap ganti
+  // project supaya OPD kecil yang dibuka berikutnya tidak mewarisi override
+  // OPD besar sebelumnya.
+  const [forceShowAll, setForceShowAll] = useState(false);
+  useEffect(() => {
+    setForceShowAll(false);
+  }, [project?.id]);
+
+  const depths = useMemo(() => allDepths(nodes, edges), [nodes, edges]);
+  const { guardedVisible, cutoffDepth, hiddenCount } = useMemo(() => {
+    if (forceShowAll) return { guardedVisible: visible, cutoffDepth: null, hiddenCount: 0 };
+    return guardVisibleByDepth(visible, depths, VISIBLE_NODE_GUARD_LIMIT);
+  }, [visible, depths, forceShowAll]);
+
   // Project store nodes -> React Flow nodes
   const rfNodes: RfNode[] = useMemo(() => {
+    // Fase 1.4: idx dihitung SEKALI di luar .map() (cache-hit murah berkat
+    // Fase 1.3 kalau nodes/edges sama dengan panggilan lain di render ini),
+    // dipakai untuk childCount langsung lewat childIds — dulu childrenOf(...)
+    // dipanggil per node di dalam .map(), O(N) per panggilan × N node.
+    const idx = getStructureIndex(nodes, edges);
     return nodes
-      .filter(n => visible.has(n.id))
+      .filter(n => guardedVisible.has(n.id))
       .map(n => ({
         id: n.id,
         type: n.link ? 'link' : n.type,
@@ -106,7 +135,7 @@ const InnerCanvas: React.FC = () => {
             n.type === 'unit'
               ? recap?.subtreeTotals.get(n.id) ?? subtreeTotals(nodes, edges, n.id)
               : null,
-          childCount: childrenOf(nodes, edges, n.id).length,
+          childCount: idx.childIds.get(n.id)?.length ?? 0,
           hasFindings: false,
           showJenjang: showJenjangOnCard,
           locked: isLocked(nodes, edges, n.id),
@@ -114,12 +143,24 @@ const InnerCanvas: React.FC = () => {
         },
         selected: selectedNodeIds.includes(n.id),
       }));
-  }, [nodes, edges, visible, selectedNodeIds, showJenjangOnCard, liveLayout, recap, instanceMarkers]);
+  }, [nodes, edges, guardedVisible, selectedNodeIds, showJenjangOnCard, liveLayout, recap, instanceMarkers]);
+
+  // Fase 1.4: warna MiniMap per node dihitung SEKALI di sini (useMemo), bukan
+  // di dalam callback nodeColor React Flow — callback itu dipanggil per node
+  // per frame minimap, dan dulu isinya nodes.find(...) per panggilan, jadi
+  // O(N) per frame × N node = O(N²) tiap kali minimap redraw.
+  const nodeColorById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const n of nodes) {
+      map.set(n.id, kategoriWarna(n));
+    }
+    return map;
+  }, [nodes]);
 
   // Project store edges -> React Flow edges
   const rfEdges: RfEdge[] = useMemo(() => {
     return hierarchyEdges(edges)
-      .filter(e => visible.has(e.source) && visible.has(e.target))
+      .filter(e => guardedVisible.has(e.source) && guardedVisible.has(e.target))
       .map(e => ({
         id: e.id,
         source: e.source,
@@ -128,7 +169,7 @@ const InnerCanvas: React.FC = () => {
         selectable: false,
         focusable: false,
       }));
-  }, [edges, visible]);
+  }, [edges, guardedVisible]);
 
   // Fit-view/Escape adalah konsep kanvas (bukan struktur), jadi tetap di sini
   // — shortcut edit (undo/redo, tambah/duplikat/hapus node) sudah pindah ke
@@ -182,16 +223,32 @@ const InnerCanvas: React.FC = () => {
         <Background variant="dots" gap={16} color="#334155" />
         <Controls showInteractive={false} />
         <MiniMap
-          nodeColor={n => {
-            const orgNode = nodes.find(x => x.id === n.id);
-            return kategoriWarna(orgNode);
-          }}
+          nodeColor={n => nodeColorById.get(n.id) ?? kategoriWarna(undefined)}
           maskColor="rgba(15, 23, 42, 0.7)"
           style={{ backgroundColor: '#0f172a' }}
           pannable
           zoomable
         />
       </ReactFlow>
+      {cutoffDepth !== null && (
+        // Fase 2.6 — banner pagar pengaman: cuma muncul kalau guard benar-benar
+        // memotong sesuatu (cutoffDepth !== null). "Tampilkan Semua" adalah
+        // pilihan sadar operator, bukan default — struktur >1.500 node
+        // ditampilkan utuh bisa terasa berat/nge-freeze di perangkat lemah.
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 flex items-center space-x-2 px-3 py-1.5 rounded-lg border border-amber-700/60 bg-amber-950/80 backdrop-blur-sm text-amber-200 text-xs shadow-lg">
+          <Layers className="w-3.5 h-3.5 flex-shrink-0" />
+          <span>
+            Struktur besar — {hiddenCount.toLocaleString('id-ID')} node disembunyikan (kedalaman &gt;{' '}
+            {cutoffDepth}) supaya kanvas tetap responsif.
+          </span>
+          <button
+            onClick={() => setForceShowAll(true)}
+            className="flex-shrink-0 px-2 py-0.5 bg-amber-800/80 hover:bg-amber-700 text-amber-100 rounded font-medium"
+          >
+            Tampilkan Semua
+          </button>
+        </div>
+      )}
       {!project && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="text-center text-slate-500 max-w-xs px-4">

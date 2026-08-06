@@ -1,13 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { Folder, FileText, Plus, Undo, Redo, ShieldCheck, Download } from 'lucide-react';
 import { NodeType } from '@/models/node';
 import { useProjectStore } from '@/store/projectStore';
 import { useHistoryStore } from '@/store/historyStore';
 import { useUiStore } from '@/store/uiStore';
-import { validateProject } from '@/selectors/validation';
-import { ProjectManagerDialog } from '../dialogs/ProjectManagerDialog';
-import { ExportDialog } from '../dialogs/ExportDialog';
-import { ReadinessDialog } from '../dialogs/ReadinessDialog';
+import { getCachedValidation } from '@/selectors/validation';
+import { DialogLoadingFallback } from '../common/DialogLoadingFallback';
+
+// Fase 1.8 — lazy-load, sama seperti OpdListSidebar.tsx. ProjectManagerDialog
+// dituju dari dua tempat (di sini & OpdListSidebar) — Rollup men-dedupe
+// keduanya ke satu chunk yang sama karena target import()-nya identik.
+const ProjectManagerDialog = lazy(() =>
+  import('../dialogs/ProjectManagerDialog').then(m => ({ default: m.ProjectManagerDialog }))
+);
+const ExportDialog = lazy(() =>
+  import('../dialogs/ExportDialog').then(m => ({ default: m.ExportDialog }))
+);
+const ReadinessDialog = lazy(() =>
+  import('../dialogs/ReadinessDialog').then(m => ({ default: m.ReadinessDialog }))
+);
 
 export const Toolbar: React.FC = () => {
   const [showProjectManager, setShowProjectManager] = useState(false);
@@ -24,7 +35,10 @@ export const Toolbar: React.FC = () => {
   const past = useHistoryStore(s => s.past);
   const future = useHistoryStore(s => s.future);
 
-  const findings = project ? validateProject(project) : [];
+  // Fase 1.2: getCachedValidation di-memo per referensi project (WeakMap) —
+  // aman dipanggil langsung tiap render, bukan validateProject penuh tiap
+  // keystroke seperti sebelumnya.
+  const findings = project ? getCachedValidation(project) : [];
   const issueCount = findings.filter(f => f.severity === 'error' || f.severity === 'warning').length;
 
   const undoLabel = past.length > 0 ? `Batalkan: ${past.at(-1)?.label}` : 'Undo';
@@ -159,20 +173,22 @@ export const Toolbar: React.FC = () => {
         </div>
       </header>
 
-      {showProjectManager && (
-        <ProjectManagerDialog onClose={() => setShowProjectManager(false)} />
-      )}
+      <Suspense fallback={<DialogLoadingFallback />}>
+        {showProjectManager && (
+          <ProjectManagerDialog onClose={() => setShowProjectManager(false)} />
+        )}
 
-      {showExportDialog && (
-        <ExportDialog onClose={() => setShowExportDialog(false)} />
-      )}
+        {showExportDialog && (
+          <ExportDialog onClose={() => setShowExportDialog(false)} />
+        )}
 
-      {showReadinessDialog && (
-        <ReadinessDialog
-          onClose={() => setShowReadinessDialog(false)}
-          onOpenExport={() => setShowExportDialog(true)}
-        />
-      )}
+        {showReadinessDialog && (
+          <ReadinessDialog
+            onClose={() => setShowReadinessDialog(false)}
+            onOpenExport={() => setShowExportDialog(true)}
+          />
+        )}
+      </Suspense>
     </>
   );
 };

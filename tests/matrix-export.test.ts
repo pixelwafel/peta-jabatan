@@ -93,13 +93,13 @@ const twoInstances: UnitInstance[] = [
 describe('buildMatrixSheet (M12.8, docs/15-template-instance.md §4)', () => {
   it('names the sheet Satuan_<nomor>', () => {
     const project = makeSekolahProject(twoInstances);
-    const { name } = buildMatrixSheet(project, project.nodes.find(n => n.id === 'sekolah')!);
+    const { name } = buildMatrixSheet(XLSX, project, project.nodes.find(n => n.id === 'sekolah')!);
     expect(name).toBe('Satuan_1.1');
   });
 
   it('produces a two-row header: group name (merged) then K/E or level·K/level·E sub-headers', () => {
     const project = makeSekolahProject(twoInstances);
-    const { sheet } = buildMatrixSheet(project, project.nodes.find(n => n.id === 'sekolah')!);
+    const { sheet } = buildMatrixSheet(XLSX, project, project.nodes.find(n => n.id === 'sekolah')!);
     const rows = XLSX.utils.sheet_to_json<string[]>(sheet, { header: 1, blankrows: true });
 
     // row index 1 = nama grup (0 = hidden id row)
@@ -115,7 +115,7 @@ describe('buildMatrixSheet (M12.8, docs/15-template-instance.md §4)', () => {
 
   it('hides row 0 (the rincianId key row) so the sheet looks clean but re-import can still map columns exactly', () => {
     const project = makeSekolahProject(twoInstances);
-    const { sheet } = buildMatrixSheet(project, project.nodes.find(n => n.id === 'sekolah')!);
+    const { sheet } = buildMatrixSheet(XLSX, project, project.nodes.find(n => n.id === 'sekolah')!);
     const rows = XLSX.utils.sheet_to_json<string[]>(sheet, { header: 1 });
 
     expect(rows[0]).toEqual(['', '', 'sekolah', 'sekolah', 'r-ap', 'r-ap', 'r-am', 'r-am']);
@@ -124,7 +124,7 @@ describe('buildMatrixSheet (M12.8, docs/15-template-instance.md §4)', () => {
 
   it('data rows carry instance nama/kode and per-column kebutuhan/eksisting figures', () => {
     const project = makeSekolahProject(twoInstances);
-    const { sheet } = buildMatrixSheet(project, project.nodes.find(n => n.id === 'sekolah')!);
+    const { sheet } = buildMatrixSheet(XLSX, project, project.nodes.find(n => n.id === 'sekolah')!);
     const rows = XLSX.utils.sheet_to_json<(string | number)[]>(sheet, { header: 1 });
 
     expect(rows[3]).toEqual(['SDN 01 Kota Timur', '20112233', 1, 1, 4, 3, 2, 2]);
@@ -133,7 +133,7 @@ describe('buildMatrixSheet (M12.8, docs/15-template-instance.md §4)', () => {
 
   it('an empty instance list still produces a valid (headers-only) sheet', () => {
     const project = makeSekolahProject([]);
-    const { sheet } = buildMatrixSheet(project, project.nodes.find(n => n.id === 'sekolah')!);
+    const { sheet } = buildMatrixSheet(XLSX, project, project.nodes.find(n => n.id === 'sekolah')!);
     const rows = XLSX.utils.sheet_to_json<string[]>(sheet, { header: 1 });
     expect(rows).toHaveLength(3); // cuma 3 baris header, tidak ada data
   });
@@ -158,7 +158,7 @@ describe('buildMatrixSheets — multiple side-by-side templates (doc 15 §6)', (
     });
     project.edges.push({ id: 'e3', source: 'root', target: 'smp', kind: 'hirarki' });
 
-    const sheets = buildMatrixSheets(project);
+    const sheets = buildMatrixSheets(XLSX, project);
     expect(sheets.map(s => s.name).sort()).toEqual(['Satuan_1.1', 'Satuan_1.2']);
   });
 });

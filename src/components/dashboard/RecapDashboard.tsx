@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ProjectIndex } from '@/persistence/types';
 import { getProjectIndex, getProject } from '@/persistence/storage';
+import { flushSave } from '@/persistence/autosave';
 import { getCustomOpdList, addCustomOpdEntry } from '@/persistence/customOpd';
 import { buildOpdIndex, daftarOpdBawaan } from '@/config/daftarOpd';
 import {
@@ -11,7 +12,7 @@ import {
   DashboardCard,
   LAINNYA_KELOMPOK,
 } from '@/selectors/dashboard';
-import { computeGlobalBreakdown } from '@/selectors/globalBreakdown';
+import { createAnalysisWorkerClient, AnalysisWorkerClient } from '@/workers/client';
 import { buildConsolidatedWorkbook } from '@/export/consolidatedExporter';
 import { buildLaporanPemerintahWorkbook } from '@/export/laporanExporter';
 import { laporanPemerintahFilename } from '@/export/filename';
@@ -131,12 +132,26 @@ export const RecapDashboard: React.FC<RecapDashboardProps> = ({ onClose }) => {
   const [breakdownProgress, setBreakdownProgress] = useState<{ done: number; total: number } | null>(null);
   const [isExportingConsolidated, setIsExportingConsolidated] = useState(false);
   const [isExportingLaporan, setIsExportingLaporan] = useState(false);
+  const [consolidatedProgress, setConsolidatedProgress] = useState<{ done: number; total: number } | null>(null);
+  const [laporanProgress, setLaporanProgress] = useState<{ done: number; total: number } | null>(null);
+  const consolidatedAbortRef = useRef<AbortController | null>(null);
+  const laporanAbortRef = useRef<AbortController | null>(null);
   const [showAddOpd, setShowAddOpd] = useState(false);
   const [newOpdKode, setNewOpdKode] = useState('');
   const [newOpdNama, setNewOpdNama] = useState('');
   const [newOpdKelompok, setNewOpdKelompok] = useState('Lainnya');
 
   const setProject = useProjectStore(s => s.setProject);
+
+  // Fase 2.3 — satu worker client untuk seluruh siklus hidup dialog ini
+  // (bukan dibuat ulang tiap fetch breakdown), dihentikan saat dialog
+  // ditutup. `useRef` + lazy-init idiomatik karena `createAnalysisWorkerClient`
+  // punya efek samping (bikin Worker) yang tidak boleh diulang tiap render.
+  const workerClientRef = useRef<AnalysisWorkerClient | null>(null);
+  if (!workerClientRef.current) workerClientRef.current = createAnalysisWorkerClient();
+  useEffect(() => {
+    return () => workerClientRef.current?.terminate();
+  }, []);
 
   const loadData = async () => {
     const [idx, customList] = await Promise.all([getProjectIndex(), getCustomOpdList()]);
@@ -164,6 +179,12 @@ export const RecapDashboard: React.FC<RecapDashboardProps> = ({ onClose }) => {
   // project, jadi dimuat progresif SETELAH kartu (dari index) tampil, dan
   // dibatalkan lewat AbortController saat dialog ditutup/topLevel berubah
   // ("aborts cleanly on navigation", exit criteria doc 14 §7).
+  //
+  // Fase 2.3 — lewat workerClientRef, bukan computeGlobalBreakdown+getProject
+  // langsung: N body project dibaca & direkap di worker thread, main thread
+  // cuma menerima RecapBucket[] kecil di akhir (plus pesan progress
+  // sepanjang jalan). Fallback inline (client.ts) membuatnya identik di
+  // Vitest (`environment: 'node'`, tanpa Worker).
   useEffect(() => {
     if (topLevel.length === 0) {
       setBreakdown([]);
@@ -174,7 +195,7 @@ export const RecapDashboard: React.FC<RecapDashboardProps> = ({ onClose }) => {
     setBreakdown(null);
     setBreakdownProgress({ done: 0, total: topLevel.length });
 
-    computeGlobalBreakdown(topLevel, getProject, {
+    workerClientRef.current!.globalBreakdown(topLevel, {
       signal: controller.signal,
       onProgress: (done, total) => setBreakdownProgress({ done, total }),
     }).then(buckets => {
@@ -224,28 +245,61 @@ export const RecapDashboard: React.FC<RecapDashboardProps> = ({ onClose }) => {
     }
   };
 
+  // Fase 2.3 — progress + batal. buildConsolidatedWorkbook mengecek
+  // `signal.aborted` di awal tiap project (pola sama seperti
+  // computeGlobalBreakdown: berhenti bersih, TIDAK throw) dan mengembalikan
+  // workbook parsial; kita sendiri yang menolak mengunduhnya kalau memang
+  // dibatalkan, supaya "Batal" tidak diam-diam tetap mengunduh file.
   const handleExportConsolidated = async () => {
     if (!index || isExportingConsolidated) return;
+    const controller = new AbortController();
+    consolidatedAbortRef.current = controller;
     setIsExportingConsolidated(true);
+    setConsolidatedProgress({ done: 0, total: 0 });
     try {
-      const blob = await buildConsolidatedWorkbook(index, getProject);
+      const blob = await buildConsolidatedWorkbook(index, getProject, {
+        signal: controller.signal,
+        onProgress: (done, total) => setConsolidatedProgress({ done, total }),
+      });
+      if (controller.signal.aborted) return;
       const date = new Date().toISOString().slice(0, 10);
       downloadBlob(blob, `peta-jabatan_konsolidasi_${date}.xlsx`);
     } finally {
       setIsExportingConsolidated(false);
+      setConsolidatedProgress(null);
+      consolidatedAbortRef.current = null;
     }
   };
 
+  const handleCancelConsolidated = () => consolidatedAbortRef.current?.abort();
+
+  // Reuse breakdown yang sudah dihitung dashboard (lihat efek di atas) —
+  // computeGlobalBreakdown (loop N body project) TIDAK dijalankan ulang
+  // selama breakdown dashboard sudah siap. Kalau belum (jarang — user klik
+  // super cepat setelah dashboard terbuka), laporanExporter jatuh balik ke
+  // menghitungnya sendiri lewat signal/onProgress yang sama.
   const handleExportLaporan = async () => {
     if (!index || !opdIdx || isExportingLaporan) return;
+    const controller = new AbortController();
+    laporanAbortRef.current = controller;
     setIsExportingLaporan(true);
+    if (!breakdown) setLaporanProgress({ done: 0, total: topLevel.length });
     try {
-      const blob = await buildLaporanPemerintahWorkbook(index, opdIdx, getProject);
+      const blob = await buildLaporanPemerintahWorkbook(index, opdIdx, getProject, {
+        precomputedBreakdown: breakdown ?? undefined,
+        signal: controller.signal,
+        onProgress: (done, total) => setLaporanProgress({ done, total }),
+      });
+      if (controller.signal.aborted) return;
       downloadBlob(blob, laporanPemerintahFilename('xlsx'));
     } finally {
       setIsExportingLaporan(false);
+      setLaporanProgress(null);
+      laporanAbortRef.current = null;
     }
   };
+
+  const handleCancelLaporan = () => laporanAbortRef.current?.abort();
 
   /** "Daftarkan sebagai OPD Resmi" (docs/14-recap-dashboard.md §1.1) — kartu
    * "Lainnya" yang isUnregistered dapat aksi cepat langsung dari kartunya. */
@@ -269,6 +323,7 @@ export const RecapDashboard: React.FC<RecapDashboardProps> = ({ onClose }) => {
   };
 
   const handleOpen = async (id: string) => {
+    await flushSave();
     const p = await getProject(id);
     if (p) {
       setProject(p);
@@ -299,32 +354,58 @@ export const RecapDashboard: React.FC<RecapDashboardProps> = ({ onClose }) => {
               <Settings className="w-3.5 h-3.5 text-blue-400" />
               <span>Tambah OPD Khusus</span>
             </button>
-            <button
-              onClick={handleExportConsolidated}
-              disabled={!index || topLevel.length === 0 || isExportingConsolidated}
-              title="Satu workbook: sheet rekap pemerintah + satu sheet per OPD top-level + sheet tautan (doc 14 §5)"
-              className="flex items-center space-x-1.5 px-2.5 py-1 bg-emerald-700/80 hover:bg-emerald-600 disabled:opacity-40 text-white rounded text-xs font-medium"
-            >
-              {isExportingConsolidated ? (
+            {isExportingConsolidated ? (
+              <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-emerald-700/80 text-white rounded text-xs font-medium">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
+                <span>
+                  {consolidatedProgress && consolidatedProgress.total > 0
+                    ? `${consolidatedProgress.done}/${consolidatedProgress.total}`
+                    : 'Menyiapkan...'}
+                </span>
+                <button
+                  onClick={handleCancelConsolidated}
+                  title="Batalkan ekspor konsolidasi"
+                  className="ml-1 hover:text-emerald-200"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleExportConsolidated}
+                disabled={!index || topLevel.length === 0}
+                title="Satu workbook: sheet rekap pemerintah + satu sheet per OPD top-level + sheet tautan (doc 14 §5)"
+                className="flex items-center space-x-1.5 px-2.5 py-1 bg-emerald-700/80 hover:bg-emerald-600 disabled:opacity-40 text-white rounded text-xs font-medium"
+              >
                 <Download className="w-3.5 h-3.5" />
-              )}
-              <span>Ekspor Konsolidasi</span>
-            </button>
-            <button
-              onClick={handleExportLaporan}
-              disabled={!index || !opdIdx || topLevel.length === 0 || isExportingLaporan}
-              title="Laporan ringkas se-pemda: ringkasan, per kategori, per OPD — untuk pimpinan (bukan data mentah)"
-              className="flex items-center space-x-1.5 px-2.5 py-1 bg-amber-700/80 hover:bg-amber-600 disabled:opacity-40 text-white rounded text-xs font-medium"
-            >
-              {isExportingLaporan ? (
+                <span>Ekspor Konsolidasi</span>
+              </button>
+            )}
+            {isExportingLaporan ? (
+              <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-amber-700/80 text-white rounded text-xs font-medium">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
+                <span>
+                  {laporanProgress ? `${laporanProgress.done}/${laporanProgress.total}` : 'Menyiapkan...'}
+                </span>
+                <button
+                  onClick={handleCancelLaporan}
+                  title="Batalkan unduh laporan"
+                  className="ml-1 hover:text-amber-200"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleExportLaporan}
+                disabled={!index || !opdIdx || topLevel.length === 0}
+                title="Laporan ringkas se-pemda: ringkasan, per kategori, per OPD — untuk pimpinan (bukan data mentah)"
+                className="flex items-center space-x-1.5 px-2.5 py-1 bg-amber-700/80 hover:bg-amber-600 disabled:opacity-40 text-white rounded text-xs font-medium"
+              >
                 <Download className="w-3.5 h-3.5" />
-              )}
-              <span>Unduh Laporan</span>
-            </button>
+                <span>Unduh Laporan</span>
+              </button>
+            )}
             <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded">
               <X className="w-4 h-4" />
             </button>

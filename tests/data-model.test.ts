@@ -126,6 +126,66 @@ describe('Data Model & Invariants (Doc 01 Exit Criteria)', () => {
     }
   });
 
+  it('Zod schema preserves kepalaUnit, locked, and unitKerja through export->import JSON round-trip (Fase 1.9)', () => {
+    // Sebelum Fase 1.9, zNode tidak mendeklarasikan kepalaUnit & locked —
+    // Zod menanggalkan key tak dikenal secara default, jadi round-trip
+    // export JSON -> import JSON diam-diam menghilangkan kepala unit
+    // struktural dan status kunci node tanpa peringatan apa pun.
+    const projectWithKepalaUnit: Project = {
+      id: 'proj-kepala',
+      schemaVersion: '1.0.0',
+      configVersion: '2026.1',
+      meta: { namaOPD: 'Test OPD', kodeOPD: 'OPD.01', penyusun: 'Admin' },
+      attributeSchema: [],
+      nodes: [
+        {
+          id: 'unit-1',
+          type: 'unit',
+          nama: 'Sekretariat',
+          nomor: '1',
+          rumpun: [],
+          rincian: [],
+          kepalaUnit: {
+            nama: 'Sekretaris',
+            kode: 'SEK.01',
+            jenjangId: 'administrator',
+            kebutuhan: 1,
+            eksisting: 1,
+          },
+          unitKerja: 'Sekretariat Daerah',
+          custom: {},
+          position: { x: 0, y: 0 },
+          collapsed: false,
+          order: 0,
+          locked: true,
+        },
+      ],
+      edges: [],
+      viewport: { x: 0, y: 0, zoom: 1 },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Simulasi persis jalur import/jsonImporter.ts: JSON.stringify (export) ->
+    // JSON.parse -> zProject.safeParse (import).
+    const roundTripped = JSON.parse(JSON.stringify(projectWithKepalaUnit));
+    const result = zProject.safeParse(roundTripped);
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      const node = result.data.nodes[0];
+      expect(node.kepalaUnit).toEqual({
+        nama: 'Sekretaris',
+        kode: 'SEK.01',
+        jenjangId: 'administrator',
+        kebutuhan: 1,
+        eksisting: 1,
+      });
+      expect(node.unitKerja).toBe('Sekretariat Daerah');
+      expect(node.locked).toBe(true);
+    }
+  });
+
   it('hierarchyEdges() correctly filters only hierarchy edges (Invariant 5)', () => {
     const edges: OrgEdge[] = [
       { id: 'e1', source: 'n1', target: 'n2', kind: 'hirarki' },

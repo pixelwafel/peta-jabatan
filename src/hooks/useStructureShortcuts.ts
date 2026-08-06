@@ -10,8 +10,12 @@ import { useDeleteNodeRequest } from './useDeleteNodeRequest';
  * itu konsep kanvas, bukan struktur.
  */
 export function useStructureShortcuts(): void {
-  const project = useProjectStore(s => s.project);
-  const edges = project?.edges ?? [];
+  // Fase 1.5: TIDAK subscribe ke s.project — hook ini tidak me-render apa
+  // pun, cuma memasang satu window listener. Subscribe ke project di sini
+  // berarti effect di bawah (dan listener-nya) di-teardown+pasang ulang
+  // tiap keystroke (project berubah tiap commit), padahal edges cuma
+  // dibaca SAAT tombol Enter benar-benar ditekan. Baca state terkini via
+  // getState() di dalam handler.
   const addNode = useProjectStore(s => s.addNode);
   const duplicateNode = useProjectStore(s => s.duplicateNode);
   const requestDelete = useDeleteNodeRequest();
@@ -53,6 +57,7 @@ export function useStructureShortcuts(): void {
         // Enter: Add Sibling
         if (e.key === 'Enter') {
           e.preventDefault();
+          const edges = useProjectStore.getState().project?.edges ?? [];
           const parentEdge = hierarchyEdges(edges).find(eg => eg.target === primarySelected);
           const parentId = parentEdge?.source;
           addNode({ type: 'jabatan', parentId });
@@ -84,5 +89,5 @@ export function useStructureShortcuts(): void {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedNodeIds, edges, addNode, duplicateNode, requestDelete, undo, redo]);
+  }, [selectedNodeIds, addNode, duplicateNode, requestDelete, undo, redo]);
 }

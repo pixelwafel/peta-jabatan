@@ -86,6 +86,33 @@ export function depthOf(nodes: OrgNode[], edges: OrgEdge[], nodeId: string): num
   return ancestorsOf(nodes, edges, nodeId).length;
 }
 
+/**
+ * Depth SEMUA node dalam satu BFS top-down, O(N) total. Fase 1.4: dulu
+ * beberapa caller (ParentSelect, recap.ts perUnit) memanggil depthOf() satu
+ * per satu di dalam loop atas banyak node — tiap panggilan sendiri O(depth)
+ * lewat ancestorsOf(), tapi dijumlah atas N node jadi O(N·depth), bisa
+ * mendekati O(N²) di project besar. Pakai fungsi ini SEKALI di luar loop
+ * kalau depth dibutuhkan untuk banyak node sekaligus; depthOf() tetap ada
+ * untuk kasus satu node saja.
+ */
+export function allDepths(nodes: OrgNode[], edges: OrgEdge[]): Map<string, number> {
+  const idx = getStructureIndex(nodes, edges);
+  const roots = rootNodes(nodes, edges);
+  const depths = new Map<string, number>();
+  const queue: Array<{ id: string; depth: number }> = roots.map(r => ({ id: r.id, depth: 0 }));
+
+  while (queue.length > 0) {
+    const { id, depth } = queue.shift()!;
+    if (depths.has(id)) continue; // cycle guard
+    depths.set(id, depth);
+    for (const c of idx.childIds.get(id) ?? []) {
+      queue.push({ id: c, depth: depth + 1 });
+    }
+  }
+
+  return depths;
+}
+
 export function buildTree(nodes: OrgNode[], edges: OrgEdge[]): TreeNode[] {
   const index = getStructureIndex(nodes, edges);
   const roots = rootNodes(nodes, edges);

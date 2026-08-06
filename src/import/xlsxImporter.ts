@@ -1,4 +1,3 @@
-import * as XLSX from 'xlsx';
 import { OrgNode } from '@/models/node';
 import { OrgEdge } from '@/models/edge';
 import { Finding } from '@/models/derived';
@@ -46,8 +45,9 @@ export interface ImportPreview {
 }
 
 export async function processXlsxImport(file: File): Promise<ImportPreview> {
+  const xlsx = await import('xlsx');
   const arrayBuffer = await file.arrayBuffer();
-  const wb = XLSX.read(arrayBuffer, { type: 'array' });
+  const wb = xlsx.read(arrayBuffer, { type: 'array' });
 
   const sheetName = wb.SheetNames.includes('Struktur')
     ? 'Struktur'
@@ -79,7 +79,7 @@ export async function processXlsxImport(file: File): Promise<ImportPreview> {
     };
   }
 
-  const matrix = XLSX.utils.sheet_to_json(ws, { header: 1 }) as (string | number | null)[][];
+  const matrix = xlsx.utils.sheet_to_json(ws, { header: 1 }) as (string | number | null)[][];
   if (!matrix || matrix.length === 0) {
     return {
       summary: {
@@ -160,7 +160,7 @@ export async function processXlsxImport(file: File): Promise<ImportPreview> {
   // §4) — dibaca SETELAH struktur & merge legacy selesai, supaya isTemplate
   // & nomor node sudah final saat dicocokkan ke nama sheet.
   const { instances, findings: matrixFindings, summaries: matrixSummaries } =
-    parseMatrixSheets(wb, nodes, edges);
+    parseMatrixSheets(xlsx, wb, nodes, edges);
 
   const allFindings = [
     ...colFindings,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ProjectIndex, ProjectIndexEntry } from '@/persistence/types';
 import {
   getProjectIndex,
@@ -6,11 +6,14 @@ import {
   saveProject,
   estimateStorageUsage,
 } from '@/persistence/storage';
+import { flushSave } from '@/persistence/autosave';
 import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { uuid } from '@/utils/uuid';
 import { buildBlankProject } from '@/persistence/blankProject';
 import { requestDeleteProject } from '@/persistence/deleteProjectFlow';
+import { computeVisibleRange } from '@/utils/virtualization';
 import { ImportDialog } from './ImportDialog';
 import { BulkExportDialog } from './BulkExportDialog';
 import {
@@ -30,6 +33,15 @@ import {
 interface ProjectManagerDialogProps {
   onClose: () => void;
 }
+
+// Fase 2.5 — kartu proyek (dua baris teks + aksi) tinggi ~84px, sisa 10px
+// jadi celah visual antar-kartu (dulu space-y-2.5 di container) — dibakukan
+// jadi konstanta bukan dihitung dari DOM supaya windowing (computeVisibleRange)
+// bisa pakai matematika baris seragam, pola sama seperti OpdListSidebar.tsx.
+const ROW_HEIGHT = 94;
+const CARD_HEIGHT = 84;
+const OVERSCAN = 6;
+const FALLBACK_VIEWPORT_HEIGHT = 480;
 
 export const ProjectManagerDialog: React.FC<ProjectManagerDialogProps> = ({ onClose }) => {
   const [index, setIndex] = useState<ProjectIndex | null>(null);
@@ -59,18 +71,23 @@ export const ProjectManagerDialog: React.FC<ProjectManagerDialogProps> = ({ onCl
     loadData();
   }, []);
 
+  // Fase 1.7: input tetap langsung, filter di belakangnya di-debounce.
+  const debouncedSearchTerm = useDebouncedValue(searchTerm);
+
   const filteredEntries = useMemo(() => {
     if (!index) return [];
-    if (!searchTerm.trim()) return index.entries;
-    const term = searchTerm.toLowerCase();
+    if (!debouncedSearchTerm.trim()) return index.entries;
+    const term = debouncedSearchTerm.toLowerCase();
     return index.entries.filter(
       e =>
         e.namaOPD.toLowerCase().includes(term) ||
         e.kodeOPD.toLowerCase().includes(term)
     );
-  }, [index, searchTerm]);
+  }, [index, debouncedSearchTerm]);
 
   const handleCreateNew = async () => {
+    // Fase 1.1: jangan buang save 500ms milik project yang sedang terbuka.
+    await flushSave();
     const newProject = buildBlankProject();
     await saveProject(newProject);
     setProject(newProject);
@@ -83,6 +100,7 @@ export const ProjectManagerDialog: React.FC<ProjectManagerDialogProps> = ({ onCl
       return;
     }
 
+    await flushSave();
     const p = await getProject(targetId);
     if (p) {
       setProject(p);
@@ -91,6 +109,10 @@ export const ProjectManagerDialog: React.FC<ProjectManagerDialogProps> = ({ onCl
   };
 
   const handleDuplicate = async (entry: ProjectIndexEntry) => {
+    // Duplikat tidak mengganti project aktif, tapi kalau entry yang
+    // diduplikat adalah project aktif, pastikan body yang dibaca sudah
+    // mencakup perubahan terbaru (bukan snapshot 500ms yang lalu).
+    if (entry.id === currentProject?.id) await flushSave();
     const original = await getProject(entry.id);
     if (!original) return;
 
@@ -132,6 +154,31 @@ export const ProjectManagerDialog: React.FC<ProjectManagerDialogProps> = ({ onCl
       return next;
     });
   };
+
+  // Fase 2.5 — windowing manual, pola sama seperti OpdListSidebar.tsx.
+  const [scrollTop, setScrollTop] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState(FALLBACK_VIEWPORT_HEIGHT);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(entries => {
+      const height = entries[0]?.contentRect.height;
+      if (height) setViewportHeight(height);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const { startIndex, endIndex } = computeVisibleRange(
+    scrollTop,
+    ROW_HEIGHT,
+    viewportHeight,
+    OVERSCAN,
+    filteredEntries.length
+  );
+  const visibleEntries = filteredEntries.slice(startIndex, endIndex);
 
   const allFilteredSelected =
     filteredEntries.length > 0 && filteredEntries.every(e => selectedForExport.has(e.id));
@@ -229,22 +276,33 @@ export const ProjectManagerDialog: React.FC<ProjectManagerDialogProps> = ({ onCl
           )}
 
           {/* Project List */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
+          <div ref={scrollRef} onScroll={e => setScrollTop(e.currentTarget.scrollTop)} className="flex-1 overflow-y-auto p-4">
             {filteredEntries.length === 0 ? (
               <div className="py-8 text-center text-slate-500 text-xs italic">
                 Tidak ada proyek ditemukan.
               </div>
             ) : (
-              filteredEntries.map(entry => {
-                const isActive = currentProject?.id === entry.id;
-                const isUnexported =
-                  !entry.lastExportedAt ||
-                  Date.parse(entry.updatedAt) > Date.parse(entry.lastExportedAt);
+              <div style={{ height: filteredEntries.length * ROW_HEIGHT, position: 'relative' }}>
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    transform: `translateY(${startIndex * ROW_HEIGHT}px)`,
+                  }}
+                >
+                  {visibleEntries.map(entry => {
+                    const isActive = currentProject?.id === entry.id;
+                    const isUnexported =
+                      !entry.lastExportedAt ||
+                      Date.parse(entry.updatedAt) > Date.parse(entry.lastExportedAt);
 
-                return (
-                  <div
-                    key={entry.id}
-                    className={`p-3 rounded-lg border transition-all flex items-center justify-between ${
+                    return (
+                      <div key={entry.id} style={{ height: ROW_HEIGHT }}>
+                        <div
+                          style={{ height: CARD_HEIGHT }}
+                          className={`p-3 rounded-lg border transition-all flex items-center justify-between ${
                       isActive
                         ? 'bg-blue-950/20 border-blue-500/50 shadow-sm'
                         : 'bg-slate-950/40 border-slate-800 hover:border-slate-700'
@@ -314,9 +372,12 @@ export const ProjectManagerDialog: React.FC<ProjectManagerDialogProps> = ({ onCl
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                  </div>
-                );
-              })
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             )}
           </div>
 

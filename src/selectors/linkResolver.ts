@@ -1,10 +1,32 @@
 import { NodeTotals, ResolvedLink } from '@/models/derived';
 import { LinkRef } from '@/models/node';
 import { ProjectIndex } from '@/persistence/types';
-import { useProjectStore } from '@/store/projectStore';
 
 const ZERO: NodeTotals = { kebutuhan: 0, eksisting: 0, selisih: 0 };
 const CYCLE_DEPTH_CAP = 10;
+
+// Fase 2.1 — pulau selector (structureIndex/navigation/guards/visibility/
+// totals/templateInstance/linkResolver/recap/validation/dashboard/
+// globalBreakdown) harus bebas-store & bebas-DOM supaya bisa dipakai lagi
+// utuh di dalam Web Worker (Fase 2.2). `resolveLink` di bawah dulu memanggil
+// `useProjectStore.getState().commit(...)` LANGSUNG untuk menulis balik cache
+// tautan — satu-satunya alasan modul ini (dan lewat dia, recap.ts &
+// validation.ts yang mengimpor resolveLink) tidak bisa dipakai di worker.
+//
+// Sekarang side effect itu di-inject lewat handler yang bisa di-set dari
+// luar: store/linkCacheRefresh.ts (lapisan store) memanggil
+// setLiveResolveHandler(scheduleCacheRefresh) sekali saat modul itu di-
+// import (dari persistence/bootstrap.ts di main thread). Di dalam worker,
+// tidak ada yang memanggil setLiveResolveHandler, jadi handler tetap null —
+// resolveLink tetap mengembalikan totals yang benar, cuma tanpa efek
+// samping "tulis balik ke store" (yang memang tidak relevan di worker).
+let liveResolveHandler: ((ref: LinkRef, resolved: ResolvedLink) => void) | null = null;
+
+export function setLiveResolveHandler(
+  handler: ((ref: LinkRef, resolved: ResolvedLink) => void) | null
+): void {
+  liveResolveHandler = handler;
+}
 
 export function cachedTotals(ref: LinkRef): NodeTotals {
   const { kebutuhan, eksisting } = ref.cached;
@@ -50,37 +72,11 @@ export function resolveLink(ref: LinkRef, index: ProjectIndex): ResolvedLink {
 
   // Fire-and-forget side effect, TIDAK bagian dari resolusi — supaya tidak
   // memblokir computeRecap yang sinkron. File yang diekspor jadi selalu bawa
-  // angka terbaru yang pernah dilihat browser ini.
-  scheduleCacheRefresh(ref, resolved);
+  // angka terbaru yang pernah dilihat browser ini. Lihat catatan
+  // setLiveResolveHandler di atas — null di worker/test tanpa wiring.
+  liveResolveHandler?.(ref, resolved);
 
   return resolved;
-}
-
-/**
- * Tulis balik angka hasil resolusi live ke `link.cached` node yang match
- * `kodeOPD`-nya, lewat commit `transient` (tidak menambah entri history —
- * operator tidak melakukan apa-apa, ini murni penyegaran cache).
- */
-export function scheduleCacheRefresh(ref: LinkRef, resolved: ResolvedLink): void {
-  if (resolved.status !== 'live') return;
-
-  const { commit } = useProjectStore.getState();
-  commit(
-    'Refresh cache tautan',
-    draft => {
-      for (const n of draft.nodes) {
-        if (n.link?.kodeOPD === ref.kodeOPD) {
-          n.link.cached = {
-            kebutuhan: resolved.totals.kebutuhan,
-            eksisting: resolved.totals.eksisting,
-            nodeCount: resolved.nodeCount,
-            updatedAt: resolved.asOf,
-          };
-        }
-      }
-    },
-    { transient: true }
-  );
 }
 
 /**

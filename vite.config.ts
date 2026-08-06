@@ -19,6 +19,23 @@ export default defineConfig(({ command }) => ({
   define: {
     __APP_VERSION__: JSON.stringify(packageJson.version),
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Fase 1.8 — pisahkan vendor besar ke chunk sendiri supaya cache
+        // browser tetap valid lintas rilis app (vendor jarang berubah versi)
+        // dan supaya xlsx/jszip (sekarang dynamic-import — lihat
+        // export/xlsxExporter.ts dkk) tidak numpang ke chunk react/xyflow
+        // yang dimuat di setiap kunjungan.
+        manualChunks: {
+          react: ['react', 'react-dom'],
+          xyflow: ['@xyflow/react', '@dagrejs/dagre'],
+          xlsx: ['xlsx'],
+          jszip: ['jszip'],
+        },
+      },
+    },
+  },
   test: {
     globals: true,
     environment: 'node',

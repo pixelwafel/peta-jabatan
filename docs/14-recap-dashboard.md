@@ -1,5 +1,12 @@
 # 14 — Recap Dashboard & Bulk Import
 
+> **See also**: [doc 20](./20-skalabilitas-worker-virtualisasi.md) — the
+> dashboard's per-category breakdown now runs off the main thread via
+> `src/workers/` (Fase 2.3, done), and Fase 3.1 (planned, not yet built) will
+> change `computeGlobalBreakdown` to fold over small precomputed
+> `ProjectSummary` records instead of reading every project body, making it
+> O(number of OPDs) instead of O(total nodes government-wide).
+
 ## Purpose
 
 One read-only view over every stored project: the government-wide totals, per-OPD

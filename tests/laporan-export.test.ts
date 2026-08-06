@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import * as XLSX from 'xlsx';
 import { exportLaporan, buildLaporanPemerintahWorkbook, pctTerisi } from '../src/export/laporanExporter';
 import { computeRecap } from '../src/selectors/recap';
@@ -69,7 +69,7 @@ describe('exportLaporan (fitur "Laporan" per-OPD, dibahas & disepakati dengan us
   it('includes a filled kop block (nama/kode OPD, tahun anggaran, penyusun)', async () => {
     const project = makeFixtureProject();
     const recap = computeRecap(project, taxonomy);
-    const rows = await sheetRows(exportLaporan(project, recap));
+    const rows = await sheetRows(await exportLaporan(project, recap));
 
     expect(rows[0][0]).toBe('LAPORAN REKAPITULASI KEBUTUHAN & EKSISTING PEGAWAI');
     expect(rows.find(r => r[0] === 'Nama OPD')?.[1]).toBe('Dinas Contoh');
@@ -81,7 +81,7 @@ describe('exportLaporan (fitur "Laporan" per-OPD, dibahas & disepakati dengan us
   it('ringkasan mencerminkan recap.total (kepala unit 1/1 + jabatan 3/2 = 4/3)', async () => {
     const project = makeFixtureProject();
     const recap = computeRecap(project, taxonomy);
-    const rows = await sheetRows(exportLaporan(project, recap));
+    const rows = await sheetRows(await exportLaporan(project, recap));
 
     expect(rows.find(r => r[0] === 'Total Kebutuhan')?.[1]).toBe(4);
     expect(rows.find(r => r[0] === 'Total Eksisting')?.[1]).toBe(3);
@@ -92,7 +92,7 @@ describe('exportLaporan (fitur "Laporan" per-OPD, dibahas & disepakati dengan us
   it('tabel per-kategori & per-jenjang berisi baris sesuai computeRecap', async () => {
     const project = makeFixtureProject();
     const recap = computeRecap(project, taxonomy);
-    const rows = await sheetRows(exportLaporan(project, recap));
+    const rows = await sheetRows(await exportLaporan(project, recap));
 
     const kategoriIdx = rows.findIndex(r => r[0] === 'REKAPITULASI PER KATEGORI');
     expect(kategoriIdx).toBeGreaterThan(-1);
@@ -106,7 +106,7 @@ describe('exportLaporan (fitur "Laporan" per-OPD, dibahas & disepakati dengan us
   it('tabel per-unit menyertakan baris root (dengan indentasi depth 0)', async () => {
     const project = makeFixtureProject();
     const recap = computeRecap(project, taxonomy);
-    const rows = await sheetRows(exportLaporan(project, recap));
+    const rows = await sheetRows(await exportLaporan(project, recap));
 
     const unitRow = rows.find(r => typeof r[0] === 'string' && r[0].includes('Dinas Contoh') && r[1] === 4);
     expect(unitRow).toBeDefined();
@@ -115,7 +115,7 @@ describe('exportLaporan (fitur "Laporan" per-OPD, dibahas & disepakati dengan us
   it('TIDAK menyertakan section Catatan kalau tidak ada unplaced/link basi', async () => {
     const project = makeFixtureProject();
     const recap = computeRecap(project, taxonomy);
-    const rows = await sheetRows(exportLaporan(project, recap));
+    const rows = await sheetRows(await exportLaporan(project, recap));
 
     expect(rows.some(r => r[0] === 'CATATAN')).toBe(false);
   });
@@ -137,7 +137,7 @@ describe('exportLaporan (fitur "Laporan" per-OPD, dibahas & disepakati dengan us
     };
     project.nodes.push(orphan);
     const recap = computeRecap(project, taxonomy);
-    const rows = await sheetRows(exportLaporan(project, recap));
+    const rows = await sheetRows(await exportLaporan(project, recap));
 
     // Unplaced dicatat sebagai baris "Catatan" di dalam section RINGKASAN
     // (bukan section "CATATAN" terpisah -- itu khusus link basi/cached).
@@ -148,7 +148,7 @@ describe('exportLaporan (fitur "Laporan" per-OPD, dibahas & disepakati dengan us
   it('menyertakan blok pengesahan dengan nama penyusun', async () => {
     const project = makeFixtureProject();
     const recap = computeRecap(project, taxonomy);
-    const rows = await sheetRows(exportLaporan(project, recap));
+    const rows = await sheetRows(await exportLaporan(project, recap));
 
     expect(rows.some(r => r[0] === 'Mengetahui,')).toBe(true);
     expect(rows.some(r => typeof r[3] === 'string' && r[3].includes('Budi'))).toBe(true);
@@ -239,5 +239,24 @@ describe('buildLaporanPemerintahWorkbook (fitur "Laporan" se-pemda)', () => {
     const rows = await sheetRows(blob);
 
     expect(rows.some(r => r[0] === 'CATATAN')).toBe(true);
+  });
+
+  it('Fase 2.3: precomputedBreakdown dipakai apa adanya, readProject tidak dipanggil untuk breakdown', async () => {
+    const dinkes = entry({ id: 'dinkes', kodeOPD: 'DINKES', totalKebutuhan: 500, totalEksisting: 420 });
+    const index: ProjectIndex = { version: 1, activeId: null, entries: [dinkes] };
+    const opdIndex = buildOpdIndex([]);
+    const readProject = vi.fn(async (id: string) => (id === 'dinkes' ? makeProject('dinkes', 'DINKES') : null));
+
+    const precomputedBreakdown = [
+      { key: 'struktural', label: 'Struktural (kustom)', kebutuhan: 999, eksisting: 111, selisih: -888, nodeCount: 1 },
+    ];
+
+    const blob = await buildLaporanPemerintahWorkbook(index, opdIndex, readProject, { precomputedBreakdown });
+    const rows = await sheetRows(blob);
+
+    // readProject tidak pernah dipanggil -- breakdown tidak dihitung ulang.
+    expect(readProject).not.toHaveBeenCalled();
+    const breakdownRow = rows.find(r => r[0] === 'Struktural (kustom)');
+    expect(breakdownRow).toEqual(['Struktural (kustom)', 999, 111, -888]);
   });
 });

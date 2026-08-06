@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import JSZip from 'jszip';
+import React, { useRef, useState } from 'react';
 import { getProject } from '@/persistence/storage';
 import { markProjectExported } from '@/persistence/reminder';
 import { computeRecap } from '@/selectors/recap';
@@ -26,7 +25,14 @@ interface BulkExportDialogProps {
   onClose: () => void;
 }
 
-type RowStatus = 'pending' | 'done' | 'error';
+type RowStatus = 'pending' | 'done' | 'error' | 'cancelled';
+
+// Fase 2.4 — sama seperti selectors/globalBreakdown.ts & export/consolidatedExporter.ts:
+// satu tick giliran event loop antar-project supaya loop N-OPD tidak jadi
+// satu long task yang membekukan UI (drag, klik, dsb) selama proses berjalan.
+function yieldToUi(): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, 0));
+}
 
 interface RowResult {
   id: string;
@@ -51,16 +57,28 @@ export const BulkExportDialog: React.FC<BulkExportDialogProps> = ({ selectedIds,
 
   const [isExporting, setIsExporting] = useState(false);
   const [results, setResults] = useState<RowResult[] | null>(null);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const selectedCount = (exportJsonSelected ? 1 : 0) + (exportXlsxSelected ? 1 : 0) + (exportCsvSelected ? 1 : 0);
 
+  const handleCancel = () => abortRef.current?.abort();
+
   const handleBulkExport = async () => {
     if (selectedCount === 0 || selectedIds.length === 0) return;
+    const controller = new AbortController();
+    abortRef.current = controller;
     setIsExporting(true);
+    setProgress({ done: 0, total: selectedIds.length });
 
     const rows: RowResult[] = selectedIds.map(id => ({ id, namaOPD: id, status: 'pending' }));
     setResults(rows);
 
+    // Fase 1.8 — dynamic import: dialog ini sendiri sudah lazy-loaded, tapi
+    // jszip cukup besar untuk dipisah lagi jadi chunk-nya sendiri, dimuat
+    // hanya saat operator benar-benar menekan "Ekspor" (bukan saat dialog
+    // dibuka).
+    const { default: JSZip } = await import('jszip');
     const zip = new JSZip();
     // kodeOPD proyek baru/impor bisa kebetulan sama (mis. semua proyek kosong
     // baru berkode default sama) — kalau folder di dalam zip tidak dijamin
@@ -69,8 +87,19 @@ export const BulkExportDialog: React.FC<BulkExportDialogProps> = ({ selectedIds,
     // kalau memang bentrok, supaya nama folder tetap rapi di kasus umum.
     const usedFolders = new Set<string>();
 
+    let done = 0;
     for (const id of selectedIds) {
+      if (controller.signal.aborted) {
+        setResults(prev => prev!.map(r => (r.id === id || r.status === 'pending' ? { ...r, status: 'cancelled' } : r)));
+        break;
+      }
+
       try {
+        // `project` tidak disimpan ke array apa pun di luar iterasi ini —
+        // sesudah ditambahkan ke zip (yang menyerap isinya sebagai
+        // string/ArrayBuffer, bukan referensi objek), body project ini bebas
+        // di-GC sebelum project berikutnya dibaca. N body tidak pernah
+        // residen bersamaan.
         const project = await getProject(id);
         if (!project) {
           setResults(prev =>
@@ -90,7 +119,7 @@ export const BulkExportDialog: React.FC<BulkExportDialogProps> = ({ selectedIds,
           zip.file(`${folder}/${exportFilename(project, 'json')}`, exportJson(project));
         }
         if (exportXlsxSelected) {
-          zip.file(`${folder}/${exportFilename(project, 'xlsx')}`, exportXlsx(project, recap));
+          zip.file(`${folder}/${exportFilename(project, 'xlsx')}`, await exportXlsx(project, recap));
         }
         if (exportCsvSelected) {
           zip.file(`${folder}/${exportFilename(project, 'csv')}`, exportCsv(project, recap, csvDelimiter));
@@ -105,17 +134,23 @@ export const BulkExportDialog: React.FC<BulkExportDialogProps> = ({ selectedIds,
         setResults(prev =>
           prev!.map(r => (r.id === id ? { ...r, status: 'error', message: 'Gagal diproses' } : r))
         );
+      } finally {
+        done++;
+        setProgress({ done, total: selectedIds.length });
+        if (done < selectedIds.length) await yieldToUi();
       }
     }
 
-    const hasAnyFile = zip.file(/.*/).length > 0;
+    const hasAnyFile = !controller.signal.aborted && zip.file(/.*/).length > 0;
     if (hasAnyFile) {
-      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const zipBlob = await zip.generateAsync({ type: 'blob', streamFiles: true });
       const date = new Date().toISOString().slice(0, 10);
       downloadBlob(zipBlob, `peta-jabatan_ekspor_${selectedIds.length}opd_${date}.zip`);
     }
 
     setIsExporting(false);
+    setProgress(null);
+    abortRef.current = null;
   };
 
   return (
@@ -220,6 +255,9 @@ export const BulkExportDialog: React.FC<BulkExportDialogProps> = ({ selectedIds,
                       <span className="text-[11px]">{r.message}</span>
                     </span>
                   )}
+                  {r.status === 'cancelled' && (
+                    <span className="text-[11px] text-slate-500 flex-shrink-0">Dibatalkan</span>
+                  )}
                 </div>
               ))}
             </div>
@@ -228,11 +266,22 @@ export const BulkExportDialog: React.FC<BulkExportDialogProps> = ({ selectedIds,
 
         {/* Footer */}
         <div className="flex items-center justify-end space-x-2 px-4 py-3 border-t border-slate-800 bg-slate-950/60">
-          {results ? (
+          {isExporting ? (
+            <>
+              <span className="text-[11px] text-slate-400 mr-auto">
+                {progress ? `Memproses ${progress.done}/${progress.total}...` : 'Menyiapkan...'}
+              </span>
+              <button
+                onClick={handleCancel}
+                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs"
+              >
+                Batalkan
+              </button>
+            </>
+          ) : results ? (
             <button
               onClick={onClose}
-              disabled={isExporting}
-              className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white rounded text-xs font-medium shadow-sm"
+              className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-medium shadow-sm"
             >
               Tutup
             </button>
@@ -245,21 +294,12 @@ export const BulkExportDialog: React.FC<BulkExportDialogProps> = ({ selectedIds,
                 Batal
               </button>
               <button
-                disabled={selectedCount === 0 || isExporting}
+                disabled={selectedCount === 0}
                 onClick={handleBulkExport}
                 className="flex items-center space-x-1.5 px-4 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white rounded text-xs font-medium shadow-sm"
               >
-                {isExporting ? (
-                  <>
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    <span>Mengekspor...</span>
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-3.5 h-3.5" />
-                    <span>Ekspor ke ZIP</span>
-                  </>
-                )}
+                <Download className="w-3.5 h-3.5" />
+                <span>Ekspor ke ZIP</span>
               </button>
             </>
           )}

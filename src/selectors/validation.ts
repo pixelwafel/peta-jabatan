@@ -12,6 +12,45 @@ import { buildTemplateUnitIds, containingTemplateUnitId, countInstancesFor } fro
 const EMPTY_INDEX: ProjectIndex = { version: 1, activeId: null, entries: [] };
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
+// Fase 0.2 — counter untuk assertion performa berbasis panggilan, bukan ms.
+// Lihat getRecapComputeCount di selectors/recap.ts untuk pola yang sama.
+let validateCount = 0;
+
+export function getValidateCount(): number {
+  return validateCount;
+}
+
+export function resetValidateCount(): void {
+  validateCount = 0;
+}
+
+// Fase 1.2 — sama seperti getCachedRecap di selectors/recap.ts: WeakMap
+// keyed di identitas `project` (referensi baru per commit lewat
+// produceWithPatches), jadi Toolbar (badge jumlah masalah, tiap render) dan
+// ReadinessDialog (dialog "Cek Kesiapan") berbagi satu hasil validasi kalau
+// keduanya membaca project yang sama dalam window waktu yang sama, alih-alih
+// masing-masing menjalankan validateProject penuh sendiri-sendiri.
+interface ValidationCacheEntry {
+  cfg: Taxonomy;
+  index: ProjectIndex;
+  findings: Finding[];
+}
+const validationCache = new WeakMap<Project, ValidationCacheEntry>();
+
+export function getCachedValidation(
+  project: Project,
+  cfg: Taxonomy = taxonomy,
+  index: ProjectIndex = EMPTY_INDEX
+): Finding[] {
+  const cached = validationCache.get(project);
+  if (cached && cached.cfg === cfg && cached.index === index) {
+    return cached.findings;
+  }
+  const findings = validateProject(project, cfg, index);
+  validationCache.set(project, { cfg, index, findings });
+  return findings;
+}
+
 export interface ReadinessReport {
   ready: boolean; // no errors — warnings do not block
   groups: Array<{
@@ -29,6 +68,7 @@ export function validateProject(
   cfg: Taxonomy = taxonomy,
   index: ProjectIndex = EMPTY_INDEX
 ): Finding[] {
+  validateCount++;
   const f: Finding[] = [];
   const idx = getStructureIndex(project.nodes, project.edges);
   const roots = project.nodes.filter(n => !idx.parentId.has(n.id));

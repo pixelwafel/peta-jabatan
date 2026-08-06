@@ -173,7 +173,7 @@ describe('Import & Round-Trip Pipeline (Doc 08 Exit Criteria)', () => {
 
     // 1. Export to XLSX Blob
     const recap = computeRecap(originalProject, taxonomy);
-    const xlsxBlob = exportXlsx(originalProject, recap);
+    const xlsxBlob = await exportXlsx(originalProject, recap);
 
     // 2. Re-import from XLSX Blob
     const file = new File([xlsxBlob], 'test_roundtrip.xlsx');
@@ -186,7 +186,7 @@ describe('Import & Round-Trip Pipeline (Doc 08 Exit Criteria)', () => {
   });
 
   it('exportXlsxTemplate produces a blank starter workbook that imports cleanly', async () => {
-    const blob = exportXlsxTemplate();
+    const blob = await exportXlsxTemplate();
     const file = new File([blob], 'template_peta_jabatan.xlsx');
     const preview = await processXlsxImport(file);
 

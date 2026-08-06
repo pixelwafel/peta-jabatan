@@ -1,7 +1,12 @@
-import * as XLSX from 'xlsx';
+import type * as XLSX from 'xlsx';
 import { Project } from '@/models/project';
 import { OrgNode } from '@/models/node';
 import { buildColumnGroups } from '@/selectors/templateInstance';
+
+// Fase 1.8 — lihat catatan di xlsxExporter.ts: import type saja (bebas
+// runtime cost), nilai xlsx dioper dari pemanggil yang sudah men-dynamic-
+// import modulnya (xlsxExporter.ts, consolidatedExporter.ts).
+type XlsxModule = typeof XLSX;
 
 /** Nama sheet Excel maksimal 31 karakter, tanpa karakter : \ / ? * [ ]. */
 function sheetNameFor(templateNode: OrgNode): string {
@@ -25,6 +30,7 @@ function sheetNameFor(templateNode: OrgNode): string {
  * import fallback ke pencocokan nama+level (M12.9).
  */
 export function buildMatrixSheet(
+  xlsx: XlsxModule,
   project: Project,
   templateNode: OrgNode
 ): { name: string; sheet: XLSX.WorkSheet } {
@@ -63,7 +69,7 @@ export function buildMatrixSheet(
   });
 
   const aoa = [row0, row1, row2, ...dataRows];
-  const sheet = XLSX.utils.aoa_to_sheet(aoa);
+  const sheet = xlsx.utils.aoa_to_sheet(aoa);
   sheet['!merges'] = merges;
   sheet['!rows'] = [{ hidden: true }];
   sheet['!cols'] = [{ wch: 28 }, { wch: 14 }, ...flatKeys.flatMap(() => [{ wch: 9 }, { wch: 9 }])];
@@ -72,10 +78,13 @@ export function buildMatrixSheet(
 }
 
 /** Satu sheet matrix per template unit di project ini (bisa lebih dari satu, doc 15 §6). */
-export function buildMatrixSheets(project: Project): Array<{ name: string; sheet: XLSX.WorkSheet }> {
+export function buildMatrixSheets(
+  xlsx: XlsxModule,
+  project: Project
+): Array<{ name: string; sheet: XLSX.WorkSheet }> {
   return project.nodes
     .filter(n => n.isTemplate)
-    .map(templateNode => buildMatrixSheet(project, templateNode));
+    .map(templateNode => buildMatrixSheet(xlsx, project, templateNode));
 }
 
 export { sheetNameFor as matrixSheetNameFor };

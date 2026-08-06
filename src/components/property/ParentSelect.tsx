@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { OrgNode } from '@/models/node';
 import { useProjectStore } from '@/store/projectStore';
-import { parentOf, depthOf } from '@/selectors/navigation';
-import { canSetParent } from '@/selectors/guards';
+import { parentOf, allDepths } from '@/selectors/navigation';
+import { validParentOptions } from '@/selectors/guards';
 import { Search } from 'lucide-react';
 
 interface ParentSelectProps {
@@ -19,13 +19,16 @@ export const ParentSelect: React.FC<ParentSelectProps> = ({ node }) => {
 
   const currentParent = parentOf(nodes, edges, node.id);
 
-  // Compute valid parent options
+  // Compute valid parent options. Fase 1.4: validParentOptions menghitung
+  // descendantsOf(node.id) SEKALI (dulu: canSetParent per kandidat, masing-
+  // masing memanggil descendantsOf sendiri — O(N²)), dan allDepths menghitung
+  // depth semua node dalam satu BFS (dulu: depthOf per kandidat — O(N·depth)).
   const validParents = useMemo(() => {
-    return nodes
-      .filter(n => canSetParent(nodes, edges, node.id, n.id))
+    const depths = allDepths(nodes, edges);
+    return validParentOptions(nodes, edges, node.id)
       .map(n => ({
         node: n,
-        depth: depthOf(nodes, edges, n.id),
+        depth: depths.get(n.id) ?? 0,
         label: n.nama,
       }))
       .sort((a, b) => {

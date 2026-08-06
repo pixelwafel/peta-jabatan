@@ -1,6 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { resolveLink, canCreateLink, cachedTotals } from '../src/selectors/linkResolver';
 import { useProjectStore } from '../src/store/projectStore';
+// Fase 2.1 — resolveLink() tidak lagi otomatis menulis balik ke store; harus
+// di-wire eksplisit lewat side-effect import ini (persis seperti main thread
+// mewiring lewat persistence/bootstrap.ts), supaya assertion "transient
+// commit" di bawah tetap berlaku.
+import '../src/store/linkCacheRefresh';
 import { ProjectIndex } from '../src/persistence/types';
 import { Project } from '../src/models/project';
 import { LinkRef } from '../src/models/node';

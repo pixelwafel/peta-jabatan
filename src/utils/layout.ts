@@ -130,3 +130,111 @@ export function computeLayout(
 
   return out;
 }
+
+// ---------------------------------------------------------------------------
+// Fase 1.6 — computeLayoutCached: memoize computeLayout pada signature
+// GEOMETRI, bukan seluruh Project. Dagre TIDAK perlu dihitung ulang untuk
+// edit yang tak mengubah geometri kartu/hirarki (rename, isi rincian, catatan
+// keterangan, custom attribute, posisi drag manual) — hanya empat input
+// nodeHeight() (type, ada/tidaknya kategoriId, ada/tidaknya kepalaUnit,
+// rincian.length) + showJenjang yang memengaruhi ukuran kartu, dan hierarchy
+// edge yang memengaruhi topologi. Perbandingan dilakukan elemen-per-elemen
+// terhadap signature tersimpan (array primitif), BUKAN kunci string — bebas
+// alokasi string besar di jalur yang sering dipanggil (Canvas Preview tab).
+//
+// Cache TUNGGAL (bukan LRU): hanya satu "live layout" yang genuinely reaktif
+// setelah TreeView pindah ke hitung-saat-klik (lihat useLiveLayout.ts) —
+// Canvas.tsx satu-satunya pemanggil di render path, dan panggilan on-click
+// (TreeView/UnplacedPanel handleFocus) biasanya memakai opts yang identik,
+// jadi kemungkinan besar tetap cache HIT kalau dipanggil segera setelah
+// Canvas render dengan struktur yang sama.
+// ---------------------------------------------------------------------------
+
+type NodeSigEntry = readonly [id: string, type: OrgNode['type'], hasKategori: boolean, hasKepala: boolean, rincianLen: number];
+type EdgeSigEntry = readonly [source: string, target: string];
+
+interface LayoutCacheEntry {
+  direction: TidyOptions['direction'];
+  scope: TidyOptions['scope'];
+  rootId: string | undefined;
+  showJenjang: boolean;
+  nodeSig: NodeSigEntry[];
+  edgeSig: EdgeSigEntry[];
+  result: Map<string, { x: number; y: number }>;
+}
+
+let layoutCache: LayoutCacheEntry | null = null;
+
+function nodeSigMatches(nodes: OrgNode[], sig: NodeSigEntry[]): boolean {
+  if (nodes.length !== sig.length) return false;
+  for (let i = 0; i < nodes.length; i++) {
+    const n = nodes[i];
+    const [id, type, hasKategori, hasKepala, rincianLen] = sig[i];
+    if (
+      n.id !== id ||
+      n.type !== type ||
+      !!n.kategoriId !== hasKategori ||
+      !!n.kepalaUnit !== hasKepala ||
+      n.rincian.length !== rincianLen
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function edgeSigMatches(hEdges: OrgEdge[], sig: EdgeSigEntry[]): boolean {
+  if (hEdges.length !== sig.length) return false;
+  for (let i = 0; i < hEdges.length; i++) {
+    const [source, target] = sig[i];
+    if (hEdges[i].source !== source || hEdges[i].target !== target) return false;
+  }
+  return true;
+}
+
+export function computeLayoutCached(
+  nodes: OrgNode[],
+  edges: OrgEdge[],
+  opts: TidyOptions
+): Map<string, { x: number; y: number }> {
+  const showJenjang = opts.showJenjang ?? false;
+  const hEdges = hierarchyEdges(edges);
+
+  // scope:'subtree' menjangkarkan hasil ke position node root (lihat blok
+  // "Preserving anchor" di atas) — geometrySignature sengaja mengabaikan
+  // position, jadi cache tidak aman dipakai untuk mode ini. Tidak ada
+  // pemanggil aktif yang memakai scope:'subtree' saat ini; kalau nanti ada,
+  // ini cukup jadi jalur "selalu hitung ulang", bukan bug diam-diam.
+  if (
+    opts.scope !== 'subtree' &&
+    layoutCache &&
+    layoutCache.direction === opts.direction &&
+    layoutCache.scope === opts.scope &&
+    layoutCache.rootId === opts.rootId &&
+    layoutCache.showJenjang === showJenjang &&
+    nodeSigMatches(nodes, layoutCache.nodeSig) &&
+    edgeSigMatches(hEdges, layoutCache.edgeSig)
+  ) {
+    return layoutCache.result;
+  }
+
+  const result = computeLayout(nodes, edges, opts);
+
+  if (opts.scope !== 'subtree') {
+    layoutCache = {
+      direction: opts.direction,
+      scope: opts.scope,
+      rootId: opts.rootId,
+      showJenjang,
+      nodeSig: nodes.map(n => [n.id, n.type, !!n.kategoriId, !!n.kepalaUnit, n.rincian.length] as const),
+      edgeSig: hEdges.map(e => [e.source, e.target] as const),
+      result,
+    };
+  }
+
+  return result;
+}
+
+export function resetLayoutCache(): void {
+  layoutCache = null;
+}

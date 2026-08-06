@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { OrgNode } from '@/models/node';
 import { useProjectStore } from '@/store/projectStore';
-import { JabatanRefEntry, searchJabatanRef } from '@/config/jabatanRef';
+import { JabatanRefData, JabatanRefEntry, loadJabatanRef, searchJabatanRef } from '@/config/jabatanRef';
 import { Plus } from 'lucide-react';
 
 interface JabatanNameFieldProps {
@@ -27,6 +27,17 @@ export const JabatanNameField: React.FC<JabatanNameFieldProps> = ({ node }) => {
   const [draft, setDraft] = useState(node.nama);
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(0);
+  // Fase 1.8: daftar referensi (~561 entri, sumber JSON 6.669 baris) TIDAK
+  // lagi statis di bundle — dimuat lazy lewat loadJabatanRef() saat field
+  // ini difokus pertama kali (lihat onFocus di bawah), bukan saat app start.
+  // null selama belum dimuat -> dropdown saran kosong untuk fokus pertama
+  // (jeda biasanya kecil dan hanya sekali per sesi, chunk-nya di-cache
+  // module-level lewat loadJabatanRef sendiri).
+  const [ref, setRef] = useState<JabatanRefData | null>(null);
+
+  const ensureRefLoaded = useCallback(() => {
+    if (!ref) loadJabatanRef().then(setRef);
+  }, [ref]);
 
   // Ganti node terpilih -> draft mulai dari nama tersimpan node baru.
   useEffect(() => {
@@ -38,7 +49,14 @@ export const JabatanNameField: React.FC<JabatanNameFieldProps> = ({ node }) => {
     setHighlight(0);
   }, [draft]);
 
-  const matches = useMemo(() => searchJabatanRef(draft), [draft]);
+  // Fase 1.7: TIDAK di-debounce — searchJabatanRef sudah murah (lowercase
+  // di-precompute sekali di jabatanRef.ts, bukan per keystroke), dan field
+  // ini dinavigasi keyboard (ArrowUp/Down + Enter memilih matches[highlight]
+  // langsung). Men-debounce `matches` di sini berarti Enter/panah bisa
+  // memilih hasil pencarian yang sudah basi relatif ke draft yang baru saja
+  // diketik — risiko salah pilih jabatan lebih mahal daripada penghematan
+  // yang didapat (dropdown ini tidak seperti daftar OPD beratus entri).
+  const matches = useMemo(() => (ref ? searchJabatanRef(ref, draft) : []), [ref, draft]);
   const trimmed = draft.trim();
   const exactMatch = matches.find(m => m.nama.toLowerCase() === trimmed.toLowerCase());
   const showAddCustom = trimmed !== '' && !exactMatch;
@@ -84,8 +102,12 @@ export const JabatanNameField: React.FC<JabatanNameFieldProps> = ({ node }) => {
         onChange={e => {
           setDraft(e.target.value);
           setOpen(true);
+          ensureRefLoaded();
         }}
-        onFocus={() => setOpen(true)}
+        onFocus={() => {
+          setOpen(true);
+          ensureRefLoaded();
+        }}
         onBlur={() => {
           // Belum dikonfirmasi (belum klik saran / tombol tambah) -> dibuang.
           setOpen(false);

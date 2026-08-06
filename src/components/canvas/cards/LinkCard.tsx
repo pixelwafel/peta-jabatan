@@ -8,6 +8,7 @@ import { useProjectIndexStore } from '@/store/projectIndexStore';
 import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
 import { getProject } from '@/persistence/storage';
+import { flushSave } from '@/persistence/autosave';
 import { ProjectIndex } from '@/persistence/types';
 
 const EMPTY_INDEX: ProjectIndex = { version: 1, activeId: null, entries: [] };
@@ -61,6 +62,7 @@ export const LinkCard: React.FC<NodeCardProps> = memo(
 
     const handleDoubleClick = async () => {
       if (resolved.status === 'live' && resolved.targetProjectId) {
+        await flushSave();
         const target = await getProject(resolved.targetProjectId);
         if (target) setProject(target);
         return;

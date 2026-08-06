@@ -30,6 +30,9 @@ interchange.
 | 15 | [Template-Instance Units](./15-template-instance.md) | School-type units: structure once, figures per instance | Stage B |
 | 16 | [Error Handling & Recovery](./16-error-handling-recovery.md) | Fault tolerance, recovery dialogs, error boundaries | Core |
 | 17 | [PWA & Offline](./17-pwa-offline.md) | Service Worker, manifest, offline resilience | Core |
+| 18 | [Outline Refactor](./18-outline-refactor.md) | 3-column layout, outline-as-editor, `order` field | Stage B |
+| 19 | [Import Template Reference](./19-import-template-reference.md) | Precise import-format spec for AI/LLM data normalization | Reference |
+| 20 | [Skalabilitas: Worker & Virtualisasi](./20-skalabilitas-worker-virtualisasi.md) | Hundreds-of-OPD scale plan — Fase 0–2 done (Web Worker, virtualization), Fase 3–4 detailed plan (summary records, real IndexedDB schema, backend escape hatch) | Stage C |
 
 ## How to read this set
 
