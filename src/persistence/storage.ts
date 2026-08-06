@@ -6,7 +6,9 @@ import { hierarchyEdges } from '@/utils/edges';
 import { compareNomor } from '@/utils/numbering';
 import { mergeStrukturalHeadsIntoUnits } from '@/utils/structuralMerge';
 
-const customStore = createStore('pjb_db', 'pjb_store');
+// Exported supaya modul persistence lain (mis. persistence/customOpd.ts) bisa
+// simpan state kecil di database/objectStore yang sama tanpa membuka handle baru.
+export const customStore = createStore('pjb_db', 'pjb_store');
 
 const INDEX_KEY = 'pjb:v1:index';
 const PROJECT_PREFIX = 'pjb:v1:project:';

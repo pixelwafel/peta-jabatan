@@ -1,0 +1,33 @@
+{
+  "listVersion": "2026.1",
+  "opd": [
+    { "kode": "SETDA", "nama": "Sekretariat Daerah", "kelompok": "Sekretariat" },
+    { "kode": "SETWAN", "nama": "Sekretariat DPRD", "kelompok": "Sekretariat" },
+    { "kode": "DINKES", "nama": "Dinas Kesehatan", "kelompok": "Dinas" },
+    { "kode": "DISDIK", "nama": "Dinas Pendidikan", "kelompok": "Dinas" },
+    { "kode": "DISHUB", "nama": "Dinas Perhubungan", "kelompok": "Dinas" },
+    { "kode": "DISDUKCAPIL", "nama": "Dinas Kependudukan dan Pencatatan Sipil", "kelompok": "Dinas" },
+    { "kode": "DISNAKER", "nama": "Dinas Tenaga Kerja", "kelompok": "Dinas" },
+    { "kode": "DISPERKIM", "nama": "Dinas Perumahan dan Kawasan Permukiman", "kelompok": "Dinas" },
+    { "kode": "DISPARBUD", "nama": "Dinas Pariwisata dan Kebudayaan", "kelompok": "Dinas" },
+    { "kode": "DISPERINDAG", "nama": "Dinas Perindustrian dan Perdagangan", "kelompok": "Dinas" },
+    { "kode": "DISKOMINFOTIK", "nama": "Dinas Komunikasi, Informatika, Statistik dan Persandian", "kelompok": "Dinas", "alias": ["DISKOMINFO"] },
+    { "kode": "DISPERTAN", "nama": "Dinas Pertanian", "kelompok": "Dinas" },
+    { "kode": "DISLUTKAN", "nama": "Dinas Kelautan dan Perikanan", "kelompok": "Dinas" },
+    { "kode": "DISSOS", "nama": "Dinas Sosial", "kelompok": "Dinas" },
+    { "kode": "DISPMPTSP", "nama": "Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu", "kelompok": "Dinas" },
+    { "kode": "DISPORA", "nama": "Dinas Pemuda dan Olahraga", "kelompok": "Dinas" },
+    { "kode": "DISLINGHUT", "nama": "Dinas Lingkungan Hidup dan Kehutanan", "kelompok": "Dinas" },
+    { "kode": "DISPERTARU", "nama": "Dinas Pertanahan dan Tata Ruang", "kelompok": "Dinas" },
+    { "kode": "DISARPUS", "nama": "Dinas Arsip dan Perpustakaan", "kelompok": "Dinas" },
+    { "kode": "BAPPEDA", "nama": "Badan Perencanaan Pembangunan Daerah", "kelompok": "Badan" },
+    { "kode": "BKPSDM", "nama": "Badan Kepegawaian dan Pengembangan Sumber Daya Manusia", "kelompok": "Badan" },
+    { "kode": "BPKAD", "nama": "Badan Pengelolaan Keuangan dan Aset Daerah", "kelompok": "Badan" },
+    { "kode": "BAPENDA", "nama": "Badan Pendapatan Daerah", "kelompok": "Badan" },
+    { "kode": "BPBD", "nama": "Badan Penanggulangan Bencana Daerah", "kelompok": "Badan" },
+    { "kode": "BKESBANGPOL", "nama": "Badan Kesatuan Bangsa dan Politik", "kelompok": "Badan" },
+    { "kode": "INSPEKTORAT", "nama": "Inspektorat Daerah", "kelompok": "Badan" },
+    { "kode": "SATPOLPP", "nama": "Satuan Polisi Pamong Praja", "kelompok": "Badan" },
+    { "kode": "RSUD", "nama": "Rumah Sakit Umum Daerah", "kelompok": "RSUD" }
+  ]
+}
