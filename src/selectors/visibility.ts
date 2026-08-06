@@ -37,3 +37,66 @@ export function visibleNodeIds(nodes: OrgNode[], edges: OrgEdge[]): Set<string> 
 export function isHiddenByCollapse(nodes: OrgNode[], edges: OrgEdge[], nodeId: string): boolean {
   return !visibleNodeIds(nodes, edges).has(nodeId);
 }
+
+export interface DepthGuardResult {
+  /** Subset dari `visible` yang lolos batas kedalaman — sama dengan `visible`
+   * (referensi yang sama, bukan disalin) kalau tidak melebihi `limit`. */
+  guardedVisible: Set<string>;
+  /** null kalau guard tidak aktif (di bawah limit); selain itu kedalaman
+   * terdalam yang masih ditampilkan. */
+  cutoffDepth: number | null;
+  /** Berapa banyak node yang disembunyikan guard (0 kalau guard tidak aktif). */
+  hiddenCount: number;
+}
+
+/**
+ * Fase 2.6 — pagar pengaman React Flow: `onlyRenderVisibleElements` (sudah
+ * aktif di Canvas.tsx) menghindarkan cost render DOM untuk node di luar
+ * viewport, tapi React Flow tetap membukukan (layout/state internal) SETIAP
+ * node yang diserahkan lewat prop `nodes` — pembukuan itu degradasi di atas
+ * ~2.000 node terlepas dari berapa yang sebenarnya kelihatan di layar.
+ * Rencana Fase 2.6: kalau `visible.size` melewati `limit`, potong di
+ * kedalaman tertentu (bukan ubah `node.collapsed` — itu data project
+ * sungguhan yang ikut undo/persist; ini murni batasan tampilan Preview,
+ * dibuang begitu tab ditutup) supaya JUMLAH node yang diserahkan ke React
+ * Flow tetap di bawah ambang, dengan banner UI yang menyebutkan berapa node
+ * disembunyikan dan tombol untuk menampilkan semua kalau operator benar-benar
+ * mau (Canvas.tsx menawarkan itu, fungsi ini murni menghitung potongannya).
+ *
+ * Algoritma: hitung populasi tiap level kedalaman di antara node visible,
+ * lalu ambil level 0..cutoff terbesar yang KUMULATIFnya masih <= limit.
+ * Root (depth 0) selalu ikut meski `limit` sangat kecil, supaya guard tidak
+ * pernah menghasilkan kanvas kosong total.
+ */
+export function guardVisibleByDepth(
+  visible: Set<string>,
+  depths: Map<string, number>,
+  limit: number
+): DepthGuardResult {
+  if (visible.size <= limit) {
+    return { guardedVisible: visible, cutoffDepth: null, hiddenCount: 0 };
+  }
+
+  const countByDepth = new Map<number, number>();
+  for (const id of visible) {
+    const d = depths.get(id) ?? 0;
+    countByDepth.set(d, (countByDepth.get(d) ?? 0) + 1);
+  }
+  const sortedDepths = Array.from(countByDepth.keys()).sort((a, b) => a - b);
+
+  let cumulative = 0;
+  let cutoff = sortedDepths[0] ?? 0;
+  for (const d of sortedDepths) {
+    const next = cumulative + (countByDepth.get(d) ?? 0);
+    if (next > limit && cumulative > 0) break; // sudah ada minimal 1 level, boleh berhenti
+    cumulative = next;
+    cutoff = d;
+  }
+
+  const guardedVisible = new Set<string>();
+  for (const id of visible) {
+    if ((depths.get(id) ?? 0) <= cutoff) guardedVisible.add(id);
+  }
+
+  return { guardedVisible, cutoffDepth: cutoff, hiddenCount: visible.size - guardedVisible.size };
+}
