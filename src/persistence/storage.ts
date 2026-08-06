@@ -1,7 +1,6 @@
 import { get, set, del, keys, createStore } from 'idb-keyval';
 import { Project } from '@/models/project';
 import { ProjectIndex, ProjectIndexEntry } from './types';
-import { projectTotals } from '@/selectors/totals';
 import { hierarchyEdges } from '@/utils/edges';
 import { compareNomor } from '@/utils/numbering';
 import { mergeStrukturalHeadsIntoUnits } from '@/utils/structuralMerge';
@@ -125,29 +124,46 @@ export async function deleteProjectData(id: string): Promise<void> {
   await saveProjectIndex(index);
 }
 
+const EMPTY_PROJECT_INDEX: ProjectIndex = { version: 1, activeId: null, entries: [] };
+
 /**
  * Bangun ProjectIndexEntry dari sebuah Project — dipakai baik oleh
  * `updateIndexForProject` (satu project, incremental) maupun
  * `rebuildIndexFromStorage` (semua project, dari nol). Diekstrak jadi fungsi
  * murni supaya bisa ditest tanpa IndexedDB (lihat tests/persistence.test.ts).
+ *
+ * `index` (opsional): index project-project LAIN yang sudah ada, dipakai
+ * untuk resolusi link node (docs/13 §2) supaya totalKebutuhan/totalEksisting
+ * project ini SUDAH menyertakan kontribusi link-nya — inilah yang membuat
+ * "government total = jumlah topLevel entries" di dashboard (doc 14 §2)
+ * valid tanpa perlu membuka body project lain lagi di sana.
  */
 export async function buildIndexEntry(
   project: Project,
-  carry: Pick<ProjectIndexEntry, 'lastExportedAt' | 'origin'> = { lastExportedAt: null, origin: 'created' }
+  carry: Pick<ProjectIndexEntry, 'lastExportedAt' | 'origin'> = { lastExportedAt: null, origin: 'created' },
+  index: ProjectIndex = EMPTY_PROJECT_INDEX
 ): Promise<ProjectIndexEntry> {
-  const totals = projectTotals(project.nodes);
   const posCount = project.nodes.filter(n => n.type === 'jabatan').length;
 
-  // Import dinamis, bukan statis: selectors/validation.ts -> linkResolver.ts ->
-  // store/projectStore.ts -> store/projectIndexStore.ts -> balik ke modul ini
-  // (getProjectIndex). Import statis akan bikin siklus; import dinamis aman
-  // karena baru di-resolve saat fungsi ini benar-benar dipanggil.
+  // Import dinamis, bukan statis: selectors/validation.ts & selectors/recap.ts
+  // -> (linkResolver.ts ->) store/projectStore.ts -> store/projectIndexStore.ts
+  // -> balik ke modul ini (getProjectIndex). Import statis akan bikin siklus;
+  // import dinamis aman karena baru di-resolve saat fungsi ini benar-benar
+  // dipanggil.
   const { validateProject } = await import('@/selectors/validation');
+  const { computeRecap } = await import('@/selectors/recap');
+  const { taxonomy } = await import('@/config/taxonomy');
+
   const findings = validateProject(project);
   const findingCounts = {
     errors: findings.filter(f => f.severity === 'error').length,
     warnings: findings.filter(f => f.severity === 'warning').length,
   };
+
+  // total dari computeRecap (bukan projectTotals) supaya link node ikut
+  // teragregasi (docs/13-link-nodes.md §3) — tanpa ini, total project yang
+  // punya tautan akan tampak lebih kecil dari kenyataan di dashboard.
+  const totals = computeRecap(project, taxonomy, index).total;
 
   return {
     id: project.id,
@@ -172,10 +188,14 @@ export async function updateIndexForProject(project: Project): Promise<void> {
   const index = await getProjectIndex();
   const existingEntry = index.entries.find(e => e.id === project.id);
 
-  const entry = await buildIndexEntry(project, {
-    lastExportedAt: existingEntry?.lastExportedAt ?? null,
-    origin: existingEntry?.origin ?? 'created',
-  });
+  const entry = await buildIndexEntry(
+    project,
+    {
+      lastExportedAt: existingEntry?.lastExportedAt ?? null,
+      origin: existingEntry?.origin ?? 'created',
+    },
+    index
+  );
 
   const entryIndex = index.entries.findIndex(e => e.id === project.id);
   if (entryIndex >= 0) {
@@ -192,22 +212,25 @@ export async function rebuildIndexFromStorage(): Promise<ProjectIndex> {
   const allKeys = (await keys(customStore)) as string[];
   const projectKeys = allKeys.filter(k => typeof k === 'string' && k.startsWith(PROJECT_PREFIX));
 
-  const entries: ProjectIndexEntry[] = [];
-  let activeId: string | null = null;
-
+  const bodies: Project[] = [];
   for (const pk of projectKeys) {
     try {
       const p = await get<Project>(pk, customStore);
-      if (p && p.id && p.meta) {
-        entries.push(await buildIndexEntry(p));
-      }
+      if (p && p.id && p.meta) bodies.push(p);
     } catch (err) {
       console.warn(`Failed reading project key ${pk}:`, err);
     }
   }
 
+  // Two-pass: pass 1 tanpa index (linked-nya sendiri belum bisa diresolusi,
+  // tapi linkedCodes-nya sudah benar) supaya pass 2 punya index lengkap untuk
+  // resolusi link antar-project dalam batch yang sama.
+  const pass1 = await Promise.all(bodies.map(p => buildIndexEntry(p)));
+  const pass1Index: ProjectIndex = { version: 1, activeId: null, entries: pass1 };
+  const entries = await Promise.all(bodies.map(p => buildIndexEntry(p, undefined, pass1Index)));
+
   entries.sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
-  activeId = entries[0]?.id ?? null;
+  const activeId = entries[0]?.id ?? null;
 
   const newIndex: ProjectIndex = {
     version: 1,

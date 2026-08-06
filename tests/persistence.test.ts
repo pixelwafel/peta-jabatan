@@ -182,4 +182,37 @@ describe('buildIndexEntry — linkedCodes population (M10.4, docs/13 §2 cycle g
     const entry = await buildIndexEntry(broken);
     expect(entry.findingCounts!.errors).toBeGreaterThanOrEqual(1);
   });
+
+  it('totalKebutuhan/totalEksisting include link node contributions when an index is passed (M11.2 double-count guard prerequisite)', async () => {
+    const base = projectWithLinks(['PKM-KTIM']);
+    // projectWithLinks lampirkan link node sebagai orphan (tanpa edge) — di
+    // sini butuh benar-benar jadi anak root supaya masuk hitungan `total`.
+    const linkedProject: Project = {
+      ...base,
+      edges: [{ id: 'e-link', source: 'node-root', target: 'node-link-0', kind: 'hirarki' }],
+    };
+    const targetIndex = {
+      version: 1 as const,
+      activeId: null,
+      entries: [
+        {
+          id: 'target',
+          namaOPD: 'Puskesmas Kota Timur',
+          kodeOPD: 'PKM-KTIM',
+          nodeCount: 41,
+          totalKebutuhan: 52,
+          totalEksisting: 47,
+          updatedAt: new Date().toISOString(),
+          lastExportedAt: null,
+        },
+      ],
+    };
+
+    const withoutIndex = await buildIndexEntry(linkedProject);
+    const withIndex = await buildIndexEntry(linkedProject, undefined, targetIndex);
+
+    expect(withoutIndex.totalKebutuhan).toBe(0); // tautan tak resolve tanpa index -> kontribusi nol
+    expect(withIndex.totalKebutuhan).toBe(52);
+    expect(withIndex.totalEksisting).toBe(47);
+  });
 });
