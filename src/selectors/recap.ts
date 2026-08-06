@@ -11,6 +11,7 @@ import { useProjectStore } from '@/store/projectStore';
 import { useProjectIndexStore } from '@/store/projectIndexStore';
 import { resolveLink } from './linkResolver';
 import { ProjectIndex } from '@/persistence/types';
+import { buildTemplateUnitIds, containingTemplateUnitId, computeInstanceTotals, countInstancesFor } from './templateInstance';
 
 const EMPTY_INDEX: ProjectIndex = { version: 1, activeId: null, entries: [] };
 
@@ -71,11 +72,39 @@ export function computeRecap(
   // antaranya — dipakai buat jam kecil di recap panel.
   const cacheMarkers = new Map<string, { includesCached: boolean; oldestAsOf?: string }>();
 
+  // Template-instance (docs/15-template-instance.md §3): angka nyata untuk
+  // node di dalam subtree template datang dari Project.instances (kolom
+  // rincianId, atau id unit-nya sendiri untuk kolom kepala unit — lihat
+  // selectors/templateInstance.ts), BUKAN dari rincian/kepalaUnit tersimpan
+  // (yang selalu nol lewat invariant TEMPLATE_ROW_HAS_FIGURES).
+  const templateUnitIds = buildTemplateUnitIds(project.nodes);
+  const instanceTotalsByTemplate = new Map<string, Map<string, NodeTotals>>();
+  for (const templateId of templateUnitIds) {
+    instanceTotalsByTemplate.set(templateId, computeInstanceTotals(project.instances ?? [], templateId));
+  }
+
   // 1. Calculate own rows totals (Units carry only their kepalaUnit figures, if any)
   for (const n of project.nodes) {
+    const templateId = containingTemplateUnitId(n.id, idx, templateUnitIds);
+    const columnTotals = templateId ? instanceTotalsByTemplate.get(templateId) : undefined;
+
     if (n.type === 'unit') {
-      const keb = n.kepalaUnit?.kebutuhan ?? 0;
-      const eks = n.kepalaUnit?.eksisting ?? 0;
+      if (columnTotals) {
+        // Kolom "kepala unit" template dikunci pakai id unit-nya sendiri
+        // (lihat catatan adaptasi di templateInstance.ts).
+        nodeTotals.set(n.id, n.kepalaUnit ? columnTotals.get(n.id) ?? ZERO : ZERO);
+      } else {
+        const keb = n.kepalaUnit?.kebutuhan ?? 0;
+        const eks = n.kepalaUnit?.eksisting ?? 0;
+        nodeTotals.set(n.id, { kebutuhan: keb, eksisting: eks, selisih: eks - keb });
+      }
+    } else if (columnTotals) {
+      let keb = 0, eks = 0;
+      for (const r of n.rincian) {
+        const t = columnTotals.get(r.id) ?? ZERO;
+        keb += t.kebutuhan;
+        eks += t.eksisting;
+      }
       nodeTotals.set(n.id, { kebutuhan: keb, eksisting: eks, selisih: eks - keb });
     } else {
       let keb = 0, eks = 0;
@@ -187,7 +216,10 @@ export function computeRecap(
         key: u.id,
         label: u.nama,
         ...t,
-        nodeCount: countPositions(subNodes),
+        // Unit template: nodeCount berarti "N satuan" (jumlah instance), bukan
+        // jumlah posisi — posisi di dalamnya cuma definisi kolom (doc 15 §3).
+        nodeCount: u.isTemplate ? countInstancesFor(project.instances ?? [], u.id) : countPositions(subNodes),
+        isTemplateUnit: u.isTemplate || undefined,
         depth: depthOf(project.nodes, project.edges, u.id),
         includesCached: marker?.includesCached,
         oldestCachedAsOf: marker?.oldestAsOf,
@@ -234,20 +266,28 @@ export function computeRecap(
   const jenjangAcc = new Map<string, { keb: number; eks: number; n: number }>();
 
   for (const n of inScopeNodes) {
+    const templateId = containingTemplateUnitId(n.id, idx, templateUnitIds);
+    const columnTotals = templateId ? instanceTotalsByTemplate.get(templateId) : undefined;
+
     if (n.type === 'jabatan') {
       for (const r of n.rincian) {
         if (!r.jenjangId) continue;
+        // Di dalam template, angka baris ini SELALU nol (invariant) — angka
+        // sebenarnya per level datang dari kolom instance keyed rincian.id
+        // (docs/15-template-instance.md §3), bukan r.kebutuhan/r.eksisting.
+        const figure = columnTotals ? columnTotals.get(r.id) ?? ZERO : { kebutuhan: r.kebutuhan ?? 0, eksisting: r.eksisting ?? 0, selisih: 0 };
         const b = jenjangAcc.get(r.jenjangId) ?? { keb: 0, eks: 0, n: 0 };
-        b.keb += r.kebutuhan ?? 0;
-        b.eks += r.eksisting ?? 0;
+        b.keb += figure.kebutuhan;
+        b.eks += figure.eksisting;
         b.n += 1;
         jenjangAcc.set(r.jenjangId, b);
       }
     } else if (n.type === 'unit' && n.kepalaUnit?.jenjangId) {
       const jid = n.kepalaUnit.jenjangId;
+      const t = nodeTotals.get(n.id) ?? ZERO; // sudah instance-aware lewat langkah 1
       const b = jenjangAcc.get(jid) ?? { keb: 0, eks: 0, n: 0 };
-      b.keb += n.kepalaUnit.kebutuhan ?? 0;
-      b.eks += n.kepalaUnit.eksisting ?? 0;
+      b.keb += t.kebutuhan;
+      b.eks += t.eksisting;
       b.n += 1;
       jenjangAcc.set(jid, b);
     }
@@ -320,6 +360,12 @@ export function useRecap(): Recap | null {
   // lain disimpan, link baru dibuat) tidak selalu mengubah project ini, jadi
   // index juga masuk dependency memo di luar recapKey.
   const index = useProjectIndexStore(s => s.index);
+  // "instancesRevision" (docs/15-template-instance.md §3): commit lewat Immer
+  // selalu menghasilkan array `instances` BARU tiap kali isinya berubah —
+  // referensi array itu sendiri sudah jadi penanda murah setara counter,
+  // tanpa perlu hash ribuan cell (figuresKey sengaja TIDAK menyertakan isi
+  // instances, persis alasan yang sama).
+  const instances = project?.instances;
 
   const memoKey = useMemo(() => {
     if (!project) return null;
@@ -330,5 +376,5 @@ export function useRecap(): Recap | null {
     if (!project) return null;
     return computeRecap(project, taxonomy, index ?? EMPTY_INDEX);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [memoKey, index]);
+  }, [memoKey, index, instances]);
 }

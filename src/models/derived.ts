@@ -31,6 +31,9 @@ export interface RecapBucket {
   depth?: number; // depth for perUnit indentation
   includesCached?: boolean; // true kalau subtree-nya menyertakan link non-'live'
   oldestCachedAsOf?: string; // tanggal cache tertua di antara link non-'live', untuk tooltip jam
+  /** true untuk baris perUnit milik unit isTemplate — nodeCount di baris ini
+   * berarti "N satuan" (jumlah instance), bukan jumlah posisi (docs/15-template-instance.md §3). */
+  isTemplateUnit?: boolean;
 }
 
 /** Hasil resolusi LinkRef (docs/13-link-nodes.md §2) — lihat selectors/linkResolver.ts. */
