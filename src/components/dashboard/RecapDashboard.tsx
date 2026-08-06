@@ -20,7 +20,6 @@ import { downloadBlob } from '@/utils/download';
 import {
   LayoutDashboard,
   X,
-  Upload,
   Download,
   AlertTriangle,
   Clock,
@@ -46,33 +45,9 @@ function formatDate(iso: string): string {
 const CardView: React.FC<{
   card: DashboardCard;
   onOpen: (id: string) => void;
-  onImportHere: () => void;
   onRegisterOpd: (kodeOPD: string, namaOPD: string) => void;
-}> = ({ card, onOpen, onImportHere, onRegisterOpd }) => {
+}> = ({ card, onOpen, onRegisterOpd }) => {
   const { entry } = card;
-
-  if (!entry) {
-    return (
-      <div className="border-2 border-dashed border-slate-700 rounded-lg p-3 bg-slate-950/20 flex flex-col justify-between min-h-[104px]">
-        <div>
-          <div className="font-mono text-[10px] text-slate-500">{card.kodeOPD}</div>
-          <div className="text-xs font-semibold text-slate-400 truncate" title={card.namaOPD}>
-            {card.namaOPD}
-          </div>
-        </div>
-        <div className="flex items-center justify-between mt-2">
-          <span className="text-[11px] text-slate-500 italic">belum masuk</span>
-          <button
-            onClick={onImportHere}
-            className="flex items-center space-x-1 px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-blue-400 rounded text-[11px] font-medium"
-          >
-            <Upload className="w-3 h-3" />
-            <span>Impor</span>
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   const stale = isEntryStale(entry);
   const errors = entry.findingCounts?.errors ?? 0;
@@ -208,8 +183,6 @@ export const RecapDashboard: React.FC<RecapDashboardProps> = ({ onClose }) => {
   }, [topLevel]);
   const staleCount = topLevel.filter(isEntryStale).length;
   const problemCount = topLevel.filter(e => (e.findingCounts?.errors ?? 0) > 0).length;
-  const expectedCount = opdIdx ? new Set(Array.from(opdIdx.values()).map(o => o.kode)).size : 0;
-  const submittedCount = topLevel.filter(e => opdIdx && opdIdx.has(e.kodeOPD)).length;
 
   const kelompokOrder = ['Sekretariat', 'Dinas', 'Badan', 'RSUD', 'Kecamatan', LAINNYA_KELOMPOK];
   const sortedGroupKeys = Array.from(groups.keys()).sort((a, b) => {
@@ -341,9 +314,7 @@ export const RecapDashboard: React.FC<RecapDashboardProps> = ({ onClose }) => {
                   {headline.selisih > 0 ? `+${headline.selisih}` : headline.selisih}
                 </span>
               </span>
-              <span className="text-slate-400">
-                {submittedCount} dari {expectedCount} OPD masuk
-              </span>
+              <span className="text-slate-400">{topLevel.length} OPD tercatat</span>
             </div>
             <div className="flex items-center space-x-3 text-[11px] text-slate-500">
               {staleCount > 0 && (
@@ -428,7 +399,6 @@ export const RecapDashboard: React.FC<RecapDashboardProps> = ({ onClose }) => {
                     key={card.kodeOPD}
                     card={card}
                     onOpen={handleOpen}
-                    onImportHere={() => setShowImport(true)}
                     onRegisterOpd={handleRegisterOpd}
                   />
                 ))}

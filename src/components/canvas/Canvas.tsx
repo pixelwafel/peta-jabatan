@@ -192,6 +192,16 @@ const InnerCanvas: React.FC = () => {
           zoomable
         />
       </ReactFlow>
+      {!project && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="text-center text-slate-500 max-w-xs px-4">
+            <p className="text-sm font-medium text-slate-400">Belum ada project dibuka</p>
+            <p className="text-xs mt-1">
+              Buka <span className="text-slate-300">Kelola Proyek</span> di toolbar untuk membuat project baru atau mengimpor berkas.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

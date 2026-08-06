@@ -93,7 +93,7 @@ describe('isEntryStale (docs/14 §3)', () => {
   });
 });
 
-describe('buildDashboardCards (M11.3, docs/14-recap-dashboard.md §1 & §3)', () => {
+describe('buildDashboardCards (M11.3, docs/14-recap-dashboard.md §1 & §3 — revisi: tanpa kartu placeholder)', () => {
   const testOpdList: OpdEntry[] = [
     { kode: 'DINKES', nama: 'Dinas Kesehatan', kelompok: 'Dinas' },
     { kode: 'DISHUB', nama: 'Dinas Perhubungan', kelompok: 'Dinas' },
@@ -101,34 +101,32 @@ describe('buildDashboardCards (M11.3, docs/14-recap-dashboard.md §1 & §3)', ()
   ];
   const opdIndex = buildOpdIndex([], { listVersion: 'test', opd: testOpdList });
 
-  it('produces a placeholder card ("belum masuk") for every expected-but-absent agency', () => {
+  it('produces no cards at all when no project is stored, regardless of the known OPD list', () => {
     const groups = buildDashboardCards([], new Map(), opdIndex);
-    const dinasCards = groups.get('Dinas') ?? [];
-
-    expect(dinasCards).toHaveLength(3);
-    expect(dinasCards.every(c => c.entry === null)).toBe(true);
-    expect(dinasCards.map(c => c.kodeOPD).sort()).toEqual(['DINKES', 'DISHUB', 'DISKOMINFOTIK']);
+    expect(groups.size).toBe(0);
   });
 
-  it('an existing top-level entry replaces its placeholder, matched by kode', () => {
+  it('an existing top-level entry gets a card grouped by its known kelompok', () => {
     const dinkesEntry = entry({ id: 'e-dinkes', kodeOPD: 'DINKES', totalKebutuhan: 100, totalEksisting: 90 });
     const groups = buildDashboardCards([dinkesEntry], new Map(), opdIndex);
     const dinasCards = groups.get('Dinas') ?? [];
 
-    expect(dinasCards).toHaveLength(3); // DINKES nyata + 2 placeholder (DISHUB, DISKOMINFOTIK)
-    const dinkesCard = dinasCards.find(c => c.kodeOPD === 'DINKES')!;
+    // Hanya project yang benar-benar tersimpan yang dapat kartu — tidak ada
+    // kartu tambahan untuk DISHUB/DISKOMINFOTIK yang belum punya project.
+    expect(dinasCards).toHaveLength(1);
+    const dinkesCard = dinasCards[0];
     expect(dinkesCard.entry).toBe(dinkesEntry);
     expect(dinkesCard.isUnregistered).toBe(false);
   });
 
-  it('a project matched via an alias code does not spawn a duplicate placeholder for the canonical code', () => {
+  it('a project matched via an alias code resolves to the canonical kelompok, not "Lainnya"', () => {
     const viaAlias = entry({ id: 'e-1', kodeOPD: 'DISKOMINFO', totalKebutuhan: 5, totalEksisting: 5 });
     const groups = buildDashboardCards([viaAlias], new Map(), opdIndex);
     const dinasCards = groups.get('Dinas') ?? [];
 
-    // DISKOMINFO (real project, kode lama) + DINKES & DISHUB placeholder = 3, BUKAN 4
-    expect(dinasCards).toHaveLength(3);
-    const matched = dinasCards.find(c => c.kodeOPD === 'DISKOMINFO')!;
+    expect(dinasCards).toHaveLength(1);
+    const matched = dinasCards[0];
+    expect(matched.kodeOPD).toBe('DISKOMINFO');
     expect(matched.entry).toBe(viaAlias);
     expect(matched.isUnregistered).toBe(false);
   });

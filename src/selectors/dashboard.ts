@@ -87,8 +87,7 @@ export interface DashboardCard {
   kodeOPD: string;
   namaOPD: string;
   kelompok: string;
-  /** null = placeholder — OPD diharapkan (ada di daftar) tapi belum ada project-nya. */
-  entry: ProjectIndexEntry | null;
+  entry: ProjectIndexEntry;
   /** Project id yang ditautkan di bawah card ini (nested sub-card, doc 14 §3). */
   linkedChildIds: string[];
   /** kodeOPD project ini tidak ditemukan di daftar bawaan+kustom -> masuk "Lainnya". */
@@ -96,12 +95,13 @@ export interface DashboardCard {
 }
 
 /**
- * Susun kartu dashboard per kelompok (docs/14-recap-dashboard.md §1, §3):
- * - Tiap entry top-level (hasil computeTopLevel) jadi satu kartu, dikelompokkan
- *   lewat daftar OPD (bawaan+kustom, alias-aware); tak ditemukan -> "Lainnya".
- * - OPD yang ada di daftar tapi TIDAK punya project tersimpan (cocok kodeOPD-nya)
- *   dapat kartu placeholder ("belum masuk"), supaya absensi kelihatan (doc 14 §1).
- * - Murni dari index — tidak membuka body project mana pun (doc 14 §2).
+ * Susun kartu dashboard per kelompok. Hanya project yang BENAR-BENAR
+ * tersimpan (entries hasil computeTopLevel) yang dapat kartu — tidak ada lagi
+ * kartu placeholder untuk OPD di `daftar-opd.json`/kustom yang belum punya
+ * project. Daftar OPD di sini murni dipakai untuk PENGELOMPOKAN (kelompok)
+ * dan penanda `isUnregistered` pada data yang memang ada; tidak pernah
+ * menghasilkan entri buatan untuk data yang tidak ada. Murni dari index —
+ * tidak membuka body project mana pun (doc 14 §2).
  */
 export function buildDashboardCards(
   topLevel: ProjectIndexEntry[],
@@ -109,7 +109,6 @@ export function buildDashboardCards(
   opdIndex: Map<string, OpdEntry>
 ): Map<string, DashboardCard[]> {
   const groups = new Map<string, DashboardCard[]>();
-  const matchedKodes = new Set<string>();
 
   const pushCard = (kelompok: string, card: DashboardCard) => {
     const list = groups.get(kelompok) ?? [];
@@ -120,7 +119,6 @@ export function buildDashboardCards(
   for (const e of topLevel) {
     const opd = resolveOpdEntry(e.kodeOPD, opdIndex);
     const kelompok = opd?.kelompok ?? LAINNYA_KELOMPOK;
-    if (opd) matchedKodes.add(opd.kode);
 
     pushCard(kelompok, {
       kodeOPD: e.kodeOPD,
@@ -129,25 +127,6 @@ export function buildDashboardCards(
       entry: e,
       linkedChildIds: linkedUnder.get(e.id) ?? [],
       isUnregistered: !opd,
-    });
-  }
-
-  // Placeholder untuk OPD yang diharapkan (daftar bawaan+kustom) tapi belum
-  // ada project-nya sama sekali. `opdIndex` juga berisi alias sebagai key
-  // terpisah menunjuk entry yang sama — proses tiap entry kanonis sekali saja.
-  const seenCanonical = new Set<OpdEntry>();
-  for (const opd of opdIndex.values()) {
-    if (seenCanonical.has(opd)) continue;
-    seenCanonical.add(opd);
-    if (matchedKodes.has(opd.kode)) continue;
-
-    pushCard(opd.kelompok, {
-      kodeOPD: opd.kode,
-      namaOPD: opd.nama,
-      kelompok: opd.kelompok,
-      entry: null,
-      linkedChildIds: [],
-      isUnregistered: false,
     });
   }
 
