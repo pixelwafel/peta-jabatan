@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type LeftPanelTab = 'tree' | 'unplaced' | 'recap';
+export type StructureTab = 'outline' | 'preview' | 'unplaced' | 'recap' | 'satuan';
 export type SaveStatus = 'saved' | 'saving' | 'error';
 
 export interface ConfirmDialogState {
@@ -43,7 +43,10 @@ export interface ToastState {
 export interface UiState {
   selectedNodeIds: string[];
   showJenjangOnCard: boolean;
-  leftPanel: LeftPanelTab;
+  /** Tab aktif di panel tengah (Outline/Preview/Unplaced/Rekap/Satuan). */
+  structureTab: StructureTab;
+  /** Template unit yang sedang dipilih di tab Satuan (kalau project punya >1 template). */
+  selectedTemplateId: string | null;
   dialog: DialogState;
   toast: ToastState | null;
   lastSavedAt: string | null;
@@ -54,7 +57,12 @@ export interface UiState {
   toggleNodeSelection: (nodeId: string) => void;
   clearSelection: () => void;
   setShowJenjangOnCard: (show: boolean) => void;
-  setLeftPanel: (panel: LeftPanelTab) => void;
+  setStructureTab: (tab: StructureTab) => void;
+  setSelectedTemplateId: (id: string | null) => void;
+  /** Dipanggil dari panel properti (TemplateEditor) — pindah ke tab Satuan
+   * langsung menunjuk template yang bersangkutan, tanpa operator harus
+   * mencari-cari tab lalu memilih ulang dari dropdown. */
+  openSatuanTab: (templateNodeId: string) => void;
   setDialog: (dialog: DialogState) => void;
   openConfirm: (opts: Omit<ConfirmDialogState, 'kind'>) => void;
   openDeleteNodeDialog: (opts: Omit<DeleteNodeDialogState, 'kind'>) => void;
@@ -67,7 +75,8 @@ export interface UiState {
 export const useUiStore = create<UiState>(set => ({
   selectedNodeIds: [],
   showJenjangOnCard: false,
-  leftPanel: 'tree',
+  structureTab: 'outline',
+  selectedTemplateId: null,
   dialog: null,
   toast: null,
   lastSavedAt: null,
@@ -88,7 +97,10 @@ export const useUiStore = create<UiState>(set => ({
     })),
   clearSelection: () => set({ selectedNodeIds: [] }),
   setShowJenjangOnCard: (show: boolean) => set({ showJenjangOnCard: show }),
-  setLeftPanel: (panel: LeftPanelTab) => set({ leftPanel: panel }),
+  setStructureTab: (tab: StructureTab) => set({ structureTab: tab }),
+  setSelectedTemplateId: (id: string | null) => set({ selectedTemplateId: id }),
+  openSatuanTab: (templateNodeId: string) =>
+    set({ structureTab: 'satuan', selectedTemplateId: templateNodeId }),
   setDialog: (dialog: DialogState) => set({ dialog }),
   openConfirm: (opts: Omit<ConfirmDialogState, 'kind'>) =>
     set({ dialog: { kind: 'confirm', ...opts } }),

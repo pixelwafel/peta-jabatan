@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { FolderTree, Eye, AlertCircle, BarChart3, LayoutGrid } from 'lucide-react';
 import { RecapPanel } from '../recap/RecapPanel';
 import { UnplacedPanel } from '../unplaced/UnplacedPanel';
@@ -6,12 +6,13 @@ import { TreeView } from '../tree/TreeView';
 import { Canvas } from '../canvas/Canvas';
 import { InstanceGrid } from '../instance/InstanceGrid';
 import { useProjectStore } from '@/store/projectStore';
-
-type StructureTab = 'outline' | 'preview' | 'unplaced' | 'recap' | 'satuan';
+import { useUiStore } from '@/store/uiStore';
 
 export const StructurePanel: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<StructureTab>('outline');
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const activeTab = useUiStore(s => s.structureTab);
+  const setActiveTab = useUiStore(s => s.setStructureTab);
+  const selectedTemplateId = useUiStore(s => s.selectedTemplateId);
+  const setSelectedTemplateId = useUiStore(s => s.setSelectedTemplateId);
   const project = useProjectStore(s => s.project);
 
   // Unit template (docs/15-template-instance.md) — tab "Satuan" cuma tampil

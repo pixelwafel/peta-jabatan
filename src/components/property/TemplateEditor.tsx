@@ -3,9 +3,7 @@ import { OrgNode } from '@/models/node';
 import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
 import { subtreeOf } from '@/selectors/navigation';
-import { jenjangLabel } from '@/config/resolver';
-import { NumberInput } from './NumberInput';
-import { LayoutGrid, Plus, Trash2, Copy, Undo2 } from 'lucide-react';
+import { LayoutGrid, Undo2, ArrowRight } from 'lucide-react';
 
 interface TemplateEditorProps {
   node: OrgNode;
@@ -13,50 +11,29 @@ interface TemplateEditorProps {
   hasChildren: boolean;
 }
 
-interface ColumnDef {
-  key: string; // rincianId, atau id unit untuk kolom kepala unit
-  label: string;
-}
-
-/** Kolom yang berlaku untuk template ini — persis logika store/projectStore.ts purgeInstanceColumns. */
-function buildColumns(node: OrgNode, nodes: OrgNode[], edges: import('@/models/edge').OrgEdge[]): ColumnDef[] {
-  const cols: ColumnDef[] = [];
-  for (const n of subtreeOf(nodes, edges, node.id)) {
-    if (n.type === 'unit' && n.kepalaUnit) {
-      cols.push({ key: n.id, label: `Kepala ${n.nama}` });
-    } else if (n.type === 'jabatan') {
-      for (const r of n.rincian) {
-        cols.push({
-          key: r.id,
-          label: r.jenjangId ? `${n.nama} · ${jenjangLabel(r.jenjangId, n.kategoriId)}` : n.nama,
-        });
-      }
-    }
-  }
-  return cols;
-}
-
+/**
+ * Panel properti hanya menangani status/trigger template (jadikan/batalkan
+ * template) — tabel isi angka per satuan TIDAK lagi dirender di sini (dulu
+ * duplikat persis dengan InstanceGrid.tsx, terjejal di kolom 380px dengan
+ * scroll horizontal). Editing sesungguhnya sepenuhnya di tab "Satuan"
+ * (StructurePanel), lebar penuh + virtualized — panel ini cuma jembatan ke
+ * sana lewat `openSatuanTab` (docs/15-template-instance.md §2, §6).
+ */
 export const TemplateEditor: React.FC<TemplateEditorProps> = ({ node, hasChildren }) => {
   const project = useProjectStore(s => s.project);
   const makeTemplate = useProjectStore(s => s.makeTemplate);
   const unmakeTemplate = useProjectStore(s => s.unmakeTemplate);
-  const addInstance = useProjectStore(s => s.addInstance);
-  const duplicateInstance = useProjectStore(s => s.duplicateInstance);
-  const removeInstance = useProjectStore(s => s.removeInstance);
-  const updateInstanceFigure = useProjectStore(s => s.updateInstanceFigure);
   const openConfirm = useUiStore(s => s.openConfirm);
   const showToast = useUiStore(s => s.showToast);
+  const openSatuanTab = useUiStore(s => s.openSatuanTab);
 
   const [picking, setPicking] = useState(false);
-  const [newInstanceName, setNewInstanceName] = useState('');
 
   const nodes = project?.nodes ?? [];
   const edges = project?.edges ?? [];
 
-  const columns = useMemo(() => (node.isTemplate ? buildColumns(node, nodes, edges) : []), [node, nodes, edges]);
-
-  const instances = useMemo(
-    () => (project?.instances ?? []).filter(i => i.templateNodeId === node.id),
+  const instanceCount = useMemo(
+    () => (project?.instances ?? []).filter(i => i.templateNodeId === node.id).length,
     [project?.instances, node.id]
   );
 
@@ -94,6 +71,8 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({ node, hasChildre
             : 'Gagal menjadikan template.',
           'error'
         );
+      } else {
+        openSatuanTab(node.id);
       }
       setPicking(false);
     };
@@ -150,7 +129,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({ node, hasChildre
   }
 
   const handleUnmake = () => {
-    const relevant = instances.length;
+    const relevant = instanceCount;
     if (relevant > 1) {
       showToast(`Ada ${relevant} satuan — hapus atau ekspor dulu sampai tersisa 1 sebelum batalkan template.`, 'error');
       return;
@@ -159,21 +138,11 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({ node, hasChildre
       title: 'Batalkan template?',
       body:
         relevant === 1
-          ? `Angka satuan "${instances[0].nama}" akan dilipat balik ke baris struktur, lalu unit ini kembali jadi unit biasa.`
+          ? 'Angka satuan yang tersisa akan dilipat balik ke baris struktur, lalu unit ini kembali jadi unit biasa.'
           : 'Unit ini akan kembali jadi unit biasa (belum ada satuan yang perlu dilipat).',
       confirmLabel: 'Batalkan Template',
       danger: true,
       onConfirm: () => unmakeTemplate(node.id),
-    });
-  };
-
-  const handleRemoveInstance = (instanceId: string, nama: string) => {
-    openConfirm({
-      title: `Hapus satuan "${nama}"?`,
-      body: 'Seluruh angka pada satuan ini akan hilang.',
-      confirmLabel: 'Hapus',
-      danger: true,
-      onConfirm: () => removeInstance(instanceId),
     });
   };
 
@@ -182,7 +151,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({ node, hasChildre
       <div className="flex items-center justify-between pb-1 border-b border-teal-900/40">
         <span className="flex items-center space-x-1.5 text-[10px] font-semibold text-teal-300 uppercase tracking-wider">
           <LayoutGrid className="w-3.5 h-3.5" />
-          <span>Template — {instances.length} satuan</span>
+          <span>Template — {instanceCount} satuan</span>
         </span>
         <button
           type="button"
@@ -195,101 +164,23 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({ node, hasChildre
         </button>
       </div>
 
-      {columns.length === 0 ? (
-        <p className="text-[11px] text-slate-500 italic">
-          Belum ada posisi di bawah unit ini — tambah jabatan/kepala unit dulu supaya ada kolom untuk diisi per satuan.
-        </p>
-      ) : (
-        <div className="overflow-x-auto -mx-2.5">
-          <table className="text-[11px] font-mono border-collapse w-full">
-            <thead>
-              <tr className="text-slate-400">
-                <th className="sticky left-0 bg-teal-950/30 text-left px-2 py-1 font-medium">Satuan</th>
-                {columns.map(c => (
-                  <th key={c.key} className="px-1.5 py-1 font-medium text-center whitespace-nowrap" title={c.label}>
-                    {c.label.length > 14 ? `${c.label.slice(0, 13)}…` : c.label}
-                  </th>
-                ))}
-                <th className="px-1 py-1" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-teal-900/30">
-              {instances.map(inst => (
-                <tr key={inst.id} className="hover:bg-teal-950/20">
-                  <td className="sticky left-0 bg-slate-950/80 px-2 py-1 text-slate-200 truncate max-w-[120px]" title={inst.nama}>
-                    {inst.nama}
-                  </td>
-                  {columns.map(c => {
-                    const fig = inst.figures[c.key] ?? { kebutuhan: 0, eksisting: 0 };
-                    return (
-                      <td key={c.key} className="px-1 py-1">
-                        <div className="flex items-center space-x-0.5">
-                          <NumberInput
-                            value={fig.kebutuhan}
-                            onChange={v => updateInstanceFigure(inst.id, c.key, { kebutuhan: v }, `inst:${inst.id}:${c.key}:keb`)}
-                          />
-                          <span className="text-slate-600">/</span>
-                          <NumberInput
-                            value={fig.eksisting}
-                            onChange={v => updateInstanceFigure(inst.id, c.key, { eksisting: v }, `inst:${inst.id}:${c.key}:eks`)}
-                          />
-                        </div>
-                      </td>
-                    );
-                  })}
-                  <td className="px-1 py-1">
-                    <div className="flex items-center space-x-1">
-                      <button
-                        type="button"
-                        onClick={() => duplicateInstance(inst.id)}
-                        title="Duplikat satuan"
-                        className="text-slate-500 hover:text-blue-400"
-                      >
-                        <Copy className="w-3 h-3" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveInstance(inst.id, inst.nama)}
-                        title="Hapus satuan"
-                        className="text-slate-500 hover:text-rose-400"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <p className="text-[11px] text-slate-400">
+        Isi/edit angka per satuan (mis. per sekolah) dilakukan di tab "Satuan" — lebih lega, tidak
+        terjejal di panel ini.
+      </p>
 
-      <div className="flex items-center space-x-1.5 pt-1">
-        <input
-          type="text"
-          placeholder="Nama satuan baru, mis. SDN 03 Kota Timur"
-          value={newInstanceName}
-          onChange={e => setNewInstanceName(e.target.value)}
-          className="flex-1 bg-slate-800 border border-slate-700 text-slate-100 rounded px-2 py-1 text-[11px] outline-none focus:border-blue-500"
-        />
-        <button
-          type="button"
-          onClick={() => {
-            if (!newInstanceName.trim()) return;
-            addInstance(node.id, newInstanceName.trim());
-            setNewInstanceName('');
-          }}
-          disabled={!newInstanceName.trim()}
-          className="flex items-center space-x-1 px-2 py-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white rounded text-[11px] font-medium"
-        >
-          <Plus className="w-3 h-3" />
-          <span>Tambah</span>
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={() => openSatuanTab(node.id)}
+        className="w-full flex items-center justify-center space-x-1.5 px-2.5 py-1.5 bg-teal-600 hover:bg-teal-500 text-white rounded text-[11px] font-medium"
+      >
+        <span>Buka di tab Satuan</span>
+        <ArrowRight className="w-3.5 h-3.5" />
+      </button>
 
       {hasChildren && (
         <p className="text-[10px] text-slate-500">
-          Sub-unit di bawah template ini ikut jadi kolom (mis. Tata Usaha) — lihat tabel di atas.
+          Sub-unit di bawah template ini ikut jadi kolom di tab Satuan (mis. Tata Usaha).
         </p>
       )}
     </div>
