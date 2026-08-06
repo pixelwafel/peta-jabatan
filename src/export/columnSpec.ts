@@ -10,6 +10,9 @@ export interface RowContext {
   parent: OrgNode | null;
   totals: NodeTotals; // subtree totals for units, own for positions
   cfg: Taxonomy;
+  /** nomor unit template yang menaungi baris ini (docs/15-template-instance.md
+   * §4) — kosong kalau baris ini bukan bagian subtree template mana pun. */
+  templateNomor?: string;
 }
 
 export interface ColumnDef {
@@ -160,6 +163,17 @@ export const COLUMNS: ColumnDef[] = [
     // baris tipe "Tautan". Angka kebutuhan/eksisting baris ini datang dari
     // totals (resolusi link, lihat selectors/recap.ts), bukan rincian lokal.
     get: c => c.node.link?.kodeOPD ?? '',
+  },
+  {
+    key: 'template',
+    header: 'template',
+    width: 12,
+    importable: true,
+    // Nomor unit template yang menaungi baris ini (docs/15-template-instance.md
+    // §4) — kosong kalau bukan bagian template. Angka kebutuhan/eksisting
+    // baris ini SELALU nol di sini (invariant); angka sebenarnya ada di sheet
+    // Satuan_<nomor> (export/matrixExporter.ts), bukan di sheet Struktur ini.
+    get: c => c.templateNomor ?? '',
   },
   {
     key: 'parent_nomor',

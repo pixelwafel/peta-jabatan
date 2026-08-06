@@ -4,6 +4,7 @@ import { Recap } from '@/models/derived';
 import { taxonomy } from '@/config/taxonomy';
 import { COLUMNS, getCustomColumns } from './columnSpec';
 import { buildExportRows } from './rowGenerator';
+import { buildMatrixSheets } from './matrixExporter';
 
 function forceTextFormat(ws: XLSX.WorkSheet, colIndex: number): void {
   if (colIndex < 0) return;
@@ -217,6 +218,13 @@ export function exportXlsx(project: Project, recap: Recap): Blob {
 
   // Sheet 4: Info
   XLSX.utils.book_append_sheet(wb, buildMetaSheet(project), 'Info');
+
+  // Sheet 5+: Satuan_<nomor> per template unit (docs/15-template-instance.md §4)
+  // — struktur (kolom kosong, tipe 'template') sudah ada di sheet Struktur;
+  // angka sebenarnya per satuan hidup di sini.
+  for (const { name, sheet } of buildMatrixSheets(project)) {
+    XLSX.utils.book_append_sheet(wb, sheet, name);
+  }
 
   const arrayBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
   return new Blob([arrayBuffer], {

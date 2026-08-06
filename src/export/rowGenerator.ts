@@ -5,6 +5,7 @@ import { Taxonomy, taxonomy } from '@/config/taxonomy';
 import { getStructureIndex } from '@/selectors/structureIndex';
 import { getJenjangOptions } from '@/config/resolver';
 import { compareNomor } from '@/utils/numbering';
+import { buildTemplateUnitIds, containingTemplateUnitId } from '@/selectors/templateInstance';
 import { RowContext } from './columnSpec';
 
 const ZERO: NodeTotals = { kebutuhan: 0, eksisting: 0, selisih: 0 };
@@ -23,6 +24,15 @@ export function buildExportRows(
   cfg: Taxonomy = taxonomy
 ): RowContext[] {
   const idx = getStructureIndex(project.nodes, project.edges);
+  // Marker "template" (docs/15-template-instance.md §4): nomor unit template
+  // yang menaungi tiap baris, dipakai import (M12.9) mencocokkan sheet
+  // Satuan_<nomor> ke baris Struktur ini.
+  const templateUnitIds = buildTemplateUnitIds(project.nodes);
+  const templateNomorByNodeId = new Map(project.nodes.filter(n => n.isTemplate).map(n => [n.id, n.nomor]));
+  const templateNomorFor = (nodeId: string): string | undefined => {
+    const templateId = containingTemplateUnitId(nodeId, idx, templateUnitIds);
+    return templateId ? templateNomorByNodeId.get(templateId) : undefined;
+  };
 
   const byNomorThenTree = (a: OrgNode, b: OrgNode) => {
     if (a.nomor && b.nomor) return compareNomor(a.nomor, b.nomor);
@@ -37,6 +47,8 @@ export function buildExportRows(
     const parentId = idx.parentId.get(node.id);
     const parent = parentId ? idx.nodeById.get(parentId) ?? null : null;
 
+    const templateNomor = templateNomorFor(node.id);
+
     if (node.type === 'unit') {
       return [
         {
@@ -45,6 +57,7 @@ export function buildExportRows(
           parent,
           totals: recap.subtreeTotals.get(node.id) ?? ZERO,
           cfg,
+          templateNomor,
         },
       ];
     }
@@ -58,6 +71,7 @@ export function buildExportRows(
           parent,
           totals: ZERO,
           cfg,
+          templateNomor,
         },
       ];
     }
@@ -68,6 +82,7 @@ export function buildExportRows(
       parent,
       totals: recap.nodeTotals.get(node.id) ?? ZERO,
       cfg,
+      templateNomor,
     }));
   });
 }

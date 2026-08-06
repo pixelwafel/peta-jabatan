@@ -72,8 +72,8 @@ describe('Export Pipeline (Doc 09 Exit Criteria)', () => {
     };
   }
 
-  it('COLUMNS contains all 21 core column definitions plus custom attributes', () => {
-    expect(COLUMNS.length).toBe(21);
+  it('COLUMNS contains all 22 core column definitions plus custom attributes', () => {
+    expect(COLUMNS.length).toBe(22);
     const keys = COLUMNS.map(c => c.key);
     expect(keys).toContain('nomor');
     expect(keys).toContain('nama');
@@ -87,6 +87,8 @@ describe('Export Pipeline (Doc 09 Exit Criteria)', () => {
     expect(keys).toContain('kepala_jenjang');
     expect(keys).toContain('kepala_kebutuhan');
     expect(keys).toContain('kepala_eksisting');
+    // Template-instance (docs/15-template-instance.md §4)
+    expect(keys).toContain('template');
     // Link node (docs/13-link-nodes.md §6)
     expect(keys).toContain('kode_tautan');
 

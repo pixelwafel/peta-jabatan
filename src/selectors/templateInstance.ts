@@ -1,7 +1,10 @@
 import { OrgNode } from '@/models/node';
+import { OrgEdge } from '@/models/edge';
 import { UnitInstance } from '@/models/project';
 import { NodeTotals } from '@/models/derived';
 import { StructureIndex } from './structureIndex';
+import { subtreeOf } from './navigation';
+import { jenjangLabel } from '@/config/resolver';
 
 /** Semua node id unit yang `isTemplate === true` (docs/15-template-instance.md §1). */
 export function buildTemplateUnitIds(nodes: OrgNode[]): Set<string> {
@@ -93,4 +96,45 @@ export function sumInstanceTotals(columnTotals: Map<string, NodeTotals>): NodeTo
 /** Jumlah instance yang tercatat untuk satu template unit — dipakai untuk marker "N satuan" (doc 15 §3). */
 export function countInstancesFor(instances: UnitInstance[], templateNodeId: string): number {
   return instances.filter(i => i.templateNodeId === templateNodeId).length;
+}
+
+export interface TemplateColumnDef {
+  key: string; // rincianId, atau id unit untuk kolom kepala unit
+  label: string; // label level (kosong kalau kolom kepala unit / posisi 1 baris)
+}
+
+export interface TemplateColumnGroup {
+  nodeId: string;
+  label: string; // nama posisi/kepala unit
+  columns: TemplateColumnDef[];
+}
+
+/**
+ * Kelompok kolom satu template unit (docs/15-template-instance.md §2, §4):
+ * satu grup per posisi/kepala unit di subtree-nya, satu kolom per baris
+ * rincian (atau satu kolom untuk kepala unit). Dipakai bersama oleh
+ * components/instance/InstanceGrid.tsx (grid UI) dan export/matrixExporter.ts
+ * (sheet Satuan_<nomor>) supaya definisi kolomnya konsisten di kedua tempat.
+ */
+export function buildColumnGroups(
+  templateNodeId: string,
+  nodes: OrgNode[],
+  edges: OrgEdge[]
+): TemplateColumnGroup[] {
+  const groups: TemplateColumnGroup[] = [];
+  for (const n of subtreeOf(nodes, edges, templateNodeId)) {
+    if (n.type === 'unit' && n.kepalaUnit) {
+      groups.push({ nodeId: n.id, label: `Kepala ${n.nama}`, columns: [{ key: n.id, label: '' }] });
+    } else if (n.type === 'jabatan' && n.rincian.length > 0) {
+      groups.push({
+        nodeId: n.id,
+        label: n.nama,
+        columns: n.rincian.map(r => ({
+          key: r.id,
+          label: r.jenjangId ? jenjangLabel(r.jenjangId, n.kategoriId) : '',
+        })),
+      });
+    }
+  }
+  return groups;
 }

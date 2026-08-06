@@ -1,22 +1,12 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
-import { subtreeOf } from '@/selectors/navigation';
-import { jenjangLabel } from '@/config/resolver';
+import { buildColumnGroups, TemplateColumnGroup } from '@/selectors/templateInstance';
 import { UnitInstance } from '@/models/project';
 import { computeVisibleRange } from '@/utils/virtualization';
 import { Plus, Trash2, Copy, LayoutGrid } from 'lucide-react';
 
-interface ColumnDef {
-  key: string; // rincianId, atau id unit untuk kolom kepala unit
-  label: string; // "K"/"E" sub-header (nama level singkat, atau kosong kalau grup 1 kolom)
-}
-
-interface ColumnGroup {
-  nodeId: string;
-  label: string; // nama posisi/kepala unit — header baris pertama
-  columns: ColumnDef[];
-}
+type ColumnGroup = TemplateColumnGroup;
 
 const ROW_HEIGHT = 32;
 const OVERSCAN = 6;
@@ -51,22 +41,7 @@ export const InstanceGrid: React.FC<{ templateNodeId: string }> = ({ templateNod
 
   const groups: ColumnGroup[] = useMemo(() => {
     if (!templateNode) return [];
-    const out: ColumnGroup[] = [];
-    for (const n of subtreeOf(nodes, edges, templateNodeId)) {
-      if (n.type === 'unit' && n.kepalaUnit) {
-        out.push({ nodeId: n.id, label: `Kepala ${n.nama}`, columns: [{ key: n.id, label: '' }] });
-      } else if (n.type === 'jabatan' && n.rincian.length > 0) {
-        out.push({
-          nodeId: n.id,
-          label: n.nama,
-          columns: n.rincian.map(r => ({
-            key: r.id,
-            label: r.jenjangId ? jenjangLabel(r.jenjangId, n.kategoriId) : '',
-          })),
-        });
-      }
-    }
-    return out;
+    return buildColumnGroups(templateNodeId, nodes, edges);
   }, [templateNode, nodes, edges, templateNodeId]);
 
   const instances = useMemo(
