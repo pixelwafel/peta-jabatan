@@ -248,4 +248,59 @@ describe('Import & Round-Trip Pipeline (Doc 08 Exit Criteria)', () => {
     const analis = preview.built.nodes.find(n => n.nama === 'Analis SDM');
     expect(analis).toBeDefined();
   });
+
+  it('a "Tautan" row imports as a link node with cache set at import time (M10.9, docs/13 §6)', async () => {
+    const rows = [
+      ['nomor', 'nama', 'tipe', 'kebutuhan', 'eksisting', 'kode_tautan'],
+      ['1', 'Dinas Kesehatan', 'Unit', '', '', ''],
+      ['1.1', 'Puskesmas Kota Timur', 'Tautan', 52, 47, 'PKM-KTIM'],
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Struktur');
+    const arrayBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const file = new File([arrayBuffer], 'linked.xlsx');
+
+    const before = Date.now();
+    const preview = await processXlsxImport(file);
+    const after = Date.now();
+
+    expect(preview.canCommit).toBe(true);
+
+    const linkNode = preview.built.nodes.find(n => n.nama === 'Puskesmas Kota Timur');
+    expect(linkNode).toBeDefined();
+    expect(linkNode!.type).toBe('unit'); // link tetap type 'unit' di data model, doc 13 §1
+    expect(linkNode!.rincian).toEqual([]); // Invariant 1 tetap berlaku
+    expect(linkNode!.kepalaUnit).toBeUndefined(); // link & kepalaUnit saling eksklusif
+
+    expect(linkNode!.link).toBeDefined();
+    expect(linkNode!.link!.kodeOPD).toBe('PKM-KTIM');
+    expect(linkNode!.link!.namaProject).toBe('Puskesmas Kota Timur');
+    expect(linkNode!.link!.cached.kebutuhan).toBe(52);
+    expect(linkNode!.link!.cached.eksisting).toBe(47);
+
+    // updatedAt = waktu impor (bukan waktu file target — belum dibuka di browser ini)
+    const importedAt = Date.parse(linkNode!.link!.cached.updatedAt);
+    expect(importedAt).toBeGreaterThanOrEqual(before);
+    expect(importedAt).toBeLessThanOrEqual(after);
+  });
+
+  it('a "Tautan" row without kode_tautan is rejected with IMPORT_LINK_NO_KODE and falls back to a plain empty unit', async () => {
+    const rows = [
+      ['nomor', 'nama', 'tipe', 'kebutuhan', 'eksisting', 'kode_tautan'],
+      ['1', 'Dinas Kesehatan', 'Unit', '', '', ''],
+      ['1.1', 'Puskesmas Tanpa Kode', 'Tautan', 52, 47, ''],
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Struktur');
+    const arrayBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const file = new File([arrayBuffer], 'linked-no-kode.xlsx');
+
+    const preview = await processXlsxImport(file);
+
+    expect(preview.findings.some(f => f.code === 'IMPORT_LINK_NO_KODE')).toBe(true);
+    const node = preview.built.nodes.find(n => n.nama === 'Puskesmas Tanpa Kode');
+    expect(node?.link).toBeUndefined();
+  });
 });

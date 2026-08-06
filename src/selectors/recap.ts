@@ -8,6 +8,11 @@ import { getStructureIndex, StructureIndex } from './structureIndex';
 import { designatedRoot, descendantsOf, depthOf } from './navigation';
 import { compareNomor } from '@/utils/numbering';
 import { useProjectStore } from '@/store/projectStore';
+import { useProjectIndexStore } from '@/store/projectIndexStore';
+import { resolveLink } from './linkResolver';
+import { ProjectIndex } from '@/persistence/types';
+
+const EMPTY_INDEX: ProjectIndex = { version: 1, activeId: null, entries: [] };
 
 let recapComputeCount = 0;
 
@@ -51,12 +56,20 @@ function allJenjangOfCategory(k: Kategori) {
   return [...(k.rumpun?.keahlian ?? []), ...(k.rumpun?.keterampilan ?? [])];
 }
 
-export function computeRecap(project: Project, cfg: Taxonomy = taxonomy): Recap {
+export function computeRecap(
+  project: Project,
+  cfg: Taxonomy = taxonomy,
+  index: ProjectIndex = EMPTY_INDEX
+): Recap {
   recapComputeCount++;
 
   const idx = getStructureIndex(project.nodes, project.edges);
   const nodeTotals = new Map<string, NodeTotals>();
   const subtreeTotals = new Map<string, NodeTotals>();
+  // Freshness marker per node (docs/13-link-nodes.md §3): apakah subtree-nya
+  // menyertakan angka link yang bukan 'live', dan tanggal cache tertua di
+  // antaranya — dipakai buat jam kecil di recap panel.
+  const cacheMarkers = new Map<string, { includesCached: boolean; oldestAsOf?: string }>();
 
   // 1. Calculate own rows totals (Units carry only their kepalaUnit figures, if any)
   for (const n of project.nodes) {
@@ -82,18 +95,42 @@ export function computeRecap(project: Project, cfg: Taxonomy = taxonomy): Recap 
     }
     visited.add(id);
 
+    const node = idx.nodeById.get(id);
     const own = nodeTotals.get(id) ?? ZERO;
     let keb = own.kebutuhan;
     let eks = own.eksisting;
+    let includesCached = false;
+    let oldestAsOf: string | undefined;
+
+    // Link node child: tambahkan totalnya lewat resolusi index, bukan lewat
+    // rekursi hirarki (link tidak punya children beneran — doc 13 §1).
+    if (node?.link) {
+      const resolved = resolveLink(node.link, index);
+      keb += resolved.totals.kebutuhan;
+      eks += resolved.totals.eksisting;
+      if (resolved.status !== 'live') {
+        includesCached = true;
+        oldestAsOf = resolved.asOf || undefined;
+      }
+    }
 
     for (const cid of idx.childIds.get(id) ?? []) {
       const c = walk(cid);
       keb += c.kebutuhan;
       eks += c.eksisting;
+
+      const childMarker = cacheMarkers.get(cid);
+      if (childMarker?.includesCached) {
+        includesCached = true;
+        if (childMarker.oldestAsOf && (!oldestAsOf || childMarker.oldestAsOf < oldestAsOf)) {
+          oldestAsOf = childMarker.oldestAsOf;
+        }
+      }
     }
 
     const t = { kebutuhan: keb, eksisting: eks, selisih: eks - keb };
     subtreeTotals.set(id, t);
+    cacheMarkers.set(id, { includesCached, oldestAsOf });
     return t;
   };
 
@@ -112,21 +149,30 @@ export function computeRecap(project: Project, cfg: Taxonomy = taxonomy): Recap 
   const inScopeNodes = project.nodes.filter(n => inScopeIds.has(n.id));
 
   // Whole Agency Total
+  const rootMarker = root ? cacheMarkers.get(root.id) : undefined;
   const totalBucket: RecapBucket = {
     key: 'total',
     label: 'TOTAL OPD',
     ...rootTotal,
     nodeCount: countPositions(inScopeNodes),
+    includesCached: rootMarker?.includesCached,
+    oldestCachedAsOf: rootMarker?.oldestAsOf,
   };
 
   // Unplaced Bucket
   const unplacedTotals = sumBuckets(orphans.map(o => subtreeTotals.get(o.id) ?? ZERO));
   const unplacedNodes = orphans.flatMap(o => [o, ...descendantsOf(project.nodes, project.edges, o.id)]);
+  const unplacedMarkers = orphans.map(o => cacheMarkers.get(o.id)).filter((m): m is { includesCached: boolean; oldestAsOf?: string } => !!m);
   const unplacedBucket: RecapBucket = {
     key: 'unplaced',
     label: 'Belum Ditempatkan',
     ...unplacedTotals,
     nodeCount: countPositions(unplacedNodes),
+    includesCached: unplacedMarkers.some(m => m.includesCached) || undefined,
+    oldestCachedAsOf: unplacedMarkers
+      .map(m => m.oldestAsOf)
+      .filter((d): d is string => !!d)
+      .sort()[0],
   };
 
   // Per-Unit Breakdown
@@ -136,12 +182,15 @@ export function computeRecap(project: Project, cfg: Taxonomy = taxonomy): Recap 
     .map(u => {
       const subNodes = [u, ...descendantsOf(project.nodes, project.edges, u.id)];
       const t = subtreeTotals.get(u.id) ?? ZERO;
+      const marker = cacheMarkers.get(u.id);
       return {
         key: u.id,
         label: u.nama,
         ...t,
         nodeCount: countPositions(subNodes),
         depth: depthOf(project.nodes, project.edges, u.id),
+        includesCached: marker?.includesCached,
+        oldestCachedAsOf: marker?.oldestAsOf,
       };
     });
 
@@ -245,9 +294,15 @@ export const figuresKey = (nodes: OrgNode[]): string =>
       const kepala = n.kepalaUnit
         ? `${n.kepalaUnit.jenjangId ?? ''},${n.kepalaUnit.kebutuhan},${n.kepalaUnit.eksisting}`
         : '';
+      // kodeOPD + cache ikut di key: makeLink/unlinkNode/refresh cache tidak
+      // mengubah nodes.length atau edges (link tak punya hierarchy child),
+      // jadi structuralKey saja tidak cukup memicu recompute.
+      const link = n.link
+        ? `${n.link.kodeOPD},${n.link.cached.kebutuhan},${n.link.cached.eksisting},${n.link.cached.updatedAt}`
+        : '';
       return `${n.id}:${n.type}:${n.kategoriId ?? ''}:${n.rumpun.join(',')}:${n.rincian
         .map(r => `${r.jenjangId ?? ''},${r.kebutuhan},${r.eksisting}`)
-        .join('|')}:${kepala}`;
+        .join('|')}:${kepala}:${link}`;
     })
     .join(';');
 
@@ -261,6 +316,10 @@ export const recapKey = (project: Project): string =>
 
 export function useRecap(): Recap | null {
   const project = useProjectStore(s => s.project);
+  // Link nodes butuh index (docs/13-link-nodes.md §3) — perubahannya (project
+  // lain disimpan, link baru dibuat) tidak selalu mengubah project ini, jadi
+  // index juga masuk dependency memo di luar recapKey.
+  const index = useProjectIndexStore(s => s.index);
 
   const memoKey = useMemo(() => {
     if (!project) return null;
@@ -269,7 +328,7 @@ export function useRecap(): Recap | null {
 
   return useMemo(() => {
     if (!project) return null;
-    return computeRecap(project, taxonomy);
+    return computeRecap(project, taxonomy, index ?? EMPTY_INDEX);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [memoKey]);
+  }, [memoKey, index]);
 }

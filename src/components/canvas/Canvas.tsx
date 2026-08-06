@@ -12,6 +12,7 @@ import '@xyflow/react/dist/style.css';
 
 import { UnitCard } from './cards/UnitCard';
 import { JabatanCard } from './cards/JabatanCard';
+import { LinkCard } from './cards/LinkCard';
 import { HierarchyEdge } from './edges/HierarchyEdge';
 import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
@@ -26,6 +27,10 @@ import { useLiveLayout } from '@/hooks/useLiveLayout';
 const nodeTypes = {
   unit: UnitCard,
   jabatan: JabatanCard,
+  // Link node tetap OrgNode.type === 'unit' di data model (docs/13-link-nodes.md
+  // §1) — 'link' di sini murni tipe rendering React Flow, dipilih di bawah
+  // berdasarkan node.link, bukan field baru di NodeType.
+  link: LinkCard,
 };
 
 const edgeTypes = {
@@ -64,7 +69,7 @@ const InnerCanvas: React.FC = () => {
       .filter(n => visible.has(n.id))
       .map(n => ({
         id: n.id,
-        type: n.type,
+        type: n.link ? 'link' : n.type,
         position: liveLayout.get(n.id) ?? n.position,
         data: {
           node: n,

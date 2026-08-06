@@ -1,5 +1,6 @@
 import { getProjectIndex, getProject, saveProject } from './storage';
 import { useProjectStore } from '@/store/projectStore';
+import { useProjectIndexStore } from '@/store/projectIndexStore';
 import { scheduleSave, initSaveListeners } from './autosave';
 import { uuid } from '@/utils/uuid';
 import { Project } from '@/models/project';
@@ -14,6 +15,7 @@ export async function bootstrapPersistence(): Promise<void> {
 
   try {
     const index = await getProjectIndex();
+    useProjectIndexStore.setState({ index });
 
     if (!index.activeId || index.entries.length === 0) {
       // Create initial default project if no project exists yet
@@ -51,6 +53,7 @@ export async function bootstrapPersistence(): Promise<void> {
 
       await saveProject(defaultProject);
       useProjectStore.getState().setProject(defaultProject);
+      await useProjectIndexStore.getState().refresh();
     } else {
       const activeProject = await getProject(index.activeId);
       if (activeProject) {

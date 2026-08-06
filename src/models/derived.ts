@@ -29,7 +29,17 @@ export interface RecapBucket {
   selisih: number;
   nodeCount: number; // positions counted, not rows
   depth?: number; // depth for perUnit indentation
-  includesCached?: boolean;
+  includesCached?: boolean; // true kalau subtree-nya menyertakan link non-'live'
+  oldestCachedAsOf?: string; // tanggal cache tertua di antara link non-'live', untuk tooltip jam
+}
+
+/** Hasil resolusi LinkRef (docs/13-link-nodes.md §2) — lihat selectors/linkResolver.ts. */
+export interface ResolvedLink {
+  status: 'live' | 'cached' | 'unresolved';
+  totals: NodeTotals;
+  nodeCount: number;
+  asOf: string; // tanggal figur ini berasal
+  targetProjectId?: string; // saat live: untuk click-through
 }
 
 export interface Recap {

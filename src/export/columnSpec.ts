@@ -40,7 +40,10 @@ export const COLUMNS: ColumnDef[] = [
     header: 'tipe',
     width: 12,
     importable: true,
-    get: c => c.cfg.labels[c.node.type] ?? c.node.type,
+    // Link node tetap type: 'unit' di data model (docs/13-link-nodes.md §1),
+    // tapi diekspor sebagai baris "Tautan" tersendiri supaya bisa di-import
+    // balik jadi link, bukan unit kosong biasa.
+    get: c => (c.node.link ? 'Tautan' : c.cfg.labels[c.node.type] ?? c.node.type),
   },
   {
     key: 'kategori',
@@ -147,6 +150,16 @@ export const COLUMNS: ColumnDef[] = [
     width: 15,
     importable: true,
     get: c => (c.node.type === 'unit' && c.node.kepalaUnit ? c.node.kepalaUnit.eksisting : ''),
+  },
+  {
+    key: 'kode_tautan',
+    header: 'kode_tautan',
+    width: 16,
+    importable: true,
+    // Kode OPD project tujuan (docs/13-link-nodes.md §6) — hanya terisi untuk
+    // baris tipe "Tautan". Angka kebutuhan/eksisting baris ini datang dari
+    // totals (resolusi link, lihat selectors/recap.ts), bukan rincian lokal.
+    get: c => c.node.link?.kodeOPD ?? '',
   },
   {
     key: 'parent_nomor',

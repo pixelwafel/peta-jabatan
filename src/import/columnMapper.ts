@@ -18,6 +18,7 @@ export interface ColumnMap {
   kepalaJenjang?: number;
   kepalaKebutuhan?: number;
   kepalaEksisting?: number;
+  kodeTautan?: number;
   custom?: Record<string, number>;
 }
 
@@ -38,6 +39,7 @@ const COLUMN_ALIASES: Record<string, string[]> = {
   kepalaJenjang: ['kepala jenjang', 'jenjang kepala', 'jenjang kepala unit', 'eselon kepala'],
   kepalaKebutuhan: ['kepala kebutuhan', 'kebutuhan kepala', 'keb kepala'],
   kepalaEksisting: ['kepala eksisting', 'eksisting kepala', 'eks kepala'],
+  kodeTautan: ['kode_tautan', 'kode tautan'],
 };
 
 function normalize(s: string): string {

@@ -1,6 +1,7 @@
 import { Project } from '@/models/project';
 import { saveProject, getProjectIndex } from './storage';
 import { useUiStore } from '@/store/uiStore';
+import { useProjectIndexStore } from '@/store/projectIndexStore';
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 let pendingProject: Project | null = null;
@@ -36,6 +37,7 @@ async function performSave(project: Project): Promise<void> {
   try {
     await saveProject(project);
     ui.setSaveStatus('saved', new Date().toISOString());
+    void useProjectIndexStore.getState().refresh();
 
     // Broadcast ping to other tabs (doc 10 amendment)
     if (broadcastChannel) {

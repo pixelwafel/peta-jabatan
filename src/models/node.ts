@@ -10,14 +10,21 @@ export interface Rincian {
   eksisting: number; // integer >= 0
 }
 
+/**
+ * Referensi ke project lain (docs/13-link-nodes.md). `kodeOPD` adalah identitas
+ * stabil — bukan `projectId`, karena file berpindah antar-browser dan id lokal
+ * tidak ikut pindah, sedangkan kode tetap sama. `projectId` cuma petunjuk
+ * resolusi lokal (bisa absen/salah); resolusi selalu match dulu lewat kodeOPD.
+ */
 export interface LinkRef {
-  projectCode: string;
-  projectName: string;
+  kodeOPD: string;
+  namaProject: string;
+  projectId?: string;
   cached: {
-    totalKebutuhan: number;
-    totalEksisting: number;
+    kebutuhan: number;
+    eksisting: number;
     nodeCount: number;
-    updatedAt: string;
+    updatedAt: string; // kapan cache ini terakhir diambil
   };
 }
 
@@ -56,7 +63,9 @@ export interface OrgNode {
   keterangan?: string;
   custom: Record<string, CustomValue>;
 
-  // multi-project layer (Stage B readiness; both optional)
+  // multi-project layer (Stage B)
+  // Link dan children/kepalaUnit saling eksklusif — lihat store/projectStore.ts
+  // makeLink()/unlinkNode() dan selectors/validation.ts LINK_HAS_CHILDREN.
   link?: LinkRef;
   isTemplate?: boolean;
 

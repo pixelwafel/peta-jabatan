@@ -10,6 +10,7 @@ import {
 } from '../src/selectors/recap';
 import { taxonomy } from '../src/config/taxonomy';
 import { useProjectStore } from '../src/store/projectStore';
+import { ProjectIndex } from '../src/persistence/types';
 
 describe('Recap Engine (Doc 07 Exit Criteria)', () => {
   beforeEach(() => {
@@ -192,5 +193,117 @@ describe('Recap Engine (Doc 07 Exit Criteria)', () => {
 
     // Traversal MUST terminate without stack overflow!
     expect(() => computeRecap(proj, taxonomy)).not.toThrow();
+  });
+});
+
+describe('Recap Engine — link node aggregation (M10.3, docs/13 §3)', () => {
+  function makeIndex(): ProjectIndex {
+    return {
+      version: 1,
+      activeId: null,
+      entries: [
+        {
+          id: 'target-live',
+          namaOPD: 'Puskesmas Kota Timur',
+          kodeOPD: 'PKM-KTIM',
+          nodeCount: 41,
+          totalKebutuhan: 52,
+          totalEksisting: 47,
+          updatedAt: '2026-07-14T00:00:00.000Z',
+          lastExportedAt: null,
+        },
+      ],
+    };
+  }
+
+  function makeFixture(link: OrgNode['link']): Project {
+    const nodes: OrgNode[] = [
+      {
+        id: 'unit-root',
+        type: 'unit',
+        nama: 'Dinas Kesehatan',
+        nomor: '1',
+        rumpun: [],
+        rincian: [],
+        custom: {},
+        position: { x: 0, y: 0 },
+        collapsed: false,
+        order: 0,
+      },
+      {
+        id: 'unit-link',
+        type: 'unit',
+        nama: 'Puskesmas Kota Timur',
+        nomor: '1.1',
+        rumpun: [],
+        rincian: [],
+        custom: {},
+        position: { x: 0, y: 100 },
+        collapsed: false,
+        order: 0,
+        link,
+      },
+    ];
+    const edges: OrgEdge[] = [{ id: 'e1', source: 'unit-root', target: 'unit-link', kind: 'hirarki' }];
+
+    return {
+      id: 'proj-recap-link',
+      schemaVersion: '1.0.0',
+      configVersion: '2026.1',
+      meta: { namaOPD: 'Dinas Kesehatan', kodeOPD: 'DINKES', penyusun: 'Admin' },
+      attributeSchema: [],
+      nodes,
+      edges,
+      viewport: { x: 0, y: 0, zoom: 1 },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  it('adds a live link child totals into the parent subtree, not just its own zero row', () => {
+    const proj = makeFixture({
+      kodeOPD: 'PKM-KTIM',
+      namaProject: 'Puskesmas Kota Timur',
+      cached: { kebutuhan: 0, eksisting: 0, nodeCount: 0, updatedAt: '' },
+    });
+    const recap = computeRecap(proj, taxonomy, makeIndex());
+
+    expect(recap.subtreeTotals.get('unit-link')).toEqual({ kebutuhan: 52, eksisting: 47, selisih: -5 });
+    expect(recap.total.kebutuhan).toBe(52);
+    expect(recap.total.eksisting).toBe(47);
+  });
+
+  it('marks includesCached only when the link resolves to non-live status', () => {
+    const liveProj = makeFixture({
+      kodeOPD: 'PKM-KTIM',
+      namaProject: 'Puskesmas Kota Timur',
+      cached: { kebutuhan: 0, eksisting: 0, nodeCount: 0, updatedAt: '' },
+    });
+    const liveRecap = computeRecap(liveProj, taxonomy, makeIndex());
+    const liveUnitBucket = liveRecap.perUnit.find(u => u.key === 'unit-link');
+    expect(liveUnitBucket?.includesCached).toBeFalsy();
+
+    const cachedProj = makeFixture({
+      kodeOPD: 'PKM-SUDAH-HILANG',
+      namaProject: 'Puskesmas Sudah Dihapus',
+      cached: { kebutuhan: 20, eksisting: 18, nodeCount: 10, updatedAt: '2026-06-01T00:00:00.000Z' },
+    });
+    const cachedRecap = computeRecap(cachedProj, taxonomy, { version: 1, activeId: null, entries: [] });
+    const cachedUnitBucket = cachedRecap.perUnit.find(u => u.key === 'unit-link');
+    expect(cachedUnitBucket?.includesCached).toBe(true);
+    expect(cachedUnitBucket?.oldestCachedAsOf).toBe('2026-06-01T00:00:00.000Z');
+    expect(cachedRecap.total.includesCached).toBe(true);
+  });
+
+  it('does not aggregate link figures when no index is passed (backward-compatible default)', () => {
+    const proj = makeFixture({
+      kodeOPD: 'PKM-KTIM',
+      namaProject: 'Puskesmas Kota Timur',
+      cached: { kebutuhan: 0, eksisting: 0, nodeCount: 0, updatedAt: '' },
+    });
+    // No third arg -> EMPTY_INDEX -> unresolved -> contributes ZERO, not a crash.
+    const recap = computeRecap(proj, taxonomy);
+    expect(recap.total.kebutuhan).toBe(0);
+    expect(recap.total.includesCached).toBe(true); // unresolved counts as non-live
   });
 });

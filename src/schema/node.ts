@@ -2,11 +2,12 @@ import { z } from 'zod';
 import { zRincian } from './rincian';
 
 export const zLinkRef = z.object({
-  projectCode: z.string(),
-  projectName: z.string(),
+  kodeOPD: z.string(),
+  namaProject: z.string(),
+  projectId: z.string().optional(),
   cached: z.object({
-    totalKebutuhan: z.number().int().min(0),
-    totalEksisting: z.number().int().min(0),
+    kebutuhan: z.number().int().min(0),
+    eksisting: z.number().int().min(0),
     nodeCount: z.number().int().min(0),
     updatedAt: z.string(),
   }),

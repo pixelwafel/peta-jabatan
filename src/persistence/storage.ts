@@ -123,23 +123,44 @@ export async function deleteProjectData(id: string): Promise<void> {
   await saveProjectIndex(index);
 }
 
-export async function updateIndexForProject(project: Project): Promise<void> {
-  const index = await getProjectIndex();
-  const existingEntry = index.entries.find(e => e.id === project.id);
+/**
+ * Bangun ProjectIndexEntry dari sebuah Project — dipakai baik oleh
+ * `updateIndexForProject` (satu project, incremental) maupun
+ * `rebuildIndexFromStorage` (semua project, dari nol). Diekstrak jadi fungsi
+ * murni supaya bisa ditest tanpa IndexedDB (lihat tests/persistence.test.ts).
+ */
+export function buildIndexEntry(
+  project: Project,
+  carry: Pick<ProjectIndexEntry, 'lastExportedAt' | 'origin'> = { lastExportedAt: null, origin: 'created' }
+): ProjectIndexEntry {
   const totals = projectTotals(project.nodes);
   const posCount = project.nodes.filter(n => n.type === 'jabatan').length;
 
-  const entry: ProjectIndexEntry = {
+  return {
     id: project.id,
     namaOPD: project.meta.namaOPD || 'Tanpa Nama',
     kodeOPD: project.meta.kodeOPD || 'KODE',
     nodeCount: posCount,
     totalKebutuhan: totals.kebutuhan,
     totalEksisting: totals.eksisting,
-    updatedAt: project.updatedAt,
+    updatedAt: project.updatedAt || new Date().toISOString(),
+    lastExportedAt: carry.lastExportedAt,
+    origin: carry.origin,
+    // Kode OPD dari tiap link node di project ini — dipakai cycle guard
+    // (selectors/linkResolver.ts canCreateLink) buat walk rantai tautan tanpa
+    // perlu buka body project lain. Lihat docs/13-link-nodes.md §2.
+    linkedCodes: project.nodes.filter(n => n.link).map(n => n.link!.kodeOPD),
+  };
+}
+
+export async function updateIndexForProject(project: Project): Promise<void> {
+  const index = await getProjectIndex();
+  const existingEntry = index.entries.find(e => e.id === project.id);
+
+  const entry = buildIndexEntry(project, {
     lastExportedAt: existingEntry?.lastExportedAt ?? null,
     origin: existingEntry?.origin ?? 'created',
-  };
+  });
 
   const entryIndex = index.entries.findIndex(e => e.id === project.id);
   if (entryIndex >= 0) {
@@ -163,19 +184,7 @@ export async function rebuildIndexFromStorage(): Promise<ProjectIndex> {
     try {
       const p = await get<Project>(pk, customStore);
       if (p && p.id && p.meta) {
-        const totals = projectTotals(p.nodes);
-        const posCount = p.nodes.filter(n => n.type === 'jabatan').length;
-        entries.push({
-          id: p.id,
-          namaOPD: p.meta.namaOPD || 'Tanpa Nama',
-          kodeOPD: p.meta.kodeOPD || 'KODE',
-          nodeCount: posCount,
-          totalKebutuhan: totals.kebutuhan,
-          totalEksisting: totals.eksisting,
-          updatedAt: p.updatedAt || new Date().toISOString(),
-          lastExportedAt: null,
-          origin: 'created',
-        });
+        entries.push(buildIndexEntry(p));
       }
     } catch (err) {
       console.warn(`Failed reading project key ${pk}:`, err);

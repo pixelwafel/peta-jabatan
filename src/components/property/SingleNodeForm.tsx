@@ -9,6 +9,7 @@ import { JabatanNameField } from './JabatanNameField';
 import { JenjangChips } from './JenjangChips';
 import { RincianEditor } from './RincianEditor';
 import { CustomAttributesEditor } from './CustomAttributesEditor';
+import { LinkEditor } from './LinkEditor';
 import { RefreshCw, Lock, Unlock, Layers } from 'lucide-react';
 
 interface SingleNodeFormProps {
@@ -126,21 +127,30 @@ export const SingleNodeForm: React.FC<SingleNodeFormProps> = ({ node, locked }) 
         </span>
         <ParentSelect node={node} />
 
-        {/* Kepala Unit Section (Only for type === 'unit') */}
-        {node.type === 'unit' && <KepalaUnitEditor node={node} />}
+        {/* Link node (docs/13-link-nodes.md) menggantikan Kepala Unit — link &
+            kepalaUnit saling eksklusif. "Jadikan tautan…" cuma tampil untuk
+            unit kosong tanpa children (ditegakkan juga di store/projectStore.ts
+            makeLink). */}
+        {node.type === 'unit' && <LinkEditor node={node} hasChildren={hasChildren} />}
+
+        {/* Kepala Unit Section (unit biasa, bukan link) */}
+        {node.type === 'unit' && !node.link && <KepalaUnitEditor node={node} />}
       </div>
 
-      {/* Figures Section */}
-      <div className="pt-2 border-t border-slate-800 space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-            Angka Kebutuhan &amp; Eksisting
-          </span>
+      {/* Figures Section — disembunyikan untuk link node: angkanya berasal
+          dari resolusi tautan (panel TAUTAN di atas), bukan rincian lokal. */}
+      {!node.link && (
+        <div className="pt-2 border-t border-slate-800 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+              Angka Kebutuhan &amp; Eksisting
+            </span>
+          </div>
+
+          {node.type === 'jabatan' && <JenjangChips node={node} />}
+          <RincianEditor node={node} />
         </div>
-
-        {node.type === 'jabatan' && <JenjangChips node={node} />}
-        <RincianEditor node={node} />
-      </div>
+      )}
 
       {/* Detail Tambahan (Opsional) — nomor & kode tidak wajib diisi manual:
           nomor bisa digenerate lewat "Auto Nomor" (kosong cuma info, tidak

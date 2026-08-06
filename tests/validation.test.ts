@@ -187,3 +187,171 @@ describe('Hierarchy, Validation & Readiness Engine (Doc 04 Exit Criteria)', () =
     expect(typeof report.ready).toBe('boolean');
   });
 });
+
+describe('Link node validation (M10.8, docs/13-link-nodes.md §7)', () => {
+  function linkFixture(link: OrgNode['link'], opts?: { withChild?: boolean }): Project {
+    const nodes: OrgNode[] = [
+      {
+        id: 'u-root',
+        type: 'unit',
+        nama: 'Dinas Kesehatan',
+        nomor: '1',
+        rumpun: [],
+        rincian: [],
+        custom: {},
+        position: { x: 0, y: 0 },
+        collapsed: false,
+        order: 0,
+      },
+      {
+        id: 'u-link',
+        type: 'unit',
+        nama: 'Puskesmas Kota Timur',
+        nomor: '1.1',
+        rumpun: [],
+        rincian: [],
+        custom: {},
+        position: { x: 0, y: 100 },
+        collapsed: false,
+        order: 0,
+        link,
+      },
+    ];
+    const edges: OrgEdge[] = [{ id: 'e1', source: 'u-root', target: 'u-link', kind: 'hirarki' }];
+
+    if (opts?.withChild) {
+      nodes.push({
+        id: 'j-stray',
+        type: 'jabatan',
+        nama: 'Staf Nyasar',
+        nomor: '1.1.1',
+        kategoriId: 'pelaksana',
+        rumpun: [],
+        rincian: [{ id: 'r1', jenjangId: null, kebutuhan: 1, eksisting: 1 }],
+        custom: {},
+        position: { x: 0, y: 200 },
+        collapsed: false,
+        order: 0,
+      });
+      edges.push({ id: 'e2', source: 'u-link', target: 'j-stray', kind: 'hirarki' });
+    }
+
+    return {
+      id: 'proj-link-val',
+      schemaVersion: '1.0.0',
+      configVersion: '2026.1',
+      meta: { namaOPD: 'Dinas Kesehatan', kodeOPD: 'DINKES', penyusun: 'Operator' },
+      attributeSchema: [],
+      nodes,
+      edges,
+      viewport: { x: 0, y: 0, zoom: 1 },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  it('LINK_UNRESOLVED fires when the link has no cache and no matching index entry', () => {
+    const proj = linkFixture({
+      kodeOPD: 'PKM-BELUM-ADA',
+      namaProject: 'Belum Diimpor',
+      cached: { kebutuhan: 0, eksisting: 0, nodeCount: 0, updatedAt: '' },
+    });
+    const findings = validateProject(proj, taxonomy, { version: 1, activeId: null, entries: [] });
+    expect(findings.some(f => f.code === 'LINK_UNRESOLVED' && f.nodeId === 'u-link')).toBe(true);
+  });
+
+  it('LINK_STALE fires when cached asOf is older than 30 days and the target is gone from the index', () => {
+    const staleDate = new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString();
+    const proj = linkFixture({
+      kodeOPD: 'PKM-LAMA',
+      namaProject: 'Puskesmas Lama',
+      cached: { kebutuhan: 10, eksisting: 8, nodeCount: 5, updatedAt: staleDate },
+    });
+    const findings = validateProject(proj, taxonomy, { version: 1, activeId: null, entries: [] });
+    expect(findings.some(f => f.code === 'LINK_STALE' && f.nodeId === 'u-link')).toBe(true);
+  });
+
+  it('LINK_AMBIGUOUS fires when two stored projects share the kodeOPD', () => {
+    const proj = linkFixture({
+      kodeOPD: 'PKM-DUP',
+      namaProject: 'Puskesmas Duplikat',
+      cached: { kebutuhan: 0, eksisting: 0, nodeCount: 0, updatedAt: '' },
+    });
+    const index = {
+      version: 1 as const,
+      activeId: null,
+      entries: [
+        { id: 'a', namaOPD: 'A', kodeOPD: 'PKM-DUP', nodeCount: 0, totalKebutuhan: 0, totalEksisting: 0, updatedAt: '2026-01-01T00:00:00.000Z', lastExportedAt: null },
+        { id: 'b', namaOPD: 'B', kodeOPD: 'PKM-DUP', nodeCount: 0, totalKebutuhan: 0, totalEksisting: 0, updatedAt: '2026-02-01T00:00:00.000Z', lastExportedAt: null },
+      ],
+    };
+    const findings = validateProject(proj, taxonomy, index);
+    expect(findings.some(f => f.code === 'LINK_AMBIGUOUS' && f.nodeId === 'u-link')).toBe(true);
+  });
+
+  it('LINK_CYCLE fires on a hand-crafted cyclic pair (target already links back to this project)', () => {
+    const proj = linkFixture({
+      kodeOPD: 'PKM-KTIM',
+      namaProject: 'Puskesmas Kota Timur',
+      cached: { kebutuhan: 0, eksisting: 0, nodeCount: 0, updatedAt: '' },
+    });
+    const index = {
+      version: 1 as const,
+      activeId: null,
+      entries: [
+        {
+          id: 'target',
+          namaOPD: 'Puskesmas Kota Timur',
+          kodeOPD: 'PKM-KTIM',
+          nodeCount: 0,
+          totalKebutuhan: 0,
+          totalEksisting: 0,
+          updatedAt: '',
+          lastExportedAt: null,
+          linkedCodes: ['DINKES'], // balik menautkan ke project ini (kodeOPD DINKES)
+        },
+      ],
+    };
+    const findings = validateProject(proj, taxonomy, index);
+    expect(findings.some(f => f.code === 'LINK_CYCLE' && f.nodeId === 'u-link')).toBe(true);
+  });
+
+  it('LINK_HAS_CHILDREN fires when a link node has a hierarchy child (corrupted state)', () => {
+    const proj = linkFixture(
+      {
+        kodeOPD: 'PKM-KTIM',
+        namaProject: 'Puskesmas Kota Timur',
+        cached: { kebutuhan: 0, eksisting: 0, nodeCount: 0, updatedAt: '' },
+      },
+      { withChild: true }
+    );
+    const findings = validateProject(proj, taxonomy);
+    expect(findings.some(f => f.code === 'LINK_HAS_CHILDREN' && f.nodeId === 'u-link')).toBe(true);
+  });
+
+  it('a healthy live link produces none of the LINK_* findings', () => {
+    const proj = linkFixture({
+      kodeOPD: 'PKM-KTIM',
+      namaProject: 'Puskesmas Kota Timur',
+      cached: { kebutuhan: 0, eksisting: 0, nodeCount: 0, updatedAt: '' },
+    });
+    const index = {
+      version: 1 as const,
+      activeId: null,
+      entries: [
+        {
+          id: 'target',
+          namaOPD: 'Puskesmas Kota Timur',
+          kodeOPD: 'PKM-KTIM',
+          nodeCount: 41,
+          totalKebutuhan: 52,
+          totalEksisting: 47,
+          updatedAt: new Date().toISOString(),
+          lastExportedAt: null,
+        },
+      ],
+    };
+    const findings = validateProject(proj, taxonomy, index);
+    expect(findings.filter(f => f.code.startsWith('LINK_'))).toHaveLength(0);
+  });
+});

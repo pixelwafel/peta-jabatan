@@ -20,6 +20,7 @@ export interface RawRow {
   kepalaJenjang?: string;
   kepalaKebutuhan?: string;
   kepalaEksisting?: string;
+  kodeTautan?: string;
   custom: Record<string, string>;
 }
 
@@ -168,6 +169,8 @@ export function parseRows(
         map.kepalaEksisting !== undefined
           ? String(cells[map.kepalaEksisting] ?? '').trim()
           : undefined,
+      kodeTautan:
+        map.kodeTautan !== undefined ? String(cells[map.kodeTautan] ?? '').trim() : undefined,
       custom: customValues,
     });
   }

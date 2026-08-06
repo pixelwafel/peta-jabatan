@@ -72,8 +72,8 @@ describe('Export Pipeline (Doc 09 Exit Criteria)', () => {
     };
   }
 
-  it('COLUMNS contains all 20 core column definitions plus custom attributes', () => {
-    expect(COLUMNS.length).toBe(20);
+  it('COLUMNS contains all 21 core column definitions plus custom attributes', () => {
+    expect(COLUMNS.length).toBe(21);
     const keys = COLUMNS.map(c => c.key);
     expect(keys).toContain('nomor');
     expect(keys).toContain('nama');
@@ -87,6 +87,8 @@ describe('Export Pipeline (Doc 09 Exit Criteria)', () => {
     expect(keys).toContain('kepala_jenjang');
     expect(keys).toContain('kepala_kebutuhan');
     expect(keys).toContain('kepala_eksisting');
+    // Link node (docs/13-link-nodes.md §6)
+    expect(keys).toContain('kode_tautan');
 
     const customCols = getCustomColumns([{ id: 'sub_lokasi', nama: 'Sub Lokasi', tipe: 'text' }]);
     expect(customCols.length).toBe(1);
@@ -147,5 +149,88 @@ describe('Export Pipeline (Doc 09 Exit Criteria)', () => {
 
     expect(parsed.id).toBe(proj.id);
     expect(parsed.nodes.length).toBe(proj.nodes.length);
+  });
+
+  it('exportJson carries link verbatim (docs/13-link-nodes.md §6 — file self-sufficient)', async () => {
+    const proj = createExportFixture();
+    proj.nodes.push({
+      id: 'unit-link',
+      type: 'unit',
+      nama: 'Puskesmas Kota Timur',
+      nomor: '1.3',
+      rumpun: [],
+      rincian: [],
+      custom: {},
+      position: { x: 0, y: 0 },
+      collapsed: false,
+      order: 2,
+      link: {
+        kodeOPD: 'PKM-KTIM',
+        namaProject: 'Puskesmas Kota Timur',
+        cached: { kebutuhan: 52, eksisting: 47, nodeCount: 41, updatedAt: '2026-07-14T00:00:00.000Z' },
+      },
+    });
+
+    const blob = exportJson(proj);
+    const parsed = JSON.parse(await blob.text());
+    const linkNode = parsed.nodes.find((n: OrgNode) => n.id === 'unit-link');
+
+    expect(linkNode.link).toEqual({
+      kodeOPD: 'PKM-KTIM',
+      namaProject: 'Puskesmas Kota Timur',
+      cached: { kebutuhan: 52, eksisting: 47, nodeCount: 41, updatedAt: '2026-07-14T00:00:00.000Z' },
+    });
+  });
+
+  it('a link node exports as a single "Tautan" row with kode_tautan and resolved totals', () => {
+    const proj = createExportFixture();
+    proj.nodes.push({
+      id: 'unit-link',
+      type: 'unit',
+      nama: 'Puskesmas Kota Timur',
+      nomor: '1.3',
+      rumpun: [],
+      rincian: [],
+      custom: {},
+      position: { x: 0, y: 0 },
+      collapsed: false,
+      order: 2,
+      link: {
+        kodeOPD: 'PKM-KTIM',
+        namaProject: 'Puskesmas Kota Timur',
+        cached: { kebutuhan: 0, eksisting: 0, nodeCount: 0, updatedAt: '' },
+      },
+    });
+
+    const index = {
+      version: 1 as const,
+      activeId: null,
+      entries: [
+        {
+          id: 'target',
+          namaOPD: 'Puskesmas Kota Timur',
+          kodeOPD: 'PKM-KTIM',
+          nodeCount: 41,
+          totalKebutuhan: 52,
+          totalEksisting: 47,
+          updatedAt: '2026-07-14T00:00:00.000Z',
+          lastExportedAt: null,
+        },
+      ],
+    };
+
+    const recap = computeRecap(proj, taxonomy, index);
+    const rows = buildExportRows(proj, recap, taxonomy);
+    const linkRow = rows.find(r => r.node.id === 'unit-link')!;
+
+    const tipeCol = COLUMNS.find(c => c.key === 'tipe')!;
+    const kodeTautanCol = COLUMNS.find(c => c.key === 'kode_tautan')!;
+    const kebutuhanCol = COLUMNS.find(c => c.key === 'kebutuhan')!;
+    const eksistingCol = COLUMNS.find(c => c.key === 'eksisting')!;
+
+    expect(tipeCol.get(linkRow)).toBe('Tautan');
+    expect(kodeTautanCol.get(linkRow)).toBe('PKM-KTIM');
+    expect(kebutuhanCol.get(linkRow)).toBe(52);
+    expect(eksistingCol.get(linkRow)).toBe(47);
   });
 });

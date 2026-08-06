@@ -1,5 +1,5 @@
 import { Finding } from '@/models/derived';
-import { NodeType, Rumpun, Rincian, KepalaUnit } from '@/models/node';
+import { NodeType, Rumpun, Rincian, KepalaUnit, LinkRef } from '@/models/node';
 import { RawRow, coerceInt } from './rowParser';
 import {
   resolveKategori,
@@ -19,6 +19,7 @@ export interface NodeCandidate {
   unitKerja?: string;
   keterangan?: string;
   kepalaUnit?: KepalaUnit;
+  link?: LinkRef;
   custom: Record<string, string>;
   rowNumbers: number[];
 }
@@ -28,7 +29,16 @@ function resolveTipe(s?: string): NodeType | null {
   const norm = s.trim().toLowerCase();
   if (norm === 'unit' || norm === 'u' || norm === 'organisasi') return 'unit';
   if (norm === 'jabatan' || norm === 'j' || norm === 'posisi') return 'jabatan';
+  // Link node tetap type 'unit' di data model (docs/13-link-nodes.md §1) —
+  // "Tautan" cuma penanda tipe baris di spreadsheet, lihat isTautanRow().
+  if (norm === 'tautan' || norm === 'link') return 'unit';
   return null;
+}
+
+function isTautanRow(s?: string): boolean {
+  if (!s) return false;
+  const norm = s.trim().toLowerCase();
+  return norm === 'tautan' || norm === 'link';
 }
 
 function inferTipe(r: RawRow): NodeType {
@@ -83,6 +93,7 @@ export function groupRows(rows: RawRow[]): {
     }
 
     const tipe = resolveTipe(first.tipe) ?? inferTipe(first);
+    const isLink = isTautanRow(first.tipe);
     const kategoriId =
       tipe === 'jabatan' ? resolveKategori(first.kategori ?? '') ?? undefined : undefined;
 
@@ -94,8 +105,10 @@ export function groupRows(rows: RawRow[]): {
     }
     const rumpun = Array.from(rumpunSet);
 
-    // Unit rows carrying figures: report and discard (Invariant 1)
-    if (tipe === 'unit' && group.some(r => num(r.kebutuhan) || num(r.eksisting))) {
+    // Unit rows carrying figures: report and discard (Invariant 1). Baris
+    // Tautan justru DIHARAPKAN bawa angka (itu resolusi link-nya) — bukan
+    // pelanggaran invariant, lihat blok `link` di bawah.
+    if (tipe === 'unit' && !isLink && group.some(r => num(r.kebutuhan) || num(r.eksisting))) {
       findings.push({
         code: 'IMPORT_UNIT_HAS_FIGURES',
         severity: 'warning',
@@ -129,9 +142,36 @@ export function groupRows(rows: RawRow[]): {
             };
           });
 
+    let link: LinkRef | undefined;
+    if (isLink) {
+      const kodeTautan = first.kodeTautan?.trim();
+      if (kodeTautan) {
+        link = {
+          kodeOPD: kodeTautan,
+          namaProject: first.nama,
+          cached: {
+            kebutuhan: coerceInt(first.kebutuhan, first.rowNumber, 'kebutuhan', findings),
+            eksisting: coerceInt(first.eksisting, first.rowNumber, 'eksisting', findings),
+            nodeCount: 0,
+            updatedAt: new Date().toISOString(), // waktu impor, bukan waktu asli file target (doc 13 §6)
+          },
+        };
+      } else {
+        findings.push({
+          code: 'IMPORT_LINK_NO_KODE',
+          severity: 'error',
+          rowNumber: first.rowNumber,
+          message: `Baris ${first.rowNumber}: "${first.nama}" bertipe Tautan tapi kolom kode_tautan kosong. Dijadikan unit kosong biasa.`,
+        });
+      }
+    }
+
+    // Link & kepalaUnit saling eksklusif (doc 13 §1) — kepalaUnit cuma
+    // diproses untuk unit yang bukan tautan.
     let kepalaUnit: KepalaUnit | undefined;
     if (
       tipe === 'unit' &&
+      !isLink &&
       (first.kepalaNama || first.kepalaKode || first.kepalaJenjang ||
         first.kepalaKebutuhan || first.kepalaEksisting)
     ) {
@@ -168,6 +208,7 @@ export function groupRows(rows: RawRow[]): {
       unitKerja: first.unitKerja,
       keterangan: first.keterangan,
       kepalaUnit,
+      link,
       custom: first.custom,
       rowNumbers: group.map(r => r.rowNumber),
     });

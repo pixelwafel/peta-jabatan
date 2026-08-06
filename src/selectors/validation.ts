@@ -5,6 +5,11 @@ import { Taxonomy, taxonomy } from '@/config/taxonomy';
 import { getStructureIndex } from './structureIndex';
 import { designatedRoot } from './navigation';
 import { isJenjangValid, jenjangLabel, getJenjangOptions } from '@/config/resolver';
+import { resolveLink, canCreateLink } from './linkResolver';
+import { ProjectIndex } from '@/persistence/types';
+
+const EMPTY_INDEX: ProjectIndex = { version: 1, activeId: null, entries: [] };
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 export interface ReadinessReport {
   ready: boolean; // no errors — warnings do not block
@@ -20,7 +25,8 @@ export interface ReadinessReport {
 
 export function validateProject(
   project: Project,
-  cfg: Taxonomy = taxonomy
+  cfg: Taxonomy = taxonomy,
+  index: ProjectIndex = EMPTY_INDEX
 ): Finding[] {
   const f: Finding[] = [];
   const idx = getStructureIndex(project.nodes, project.edges);
@@ -171,6 +177,61 @@ export function validateProject(
             severity: 'warning',
             nodeId: n.id,
             message: `Jenjang kepala unit pada "${n.nama}" tidak valid.`,
+          });
+        }
+      }
+
+      // Link node checks (docs/13-link-nodes.md §7)
+      if (n.link) {
+        if (hasChildren) {
+          f.push({
+            code: 'LINK_HAS_CHILDREN',
+            severity: 'error',
+            nodeId: n.id,
+            message: `"${n.nama}" adalah tautan tapi punya children — state korup, link & children saling eksklusif.`,
+          });
+        }
+
+        const resolved = resolveLink(n.link, index);
+
+        if (resolved.status === 'unresolved') {
+          f.push({
+            code: 'LINK_UNRESOLVED',
+            severity: 'warning',
+            nodeId: n.id,
+            message: `Tautan "${n.nama}" (kode ${n.link.kodeOPD}) belum pernah diimpor di browser ini — angkanya belum tersedia.`,
+          });
+        }
+
+        if (
+          resolved.status === 'cached' &&
+          resolved.asOf &&
+          Date.now() - Date.parse(resolved.asOf) > THIRTY_DAYS_MS
+        ) {
+          f.push({
+            code: 'LINK_STALE',
+            severity: 'info',
+            nodeId: n.id,
+            message: `Angka tautan "${n.nama}" berasal dari cache per ${new Date(resolved.asOf).toLocaleDateString('id-ID')}, lebih dari 30 hari lalu.`,
+          });
+        }
+
+        const matchingEntries = index.entries.filter(e => e.kodeOPD === n.link!.kodeOPD);
+        if (matchingEntries.length > 1) {
+          f.push({
+            code: 'LINK_AMBIGUOUS',
+            severity: 'info',
+            nodeId: n.id,
+            message: `Kode ${n.link.kodeOPD} dipakai oleh ${matchingEntries.length} project tersimpan — tautan "${n.nama}" mengambil yang paling baru diperbarui.`,
+          });
+        }
+
+        if (!canCreateLink(index, project.meta.kodeOPD, n.link.kodeOPD)) {
+          f.push({
+            code: 'LINK_CYCLE',
+            severity: 'error',
+            nodeId: n.id,
+            message: `Tautan "${n.nama}" (kode ${n.link.kodeOPD}) membentuk siklus — project tujuan balik menautkan ke project ini.`,
           });
         }
       }

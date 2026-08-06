@@ -16,6 +16,9 @@ import {
 import { formatNomor } from '@/utils/numbering';
 import { useHistoryStore } from './historyStore';
 import { useUiStore } from './uiStore';
+import { useProjectIndexStore } from './projectIndexStore';
+import { canCreateLink } from '@/selectors/linkResolver';
+import { LinkRef } from '@/models/node';
 
 enablePatches();
 
@@ -62,6 +65,12 @@ export interface ProjectState {
 
   // Kepala unit (posisi struktural, melekat di node Unit — bukan node terpisah)
   setKepalaUnit: (nodeId: string, patch: Partial<KepalaUnit> | null) => void;
+
+  // Link nodes (docs/13-link-nodes.md). Link & children/kepalaUnit saling
+  // eksklusif — makeLink menolak node yang punya children, dan menghapus
+  // kepalaUnit sekaligus supaya tidak dobel-hitung dengan link.cached.
+  makeLink: (nodeId: string, ref: Omit<LinkRef, 'cached'>) => { ok: boolean; reason?: 'has-children' | 'cycle' | 'locked' };
+  unlinkNode: (nodeId: string) => void;
 
   // Kunci node — mencegah edit/hapus/pindah tidak sengaja. Bersifat individual
   // per node (lihat selectors/guards.ts). `cascade: true` adalah shortcut untuk
@@ -547,6 +556,51 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         kode: node.kepalaUnit?.kode,
         ...patch,
       };
+    });
+  },
+
+  makeLink: (nodeId, ref) => {
+    const current = get().project;
+    if (!current) return { ok: false, reason: 'locked' };
+
+    if (isLocked(current.nodes, current.edges, nodeId)) {
+      return { ok: false, reason: 'locked' };
+    }
+
+    const node = current.nodes.find(n => n.id === nodeId);
+    if (!node || node.type !== 'unit') return { ok: false, reason: 'has-children' };
+
+    if (childrenOf(current.nodes, current.edges, nodeId).length > 0) {
+      return { ok: false, reason: 'has-children' }; // Link & children saling eksklusif (doc 13 §1)
+    }
+
+    const index = useProjectIndexStore.getState().index;
+    if (index && !canCreateLink(index, current.meta.kodeOPD, ref.kodeOPD)) {
+      return { ok: false, reason: 'cycle' }; // Cycle guard (doc 13 §2)
+    }
+
+    get().commit('Jadikan tautan', draft => {
+      const n = draft.nodes.find(n => n.id === nodeId);
+      if (!n) return;
+      delete n.kepalaUnit; // link & kepalaUnit saling eksklusif, lihat models/node.ts
+      n.link = {
+        ...ref,
+        cached: { kebutuhan: 0, eksisting: 0, nodeCount: 0, updatedAt: '' },
+      };
+    });
+
+    return { ok: true };
+  },
+
+  unlinkNode: (nodeId) => {
+    const current = get().project;
+    if (current && isLocked(current.nodes, current.edges, nodeId)) return;
+
+    get().commit('Putuskan tautan', draft => {
+      const node = draft.nodes.find(n => n.id === nodeId);
+      if (node) {
+        delete node.link;
+      }
     });
   },
 
