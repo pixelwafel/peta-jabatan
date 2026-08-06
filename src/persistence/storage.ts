@@ -131,12 +131,23 @@ export async function deleteProjectData(id: string): Promise<void> {
  * `rebuildIndexFromStorage` (semua project, dari nol). Diekstrak jadi fungsi
  * murni supaya bisa ditest tanpa IndexedDB (lihat tests/persistence.test.ts).
  */
-export function buildIndexEntry(
+export async function buildIndexEntry(
   project: Project,
   carry: Pick<ProjectIndexEntry, 'lastExportedAt' | 'origin'> = { lastExportedAt: null, origin: 'created' }
-): ProjectIndexEntry {
+): Promise<ProjectIndexEntry> {
   const totals = projectTotals(project.nodes);
   const posCount = project.nodes.filter(n => n.type === 'jabatan').length;
+
+  // Import dinamis, bukan statis: selectors/validation.ts -> linkResolver.ts ->
+  // store/projectStore.ts -> store/projectIndexStore.ts -> balik ke modul ini
+  // (getProjectIndex). Import statis akan bikin siklus; import dinamis aman
+  // karena baru di-resolve saat fungsi ini benar-benar dipanggil.
+  const { validateProject } = await import('@/selectors/validation');
+  const findings = validateProject(project);
+  const findingCounts = {
+    errors: findings.filter(f => f.severity === 'error').length,
+    warnings: findings.filter(f => f.severity === 'warning').length,
+  };
 
   return {
     id: project.id,
@@ -152,6 +163,8 @@ export function buildIndexEntry(
     // (selectors/linkResolver.ts canCreateLink) buat walk rantai tautan tanpa
     // perlu buka body project lain. Lihat docs/13-link-nodes.md §2.
     linkedCodes: project.nodes.filter(n => n.link).map(n => n.link!.kodeOPD),
+    // Badge "N file bermasalah" di dashboard tanpa buka body (doc 14 §2).
+    findingCounts,
   };
 }
 
@@ -159,7 +172,7 @@ export async function updateIndexForProject(project: Project): Promise<void> {
   const index = await getProjectIndex();
   const existingEntry = index.entries.find(e => e.id === project.id);
 
-  const entry = buildIndexEntry(project, {
+  const entry = await buildIndexEntry(project, {
     lastExportedAt: existingEntry?.lastExportedAt ?? null,
     origin: existingEntry?.origin ?? 'created',
   });
@@ -186,7 +199,7 @@ export async function rebuildIndexFromStorage(): Promise<ProjectIndex> {
     try {
       const p = await get<Project>(pk, customStore);
       if (p && p.id && p.meta) {
-        entries.push(buildIndexEntry(p));
+        entries.push(await buildIndexEntry(p));
       }
     } catch (err) {
       console.warn(`Failed reading project key ${pk}:`, err);

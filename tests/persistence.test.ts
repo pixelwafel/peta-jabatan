@@ -152,19 +152,34 @@ describe('buildIndexEntry — linkedCodes population (M10.4, docs/13 §2 cycle g
     };
   }
 
-  it('populates linkedCodes with the kodeOPD of every link node in the project', () => {
-    const entry = buildIndexEntry(projectWithLinks(['PKM1', 'PKM2']));
+  it('populates linkedCodes with the kodeOPD of every link node in the project', async () => {
+    const entry = await buildIndexEntry(projectWithLinks(['PKM1', 'PKM2']));
     expect(entry.linkedCodes).toEqual(['PKM1', 'PKM2']);
   });
 
-  it('produces an empty linkedCodes array for a project with no link nodes', () => {
-    const entry = buildIndexEntry(baseProject);
+  it('produces an empty linkedCodes array for a project with no link nodes', async () => {
+    const entry = await buildIndexEntry(baseProject);
     expect(entry.linkedCodes).toEqual([]);
   });
 
-  it('preserves lastExportedAt/origin passed in as the "carry" (existing entry) values', () => {
-    const entry = buildIndexEntry(baseProject, { lastExportedAt: '2026-01-01T00:00:00.000Z', origin: 'imported' });
+  it('preserves lastExportedAt/origin passed in as the "carry" (existing entry) values', async () => {
+    const entry = await buildIndexEntry(baseProject, { lastExportedAt: '2026-01-01T00:00:00.000Z', origin: 'imported' });
     expect(entry.lastExportedAt).toBe('2026-01-01T00:00:00.000Z');
     expect(entry.origin).toBe('imported');
+  });
+
+  it('populates findingCounts from validateProject (M11.1, docs/14 §2)', async () => {
+    // baseProject punya kodeOPD/namaOPD terisi -> tidak ada error META_OPD_MISSING
+    const entry = await buildIndexEntry(baseProject);
+    expect(entry.findingCounts).toBeDefined();
+    expect(typeof entry.findingCounts!.errors).toBe('number');
+    expect(typeof entry.findingCounts!.warnings).toBe('number');
+    expect(entry.findingCounts!.errors).toBe(0);
+  });
+
+  it('findingCounts reflects a real error (missing kodeOPD -> META_OPD_MISSING)', async () => {
+    const broken: Project = { ...baseProject, meta: { ...baseProject.meta, kodeOPD: '' } };
+    const entry = await buildIndexEntry(broken);
+    expect(entry.findingCounts!.errors).toBeGreaterThanOrEqual(1);
   });
 });
