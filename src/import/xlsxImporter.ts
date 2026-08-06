@@ -8,6 +8,8 @@ import { groupRows } from './groupRows';
 import { buildStructure } from './buildStructure';
 import { projectTotals } from '@/selectors/totals';
 import { mergeStrukturalHeadsIntoUnits } from '@/utils/structuralMerge';
+import { parseMatrixSheets, MatrixSummary } from './matrixImporter';
+import { UnitInstance } from '@/models/project';
 
 export interface ImportPreview {
   summary: {
@@ -26,7 +28,13 @@ export interface ImportPreview {
   built: {
     nodes: OrgNode[];
     edges: OrgEdge[];
+    /** Instance template (docs/15-template-instance.md §4) — dari sheet
+     * Satuan_<nomor>, kalau ada. */
+    instances?: UnitInstance[];
   };
+  /** Ringkasan per sheet matrix (doc 15 §4 "per-matrix summary") — instance
+   * count, jumlah kolom, total, dipakai preview impor. */
+  matrixSummaries?: MatrixSummary[];
   /**
    * Metadata asli dari berkas sumber (docs/14-recap-dashboard.md §4 —
    * staging new/replace/older butuh kodeOPD & updatedAt yang SEBENARNYA,
@@ -148,15 +156,27 @@ export async function processXlsxImport(file: File): Promise<ImportPreview> {
         ]
       : [];
 
+  // Stage 7: Sheet Satuan_<nomor> per template unit (docs/15-template-instance.md
+  // §4) — dibaca SETELAH struktur & merge legacy selesai, supaya isTemplate
+  // & nomor node sudah final saat dicocokkan ke nama sheet.
+  const { instances, findings: matrixFindings, summaries: matrixSummaries } =
+    parseMatrixSheets(wb, nodes, edges);
+
   const allFindings = [
     ...colFindings,
     ...parseFindings,
     ...groupFindings,
     ...structFindings,
     ...mergeFindings,
+    ...matrixFindings,
   ];
 
-  const hasFatalError = allFindings.some(f => f.severity === 'error');
+  // IMPORT_MATRIX_TEMPLATE_NOT_FOUND sengaja error severity (kelihatan tegas
+  // di daftar temuan) TAPI fatal-nya cuma untuk sheet itu sendiri (doc 15 §4)
+  // — tidak boleh membatalkan commit seluruh Struktur yang sudah valid.
+  const hasFatalError = allFindings.some(
+    f => f.severity === 'error' && f.code !== 'IMPORT_MATRIX_TEMPLATE_NOT_FOUND'
+  );
 
   const unitCount = nodes.filter(n => n.type === 'unit').length;
   const jabatanCount = nodes.filter(n => n.type === 'jabatan').length;
@@ -191,6 +211,7 @@ export async function processXlsxImport(file: File): Promise<ImportPreview> {
     findings: allFindings,
     sample,
     canCommit: !hasFatalError && nodes.length > 0,
-    built: { nodes, edges },
+    built: { nodes, edges, instances: instances.length > 0 ? instances : undefined },
+    matrixSummaries: matrixSummaries.length > 0 ? matrixSummaries : undefined,
   };
 }

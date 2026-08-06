@@ -7,6 +7,7 @@ import {
   resolveJenjang,
 } from '@/config/labels';
 import { uuid } from '@/utils/uuid';
+import { taxonomy } from '@/config/taxonomy';
 
 export interface NodeCandidate {
   nomor: string;
@@ -20,6 +21,7 @@ export interface NodeCandidate {
   keterangan?: string;
   kepalaUnit?: KepalaUnit;
   link?: LinkRef;
+  isTemplate?: boolean;
   custom: Record<string, string>;
   rowNumbers: number[];
 }
@@ -27,8 +29,17 @@ export interface NodeCandidate {
 function resolveTipe(s?: string): NodeType | null {
   if (!s) return null;
   const norm = s.trim().toLowerCase();
-  if (norm === 'unit' || norm === 'u' || norm === 'organisasi') return 'unit';
-  if (norm === 'jabatan' || norm === 'j' || norm === 'posisi') return 'jabatan';
+  // taxonomy.labels.unit/jabatan ("Unit Organisasi"/"Jabatan") adalah label
+  // yang BENAR-BENAR ditulis export/xlsxExporter.ts di kolom "tipe" — tanpa
+  // ini, file yang diekspor lalu diimpor ulang salah menebak tipe unit yang
+  // namanya tidak diawali kata seperti "Dinas"/"Bidang" (lihat inferTipe di
+  // bawah), mis. "SD (Template)" jatuh ke 'jabatan' padahal Unit.
+  if (norm === 'unit' || norm === 'u' || norm === 'organisasi' || norm === taxonomy.labels.unit.toLowerCase()) {
+    return 'unit';
+  }
+  if (norm === 'jabatan' || norm === 'j' || norm === 'posisi' || norm === taxonomy.labels.jabatan.toLowerCase()) {
+    return 'jabatan';
+  }
   // Link node tetap type 'unit' di data model (docs/13-link-nodes.md §1) —
   // "Tautan" cuma penanda tipe baris di spreadsheet, lihat isTautanRow().
   if (norm === 'tautan' || norm === 'link') return 'unit';
@@ -197,6 +208,12 @@ export function groupRows(rows: RawRow[]): {
       };
     }
 
+    // Template-instance (docs/15-template-instance.md §4): baris unit yang
+    // kolom "template"-nya menunjuk NOMORNYA SENDIRI adalah root template-nya
+    // (bukan baris di dalam subtree-nya — itu punya nomor ancestor, beda dari
+    // nomor barisnya sendiri). Lihat export/rowGenerator.ts templateNomorFor.
+    const isTemplate = tipe === 'unit' && !!first.template && first.template.trim() === nomor.trim();
+
     candidates.push({
       nomor,
       nama: first.nama,
@@ -209,6 +226,7 @@ export function groupRows(rows: RawRow[]): {
       keterangan: first.keterangan,
       kepalaUnit,
       link,
+      isTemplate: isTemplate || undefined,
       custom: first.custom,
       rowNumbers: group.map(r => r.rowNumber),
     });

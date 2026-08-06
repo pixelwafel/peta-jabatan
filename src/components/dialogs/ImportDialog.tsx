@@ -116,7 +116,7 @@ function jsonResultToPreview(jsonRes: JsonImportResult): ImportPreview {
       parent: '—',
     })),
     canCommit: true,
-    built: { nodes, edges },
+    built: { nodes, edges, instances: jsonRes.project.instances },
     // JSON membawa Project lengkap — kodeOPD/updatedAt ASLI dipakai buat
     // staging bulk import (doc 14 §4), bukan turunan nama file.
     sourceMeta: {

@@ -52,6 +52,7 @@ export function buildStructure(candidates: NodeCandidate[]): {
       keterangan: c.keterangan,
       kepalaUnit: c.kepalaUnit,
       link: c.link,
+      isTemplate: c.isTemplate,
       custom: c.custom,
       position: { x: 0, y: 0 }, // Tidy assigns real coordinates on commit
       collapsed: false,

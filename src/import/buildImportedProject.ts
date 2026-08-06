@@ -34,6 +34,10 @@ export function buildImportedProject(preview: ImportPreview, fileName: string): 
     attributeSchema: [],
     nodes: preview.built.nodes,
     edges: preview.built.edges,
+    // Instance template (docs/15-template-instance.md §4) — dari sheet
+    // Satuan_<nomor> kalau ada; JSON membawa instances-nya sendiri lewat
+    // preview.built langsung (jsonResultToPreview di ImportDialog.tsx).
+    instances: preview.built.instances,
     viewport: { x: 0, y: 0, zoom: 1 },
     createdAt: new Date().toISOString(),
     updatedAt,
