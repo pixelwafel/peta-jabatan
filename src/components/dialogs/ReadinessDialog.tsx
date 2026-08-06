@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useProjectStore } from '@/store/projectStore';
-import { validateProject, buildReadinessReport } from '@/selectors/validation';
+import { getCachedValidation, buildReadinessReport } from '@/selectors/validation';
 import { useUiStore } from '@/store/uiStore';
 import { ancestorsOf } from '@/selectors/navigation';
 import { NODE_W, nodeHeight } from '@/utils/layout';
@@ -36,7 +36,9 @@ export const ReadinessDialog: React.FC<ReadinessDialogProps> = ({
 
   if (!project) return null;
 
-  const findings = validateProject(project);
+  // Fase 1.2: getCachedValidation berbagi hasil dengan Toolbar (badge jumlah
+  // masalah) kalau project yang sama sudah divalidasi di render yang sama.
+  const findings = getCachedValidation(project);
   const report = buildReadinessReport(findings);
 
   const toggleGroup = (code: string) => {

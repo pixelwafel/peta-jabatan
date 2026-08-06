@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
 import { projectTotals } from '@/selectors/totals';
@@ -10,8 +10,18 @@ export const StatusBar: React.FC = () => {
   const lastSavedAt = useUiStore(s => s.lastSavedAt);
 
   const nodes = project?.nodes ?? [];
-  const rincianCount = nodes.reduce((acc, n) => acc + n.rincian.length, 0);
-  const totals = projectTotals(nodes);
+  // Fase 1.5: di-memo per referensi `nodes` — StatusBar juga subscribe ke
+  // saveStatus/lastSavedAt (uiStore), yang berubah lepas dari project (mis.
+  // status autosave "saving" -> "saved" tanpa project berubah). Tanpa memo,
+  // reduce+projectTotals (O(N)) dihitung ulang tiap kali salah satu dari itu
+  // berubah walau nodes-nya sama persis.
+  const { rincianCount, totals } = useMemo(() => {
+    return {
+      rincianCount: nodes.reduce((acc, n) => acc + n.rincian.length, 0),
+      totals: projectTotals(nodes),
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodes]);
 
   const formatTime = (isoString: string | null) => {
     if (!isoString) return '';

@@ -148,6 +148,33 @@ describe('buildConsolidatedWorkbook (M11.6, docs/14-recap-dashboard.md §5)', ()
     const wb = XLSX.read(await blob.arrayBuffer(), { type: 'array' });
     expect(wb.SheetNames).toEqual(['Rekap Pemerintah', 'DISHUB']);
   });
+
+  it('Fase 2.3: stops processing remaining top-level projects once the AbortSignal fires, without throwing', async () => {
+    const a = makeProject('a-id', 'A');
+    const b = makeProject('b-id', 'B');
+    const bodies = new Map<string, Project>([
+      ['a-id', a],
+      ['b-id', b],
+    ]);
+    const controller = new AbortController();
+    const readProject = async (id: string) => {
+      if (id === 'a-id') controller.abort(); // simulasikan user klik "Batal" setelah project pertama
+      return bodies.get(id) ?? null;
+    };
+    const index: ProjectIndex = {
+      version: 1,
+      activeId: null,
+      entries: [entry('a-id', 'A'), entry('b-id', 'B')],
+    };
+
+    const blob = await buildConsolidatedWorkbook(index, readProject, { signal: controller.signal });
+    const wb = XLSX.read(await blob.arrayBuffer(), { type: 'array' });
+
+    // 'A' sudah sempat diproses (readProject dipanggil sebelum abort), 'B' tidak.
+    expect(wb.SheetNames).toContain('Rekap Pemerintah');
+    expect(wb.SheetNames).toContain('A');
+    expect(wb.SheetNames).not.toContain('B');
+  });
 });
 
 describe('buildConsolidatedWorkbook — template matrix sheets (M12.10, docs/15-template-instance.md §4 reconciliation)', () => {

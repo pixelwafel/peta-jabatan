@@ -1,4 +1,3 @@
-import { toBlob } from 'html-to-image';
 import { useProjectStore } from '@/store/projectStore';
 
 export interface PngExportOptions {
@@ -9,6 +8,9 @@ export interface PngExportOptions {
 export async function exportPng(
   opts: PngExportOptions = { background: 'white', scale: 2 }
 ): Promise<Blob> {
+  // Fase 1.8 — html-to-image di-dynamic-import: cuma dipakai jalur export
+  // PNG, tidak perlu ikut entry chunk.
+  const { toBlob } = await import('html-to-image');
   const viewportEl = document.querySelector('.react-flow__viewport') as HTMLElement;
   if (!viewportEl) {
     throw new Error('Canvas viewport element not found');

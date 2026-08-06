@@ -1,19 +1,17 @@
-import { useMemo } from 'react';
 import { Project } from '@/models/project';
 import { OrgNode } from '@/models/node';
+import { OrgEdge } from '@/models/edge';
 import { NodeTotals, Recap, RecapBucket } from '@/models/derived';
 import { taxonomy, Taxonomy, Kategori } from '@/config/taxonomy';
 import { getKategori, jenjangLabel, getJenjangOptions } from '@/config/resolver';
 import { getStructureIndex, StructureIndex } from './structureIndex';
-import { designatedRoot, descendantsOf, depthOf } from './navigation';
+import { designatedRoot, allDepths } from './navigation';
 import { compareNomor } from '@/utils/numbering';
-import { useProjectStore } from '@/store/projectStore';
-import { useProjectIndexStore } from '@/store/projectIndexStore';
 import { resolveLink } from './linkResolver';
 import { ProjectIndex } from '@/persistence/types';
 import { buildTemplateUnitIds, containingTemplateUnitId, computeInstanceTotals, countInstancesFor } from './templateInstance';
 
-const EMPTY_INDEX: ProjectIndex = { version: 1, activeId: null, entries: [] };
+export const EMPTY_INDEX: ProjectIndex = { version: 1, activeId: null, entries: [] };
 
 let recapComputeCount = 0;
 
@@ -116,8 +114,14 @@ export function computeRecap(
     }
   }
 
-  // 2. Post-order traversal with visited set to guard against cycles
+  // 2. Post-order traversal with visited set to guard against cycles.
+  // Fase 1.4: subtreePositionCount diakumulasi di pass yang SAMA ini — dulu
+  // dihitung ulang lewat descendantsOf(...) per unit & per orphan di bawah
+  // (masing-masing O(subtree), dijumlah atas semua unit jadi O(N²) di
+  // project besar). Nilainya sama persis dengan countPositions([node,
+  // ...descendantsOf(node)]) yang digantikannya.
   const visited = new Set<string>();
+  const subtreePositionCount = new Map<string, number>();
   const walk = (id: string): NodeTotals => {
     if (visited.has(id)) {
       return subtreeTotals.get(id) ?? ZERO;
@@ -130,6 +134,8 @@ export function computeRecap(
     let eks = own.eksisting;
     let includesCached = false;
     let oldestAsOf: string | undefined;
+    let positionCount =
+      node && (node.type === 'jabatan' || (node.type === 'unit' && node.kepalaUnit)) ? 1 : 0;
 
     // Link node child: tambahkan totalnya lewat resolusi index, bukan lewat
     // rekursi hirarki (link tidak punya children beneran — doc 13 §1).
@@ -147,6 +153,7 @@ export function computeRecap(
       const c = walk(cid);
       keb += c.kebutuhan;
       eks += c.eksisting;
+      positionCount += subtreePositionCount.get(cid) ?? 0;
 
       const childMarker = cacheMarkers.get(cid);
       if (childMarker?.includesCached) {
@@ -159,6 +166,7 @@ export function computeRecap(
 
     const t = { kebutuhan: keb, eksisting: eks, selisih: eks - keb };
     subtreeTotals.set(id, t);
+    subtreePositionCount.set(id, positionCount);
     cacheMarkers.set(id, { includesCached, oldestAsOf });
     return t;
   };
@@ -190,13 +198,16 @@ export function computeRecap(
 
   // Unplaced Bucket
   const unplacedTotals = sumBuckets(orphans.map(o => subtreeTotals.get(o.id) ?? ZERO));
-  const unplacedNodes = orphans.flatMap(o => [o, ...descendantsOf(project.nodes, project.edges, o.id)]);
+  const unplacedPositionCount = orphans.reduce(
+    (sum, o) => sum + (subtreePositionCount.get(o.id) ?? 0),
+    0
+  );
   const unplacedMarkers = orphans.map(o => cacheMarkers.get(o.id)).filter((m): m is { includesCached: boolean; oldestAsOf?: string } => !!m);
   const unplacedBucket: RecapBucket = {
     key: 'unplaced',
     label: 'Belum Ditempatkan',
     ...unplacedTotals,
-    nodeCount: countPositions(unplacedNodes),
+    nodeCount: unplacedPositionCount,
     includesCached: unplacedMarkers.some(m => m.includesCached) || undefined,
     oldestCachedAsOf: unplacedMarkers
       .map(m => m.oldestAsOf)
@@ -204,12 +215,14 @@ export function computeRecap(
       .sort()[0],
   };
 
-  // Per-Unit Breakdown
+  // Per-Unit Breakdown. Fase 1.4: nodeCount & depth datang dari
+  // subtreePositionCount/depths yang sudah dihitung sekali di atas (O(N)
+  // total), bukan descendantsOf/depthOf dipanggil per unit (O(N²)).
+  const depths = allDepths(project.nodes, project.edges);
   const perUnit: RecapBucket[] = project.nodes
     .filter(n => n.type === 'unit')
     .sort((a, b) => compareNomor(a.nomor, b.nomor))
     .map(u => {
-      const subNodes = [u, ...descendantsOf(project.nodes, project.edges, u.id)];
       const t = subtreeTotals.get(u.id) ?? ZERO;
       const marker = cacheMarkers.get(u.id);
       return {
@@ -218,9 +231,11 @@ export function computeRecap(
         ...t,
         // Unit template: nodeCount berarti "N satuan" (jumlah instance), bukan
         // jumlah posisi — posisi di dalamnya cuma definisi kolom (doc 15 §3).
-        nodeCount: u.isTemplate ? countInstancesFor(project.instances ?? [], u.id) : countPositions(subNodes),
+        nodeCount: u.isTemplate
+          ? countInstancesFor(project.instances ?? [], u.id)
+          : subtreePositionCount.get(u.id) ?? 0,
         isTemplateUnit: u.isTemplate || undefined,
-        depth: depthOf(project.nodes, project.edges, u.id),
+        depth: depths.get(u.id) ?? 0,
         includesCached: marker?.includesCached,
         oldestCachedAsOf: marker?.oldestAsOf,
       };
@@ -324,6 +339,37 @@ export function computeRecap(
   };
 }
 
+// Fase 1.2 — memo berbasis referensi. `produceWithPatches` (projectStore.ts
+// commit) SELALU menghasilkan objek Project baru per commit, dan referensi
+// yang sama itu dibagikan ke semua consumer dalam satu render pass. WeakMap
+// keyed di `project` jadi cache sempurna: tanpa bangun string, tanpa
+// invalidasi manual, entry lama ikut ter-GC begitu project-nya sendiri lepas
+// dari memori. Ini menggantikan recapKey (di bawah, tetap diekspor untuk
+// backward-compat test) di jalur useRecap/buildIndexEntry/Toolbar — akibatnya
+// tiga useRecap() independen (Canvas, RecapPanel, ExportDialog) yang dulu
+// masing-masing recompute sendiri sekarang berbagi satu hasil per project+
+// index+cfg yang sama.
+interface RecapCacheEntry {
+  cfg: Taxonomy;
+  index: ProjectIndex;
+  recap: Recap;
+}
+const recapCache = new WeakMap<Project, RecapCacheEntry>();
+
+export function getCachedRecap(
+  project: Project,
+  cfg: Taxonomy = taxonomy,
+  index: ProjectIndex = EMPTY_INDEX
+): Recap {
+  const cached = recapCache.get(project);
+  if (cached && cached.cfg === cfg && cached.index === index) {
+    return cached.recap;
+  }
+  const recap = computeRecap(project, cfg, index);
+  recapCache.set(project, { cfg, index, recap });
+  return recap;
+}
+
 /**
  * Key for memoizing recap calculation.
  * Excludes position, nama, keterangan, and custom attributes.
@@ -353,28 +399,3 @@ export const structuralKey = (nodes: OrgNode[], edges: OrgEdge[]): string =>
 
 export const recapKey = (project: Project): string =>
   `${structuralKey(project.nodes, project.edges)}#${figuresKey(project.nodes)}`;
-
-export function useRecap(): Recap | null {
-  const project = useProjectStore(s => s.project);
-  // Link nodes butuh index (docs/13-link-nodes.md §3) — perubahannya (project
-  // lain disimpan, link baru dibuat) tidak selalu mengubah project ini, jadi
-  // index juga masuk dependency memo di luar recapKey.
-  const index = useProjectIndexStore(s => s.index);
-  // "instancesRevision" (docs/15-template-instance.md §3): commit lewat Immer
-  // selalu menghasilkan array `instances` BARU tiap kali isinya berubah —
-  // referensi array itu sendiri sudah jadi penanda murah setara counter,
-  // tanpa perlu hash ribuan cell (figuresKey sengaja TIDAK menyertakan isi
-  // instances, persis alasan yang sama).
-  const instances = project?.instances;
-
-  const memoKey = useMemo(() => {
-    if (!project) return null;
-    return recapKey(project);
-  }, [project]);
-
-  return useMemo(() => {
-    if (!project) return null;
-    return computeRecap(project, taxonomy, index ?? EMPTY_INDEX);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [memoKey, index, instances]);
-}

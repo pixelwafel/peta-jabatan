@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import type * as XLSX from 'xlsx';
 import { OrgNode } from '@/models/node';
 import { OrgEdge } from '@/models/edge';
 import { UnitInstance } from '@/models/project';
@@ -6,6 +6,10 @@ import { Finding } from '@/models/derived';
 import { buildColumnGroups } from '@/selectors/templateInstance';
 import { coerceInt } from './rowParser';
 import { uuid } from '@/utils/uuid';
+
+// Fase 1.8 — lihat catatan di export/xlsxExporter.ts. `xlsx` dioper dari
+// xlsxImporter.ts, yang sudah men-dynamic-import modulnya untuk XLSX.read().
+type XlsxModule = typeof XLSX;
 
 const MATRIX_SHEET_PREFIX = 'Satuan_';
 
@@ -39,6 +43,7 @@ export interface MatrixImportResult {
  * Struktur tetap diproses normal.
  */
 export function parseMatrixSheets(
+  xlsx: XlsxModule,
   wb: XLSX.WorkBook,
   nodes: OrgNode[],
   edges: OrgEdge[]
@@ -63,7 +68,7 @@ export function parseMatrixSheets(
     }
 
     const sheet = wb.Sheets[sheetName];
-    const matrix = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as (string | number | null)[][];
+    const matrix = xlsx.utils.sheet_to_json(sheet, { header: 1 }) as (string | number | null)[][];
 
     const satuanRowIndex = matrix.findIndex(row => String(row?.[0] ?? '').trim().toLowerCase() === 'satuan');
     if (satuanRowIndex === -1) {

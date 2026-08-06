@@ -93,7 +93,7 @@ describe('Matrix round-trip via hidden-id row (M12.9, docs/15-template-instance.
   it('export -> re-import reconstructs isTemplate, and instance figures exactly (kebutuhan/eksisting per column)', async () => {
     const original = makeSekolahProject(twoInstances);
     const recap = computeRecap(original, taxonomy);
-    const blob = exportXlsx(original, recap);
+    const blob = await exportXlsx(original, recap);
     const file = new File([blob], 'sekolah.xlsx');
 
     const preview = await processXlsxImport(file);
@@ -123,7 +123,7 @@ describe('Matrix round-trip via hidden-id row (M12.9, docs/15-template-instance.
   it('matrixSummaries reports instance count, column count, and totals for the sheet', async () => {
     const original = makeSekolahProject(twoInstances);
     const recap = computeRecap(original, taxonomy);
-    const blob = exportXlsx(original, recap);
+    const blob = await exportXlsx(original, recap);
     const file = new File([blob], 'sekolah.xlsx');
 
     const preview = await processXlsxImport(file);
@@ -147,7 +147,7 @@ describe('Matrix round-trip via hidden-id row (M12.9, docs/15-template-instance.
     }));
     const original = makeSekolahProject(many);
     const recap = computeRecap(original, taxonomy);
-    const blob = exportXlsx(original, recap);
+    const blob = await exportXlsx(original, recap);
     const file = new File([blob], 'sekolah-300.xlsx');
 
     const preview = await processXlsxImport(file);
@@ -160,7 +160,7 @@ describe('Matrix import via label fallback (no hidden-id row — hand-built file
   it('matches columns by group label + level text when the hidden row is stripped out', async () => {
     const original = makeSekolahProject(twoInstances);
     const recap = computeRecap(original, taxonomy);
-    const blob = exportXlsx(original, recap);
+    const blob = await exportXlsx(original, recap);
     const arrayBuffer = await blob.arrayBuffer();
     const wb = XLSX.read(arrayBuffer, { type: 'array' });
 
@@ -197,7 +197,7 @@ describe('Fatal-for-that-sheet-only (doc 15 §4)', () => {
   it('a matrix sheet whose nomor is absent from Struktur is skipped, but the rest of the import still commits', async () => {
     const original = makeSekolahProject(twoInstances);
     const recap = computeRecap(original, taxonomy);
-    const blob = exportXlsx(original, recap);
+    const blob = await exportXlsx(original, recap);
     const arrayBuffer = await blob.arrayBuffer();
     const wb = XLSX.read(arrayBuffer, { type: 'array' });
 

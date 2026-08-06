@@ -1,6 +1,5 @@
-import * as XLSX from 'xlsx';
 import { Project } from '@/models/project';
-import { Recap } from '@/models/derived';
+import { Recap, RecapBucket } from '@/models/derived';
 import { ProjectIndex } from '@/persistence/types';
 import { OpdEntry, resolveOpdEntry } from '@/config/daftarOpd';
 import { computeTopLevel, sumTopLevelTotals, isEntryStale } from '@/selectors/dashboard';
@@ -53,7 +52,8 @@ const BLANK: Row = [];
  * pengesahan. Sumber angka murni `recap` yang sudah dihitung `computeRecap`
  * — tidak ada agregasi baru di sini.
  */
-export function exportLaporan(project: Project, recap: Recap): Blob {
+export async function exportLaporan(project: Project, recap: Recap): Promise<Blob> {
+  const xlsx = await import('xlsx');
   const rows: Row[] = [];
 
   // --- Kop ---
@@ -129,19 +129,26 @@ export function exportLaporan(project: Project, recap: Recap): Blob {
   rows.push(BLANK);
   rows.push(['( ......................................... )', '', '', `( ${project.meta.penyusun || '.........................................'} )`]);
 
-  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const ws = xlsx.utils.aoa_to_sheet(rows);
   ws['!cols'] = [{ wch: 40 }, { wch: 16 }, { wch: 14 }, { wch: 14 }, { wch: 12 }];
 
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Laporan');
+  const wb = xlsx.utils.book_new();
+  xlsx.utils.book_append_sheet(wb, ws, 'Laporan');
 
-  const arrayBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const arrayBuffer = xlsx.write(wb, { bookType: 'xlsx', type: 'array' });
   return new Blob([arrayBuffer], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });
 }
 
-export interface LaporanPemerintahOptions extends GlobalBreakdownOptions {}
+export interface LaporanPemerintahOptions extends GlobalBreakdownOptions {
+  /** Fase 2.3 — RecapDashboard.tsx sudah menghitung breakdown per-kategori
+   * ini sendiri (lewat worker, lihat workers/client.ts) untuk tampilan
+   * "Per Kategori (Se-Pemda)"-nya. Kalau di-pass, dipakai apa adanya dan
+   * `computeGlobalBreakdown` (loop baca N body project) TIDAK dijalankan
+   * ulang di sini — laporan cuma mem-format ulang angka yang sama. */
+  precomputedBreakdown?: RecapBucket[];
+}
 
 /**
  * Laporan ringkas se-pemda (konsolidasi semua OPD tersimpan). Reuse penuh
@@ -157,11 +164,12 @@ export async function buildLaporanPemerintahWorkbook(
   readProject: (id: string) => Promise<Project | null>,
   opts: LaporanPemerintahOptions = {}
 ): Promise<Blob> {
+  const xlsx = await import('xlsx');
   const { topLevel, doubleLinked } = computeTopLevel(fullIndex.entries);
   const totals = sumTopLevelTotals(topLevel);
   const staleCount = topLevel.filter(isEntryStale).length;
   const problemCount = topLevel.filter(e => (e.findingCounts?.errors ?? 0) > 0).length;
-  const breakdown = await computeGlobalBreakdown(topLevel, readProject, opts);
+  const breakdown = opts.precomputedBreakdown ?? (await computeGlobalBreakdown(topLevel, readProject, opts));
 
   const rows: Row[] = [];
 
@@ -225,13 +233,13 @@ export async function buildLaporanPemerintahWorkbook(
   rows.push(BLANK);
   rows.push(['( ......................................... )', '', '', '( ......................................... )']);
 
-  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const ws = xlsx.utils.aoa_to_sheet(rows);
   ws['!cols'] = [{ wch: 16 }, { wch: 34 }, { wch: 16 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 14 }];
 
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Laporan Se-Pemda');
+  const wb = xlsx.utils.book_new();
+  xlsx.utils.book_append_sheet(wb, ws, 'Laporan Se-Pemda');
 
-  const arrayBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const arrayBuffer = xlsx.write(wb, { bookType: 'xlsx', type: 'array' });
   return new Blob([arrayBuffer], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });

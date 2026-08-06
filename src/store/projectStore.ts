@@ -49,9 +49,15 @@ function purgeInstanceColumns(
 
 export interface ProjectState {
   project: Project | null;
+  // Fase 1.1: penanda "project ini sudah diedit sejak dimuat" untuk bootstrap
+  // memutuskan kapan menjadwalkan autosave. `rev` naik pada tiap commit/undo/
+  // redo yang benar-benar mengubah isi; setProject mereset ke 0 (baru dimuat,
+  // belum ada yang perlu disimpan) — KECUALI saat getProject melakukan migrasi
+  // sekali-jalan, di mana rev harus 1 supaya body termigrasi tetap tersimpan.
+  rev: number;
 
   // Store Management
-  setProject: (project: Project | null) => void;
+  setProject: (project: Project | null, opts?: { rev?: number }) => void;
   commit: (
     label: string,
     recipe: (draft: Project) => void,
@@ -138,9 +144,10 @@ export interface ProjectState {
 
 export const useProjectStore = create<ProjectState>((set, get) => ({
   project: null,
+  rev: 0,
 
-  setProject: (project: Project | null) => {
-    set({ project });
+  setProject: (project: Project | null, opts) => {
+    set({ project, rev: opts?.rev ?? 0 });
     useHistoryStore.getState().clearHistory();
     // Seleksi node lama tidak relevan lagi untuk proyek baru — kalau tidak
     // dibersihkan, panel properti (kolom 3) tetap menampilkan form node dari
@@ -159,7 +166,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
     if (forward.length === 0) return; // No-op guard
 
-    set({ project: next });
+    set({ project: next, rev: get().rev + 1 });
 
     if (opts?.transient) return;
 
@@ -177,7 +184,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
     return useHistoryStore.getState().undo((inversePatches: Patch[]) => {
       const restored = applyPatches(get().project!, inversePatches);
-      set({ project: restored });
+      set({ project: restored, rev: get().rev + 1 });
     });
   },
 
@@ -187,7 +194,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
     return useHistoryStore.getState().redo((forwardPatches: Patch[]) => {
       const restored = applyPatches(get().project!, forwardPatches);
-      set({ project: restored });
+      set({ project: restored, rev: get().rev + 1 });
     });
   },
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useRecap } from '@/selectors/recap';
+import { useRecap } from '@/hooks/useRecap';
 import { useReactFlow } from '@xyflow/react';
 import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';

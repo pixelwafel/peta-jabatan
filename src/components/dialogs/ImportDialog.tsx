@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { processXlsxImport, ImportPreview } from '@/import/xlsxImporter';
 import { importJsonFile, JsonImportResult } from '@/import/jsonImporter';
 import { buildImportedProject } from '@/import/buildImportedProject';
@@ -8,6 +8,7 @@ import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
 import { uuid } from '@/utils/uuid';
 import { saveProject, getProjectIndex } from '@/persistence/storage';
+import { flushSave } from '@/persistence/autosave';
 import { ProjectIndex } from '@/persistence/types';
 import { Project } from '@/models/project';
 import { exportXlsxTemplate } from '@/export/xlsxExporter';
@@ -54,7 +55,21 @@ interface QueuedImport {
   status: QueueStatus;
   preview: ImportPreview | null;
   errorMessage?: string;
+  /** Fase 2.4 — dibangun SEKALI saat parse selesai (di parseEntry), bukan
+   * dihitung ulang tiap kali `stagedByClientId` di-memo. `null` kalau
+   * previewnya tidak canCommit. */
+  builtProject?: Project | null;
 }
+
+// Fase 2.4 — batasi fan-out parse XLSX/JSON ke beberapa job konkuren
+// (bukan meluncurkan SEMUA berkas sekaligus): XLSX.read() sepenuhnya sinkron
+// (docs — lihat catatan SheetJS CE di rencana Fase 2), jadi drop 50 berkas
+// sekaligus berarti 50 blocking task berebut giliran tanpa kendali. Batas
+// ini murni soal berapa banyak yang BOLEH berjalan "sekaligus" secara
+// logis (tiap parseEntry sendiri masih blocking saat gilirannya) — bukan
+// paralelisme sungguhan tanpa Worker (itu baru ada kalau xlsx.worker.ts
+// dibangun, sengaja ditunda — lihat catatan penutup Fase 2.4).
+const MAX_CONCURRENT_PARSES = 3;
 
 function splitFindings(findings: Finding[]) {
   return {
@@ -267,13 +282,27 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({ onClose, onImported,
     getProjectIndex().then(setStoredIndex);
   }, []);
 
+  // Fase 2.4 — semaphore kecil: `pendingParseRef` adalah antrean berkas yang
+  // BELUM mulai diparse, `activeParseCountRef` menghitung yang sedang
+  // berjalan. `pumpParseQueue` dipanggil tiap kali ada slot kosong (mulai,
+  // atau satu parse selesai) supaya paling banyak MAX_CONCURRENT_PARSES
+  // berjalan pada satu waktu, sisanya menunggu giliran alih-alih semuanya
+  // diluncurkan sekaligus lewat satu `for` loop seperti sebelumnya.
+  const pendingParseRef = useRef<{ clientId: string; file: File }[]>([]);
+  const activeParseCountRef = useRef(0);
+
   const parseEntry = async (clientId: string, file: File) => {
     try {
       const preview = file.name.toLowerCase().endsWith('.json')
         ? jsonResultToPreview(await importJsonFile(file))
         : await processXlsxImport(file);
+      // Bangun project SEKALI di sini (bukan di stagedByClientId useMemo,
+      // yang dulu menjalankan ulang buildImportedProject untuk SELURUH
+      // antrean tiap kali queue berubah — lihat catatan di QueuedImport).
+      const fileName = file.name.replace(/\.[^/.]+$/, '');
+      const builtProject = preview.canCommit ? buildImportedProject(preview, fileName) : null;
       setQueue(prev =>
-        prev.map(q => (q.clientId === clientId ? { ...q, status: 'ready', preview } : q))
+        prev.map(q => (q.clientId === clientId ? { ...q, status: 'ready', preview, builtProject } : q))
       );
     } catch (err) {
       console.error('Import processing error:', err);
@@ -284,6 +313,17 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({ onClose, onImported,
             : q
         )
       );
+    }
+  };
+
+  const pumpParseQueue = () => {
+    while (activeParseCountRef.current < MAX_CONCURRENT_PARSES && pendingParseRef.current.length > 0) {
+      const next = pendingParseRef.current.shift()!;
+      activeParseCountRef.current++;
+      parseEntry(next.clientId, next.file).finally(() => {
+        activeParseCountRef.current--;
+        pumpParseQueue();
+      });
     }
   };
 
@@ -305,9 +345,8 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({ onClose, onImported,
     setQueue(prev => [...prev, ...entries]);
     setBatchResult(null);
 
-    for (const entry of entries) {
-      parseEntry(entry.clientId, entry.file);
-    }
+    pendingParseRef.current.push(...entries.map(e => ({ clientId: e.clientId, file: e.file })));
+    pumpParseQueue();
   };
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -317,12 +356,18 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({ onClose, onImported,
 
   const removeEntry = (clientId: string) => {
     setQueue(prev => prev.filter(q => q.clientId !== clientId));
+    // Batal juga berkas yang masih menunggu giliran parse (belum sempat
+    // mulai) — tidak ada gunanya memproses berkas yang sudah dihapus user.
+    pendingParseRef.current = pendingParseRef.current.filter(p => p.clientId !== clientId);
   };
 
   const commitOne = async (entry: QueuedImport) => {
     if (!entry.preview || !entry.preview.canCommit) return null;
     const fileName = entry.file.name.replace(/\.[^/.]+$/, '');
-    const project = buildImportedProject(entry.preview, fileName);
+    // Reuse builtProject dari parseEntry (shallow clone — di bawah `.id`
+    // bisa dimutasi kalau staging 'replace', jangan sampai memutasi objek
+    // yang masih dipegang stagedByClientId punya entry lain).
+    const project = entry.builtProject ? { ...entry.builtProject } : buildImportedProject(entry.preview, fileName);
 
     // Baris "Impor" per-item di antrian multi-berkas ikut hormati staging
     // (doc 14 §4): kalau statusnya 'replace', timpa project yang sudah ada
@@ -357,14 +402,15 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({ onClose, onImported,
     const map = new Map<string, StagedEntry>();
     if (queue.length <= 1 || !storedIndex) return map;
 
+    // Fase 2.4 — q.builtProject sudah dibangun sekali di parseEntry; tidak
+    // ada lagi buildImportedProject yang dijalankan ulang di sini tiap kali
+    // queue berubah (mis. satu baris lain di-commit) untuk SELURUH antrean.
     const parsedFiles: ParsedFile[] = queue
       .filter(q => q.status === 'ready')
       .map(q => ({
         clientId: q.clientId,
         fileName: q.file.name,
-        project: q.preview?.canCommit
-          ? buildImportedProject(q.preview, q.file.name.replace(/\.[^/.]+$/, ''))
-          : null,
+        project: q.builtProject ?? null,
         parseFailed: !q.preview?.canCommit,
       }));
 
@@ -392,6 +438,9 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({ onClose, onImported,
         // jadi proyek aktif & langsung navigasi ke outline.
         const project = await commitOne(queue[0]);
         if (project) {
+          // Fase 1.1: jangan buang save 500ms milik project yang sedang
+          // terbuka saat import langsung menggantinya jadi project aktif.
+          await flushSave();
           setProject(project);
           showToast(`Proyek "${project.meta.namaOPD}" berhasil diimpor (${project.nodes.length} node).`);
           onImported();
@@ -447,8 +496,8 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({ onClose, onImported,
     showToast('Batch dibatalkan — berkas yang sempat tertulis sudah dihapus.', 'error');
   };
 
-  const handleDownloadTemplate = () => {
-    const blob = exportXlsxTemplate();
+  const handleDownloadTemplate = async () => {
+    const blob = await exportXlsxTemplate();
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

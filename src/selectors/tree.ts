@@ -23,6 +23,41 @@ export function sortSiblings(
   });
 }
 
+export interface FlatTreeRow {
+  id: string;
+  depth: number;
+  hasChildren: boolean;
+}
+
+/**
+ * Fase 2.5 — meratakan `TreeNode[]` (hasil buildTree, bercabang) jadi satu
+ * array baris top-down, melompati subtree node yang `collapsed` (persis
+ * kondisi yang dulu diputuskan lewat rekursi `!node.collapsed && children.map(...)`
+ * di komponen tree/TreeView.tsx). Dipisah jadi selector murni supaya
+ * TreeView bisa mem-virtualisasi (windowing lewat utils/virtualization.ts,
+ * pola sama seperti InstanceGrid.tsx) tanpa perlu me-render SELURUH pohon ke
+ * DOM sekaligus — cuma baris di viewport yang dirender.
+ *
+ * `hasChildren` dihitung dari `t.children.length` (struktur PENUH, sebelum
+ * collapse dipertimbangkan) — bukan dari jumlah baris yang akhirnya
+ * ditampilkan — supaya node yang collapsed tetap menunjukkan chevron untuk
+ * dibuka lagi.
+ */
+export function flattenVisibleTree(tree: TreeNode[], nodeById: Map<string, OrgNode>): FlatTreeRow[] {
+  const rows: FlatTreeRow[] = [];
+  const walk = (list: TreeNode[]) => {
+    for (const t of list) {
+      const node = nodeById.get(t.id);
+      rows.push({ id: t.id, depth: t.depth, hasChildren: t.children.length > 0 });
+      if (t.children.length > 0 && !node?.collapsed) {
+        walk(t.children);
+      }
+    }
+  };
+  walk(tree);
+  return rows;
+}
+
 export function buildTree(nodes: OrgNode[], edges: OrgEdge[]): TreeNode[] {
   const idx = getStructureIndex(nodes, edges);
   const root = designatedRoot(nodes, edges);

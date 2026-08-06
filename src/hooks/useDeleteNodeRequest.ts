@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
 import { computeDeleteImpact } from '@/selectors/deleteImpact';
@@ -18,40 +19,49 @@ import { computeDeleteImpact } from '@/selectors/deleteImpact';
  *   kalau node ini sendiri tidak berinduk.
  */
 export function useDeleteNodeRequest() {
-  const project = useProjectStore(s => s.project);
+  // Fase 1.5: dulu hook ini subscribe ke SELURUH s.project dan mengembalikan
+  // closure baru tiap render — dua-duanya membatalkan manfaat React.memo di
+  // TreeRow (satu prop dengan identitas baru tiap keystroke = shallow compare
+  // memo gagal untuk SEMUA baris, bukan cuma tombol Hapus). Baca project
+  // fresh via getState() saat benar-benar dipanggil, dan bungkus useCallback
+  // supaya referensi fungsi yang dikembalikan stabil.
   const deleteNode = useProjectStore(s => s.deleteNode);
   const openConfirm = useUiStore(s => s.openConfirm);
   const openDeleteNodeDialog = useUiStore(s => s.openDeleteNodeDialog);
 
-  return (id: string) => {
-    if (!project) return;
-    const node = project.nodes.find(n => n.id === id);
-    if (!node) return;
+  return useCallback(
+    (id: string) => {
+      const project = useProjectStore.getState().project;
+      if (!project) return;
+      const node = project.nodes.find(n => n.id === id);
+      if (!node) return;
 
-    const { directChildCount, subtreeCount, hasParent } = computeDeleteImpact(
-      project.nodes,
-      project.edges,
-      id
-    );
+      const { directChildCount, subtreeCount, hasParent } = computeDeleteImpact(
+        project.nodes,
+        project.edges,
+        id
+      );
 
-    if (directChildCount === 0) {
-      openConfirm({
-        title: `Hapus "${node.nama}"?`,
-        body: 'Node ini akan dihapus dari struktur. Tindakan ini bisa di-undo.',
-        confirmLabel: 'Hapus',
-        danger: true,
-        onConfirm: () => deleteNode(id, 'node-only'),
+      if (directChildCount === 0) {
+        openConfirm({
+          title: `Hapus "${node.nama}"?`,
+          body: 'Node ini akan dihapus dari struktur. Tindakan ini bisa di-undo.',
+          confirmLabel: 'Hapus',
+          danger: true,
+          onConfirm: () => deleteNode(id, 'node-only'),
+        });
+        return;
+      }
+
+      openDeleteNodeDialog({
+        nodeName: node.nama,
+        directChildCount,
+        subtreeCount,
+        orphanWarning: !hasParent,
+        onDeleteNodeOnly: () => deleteNode(id, 'node-only'),
+        onDeleteSubtree: () => deleteNode(id, 'subtree'),
       });
-      return;
-    }
-
-    openDeleteNodeDialog({
-      nodeName: node.nama,
-      directChildCount,
-      subtreeCount,
-      orphanWarning: !hasParent,
-      onDeleteNodeOnly: () => deleteNode(id, 'node-only'),
-      onDeleteSubtree: () => deleteNode(id, 'subtree'),
-    });
-  };
+    },
+    [deleteNode, openConfirm, openDeleteNodeDialog]
+  );
 }

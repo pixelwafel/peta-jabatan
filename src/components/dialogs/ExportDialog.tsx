@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useProjectStore } from '@/store/projectStore';
-import { useRecap } from '@/selectors/recap';
+import { useRecap } from '@/hooks/useRecap';
 import { exportFilename, laporanFilename } from '@/export/filename';
 import { exportXlsx } from '@/export/xlsxExporter';
 import { exportCsv } from '@/export/csvExporter';
@@ -68,7 +68,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ onClose }) => {
       }
 
       if (exportXlsxSelected) {
-        const xlsxBlob = exportXlsx(project, recap);
+        const xlsxBlob = await exportXlsx(project, recap);
         downloadBlob(xlsxBlob, exportFilename(project, 'xlsx'));
         await new Promise(r => setTimeout(r, 200));
       }
@@ -85,7 +85,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ onClose }) => {
       }
 
       if (exportLaporanSelected) {
-        const laporanBlob = exportLaporan(project, recap);
+        const laporanBlob = await exportLaporan(project, recap);
         downloadBlob(laporanBlob, laporanFilename(project, 'xlsx'));
         await new Promise(r => setTimeout(r, 200));
       }

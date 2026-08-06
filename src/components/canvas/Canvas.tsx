@@ -19,11 +19,10 @@ import { useUiStore } from '@/store/uiStore';
 import { visibleNodeIds } from '@/selectors/visibility';
 import { hierarchyEdges } from '@/utils/edges';
 import { nodeTotals, subtreeTotals } from '@/selectors/totals';
-import { childrenOf } from '@/selectors/navigation';
 import { isLocked } from '@/selectors/guards';
 import { kategoriWarna } from '@/config/resolver';
 import { useLiveLayout } from '@/hooks/useLiveLayout';
-import { useRecap } from '@/selectors/recap';
+import { useRecap } from '@/hooks/useRecap';
 import { getStructureIndex } from '@/selectors/structureIndex';
 import { buildTemplateUnitIds, containingTemplateUnitId, countInstancesFor } from '@/selectors/templateInstance';
 
@@ -91,6 +90,11 @@ const InnerCanvas: React.FC = () => {
 
   // Project store nodes -> React Flow nodes
   const rfNodes: RfNode[] = useMemo(() => {
+    // Fase 1.4: idx dihitung SEKALI di luar .map() (cache-hit murah berkat
+    // Fase 1.3 kalau nodes/edges sama dengan panggilan lain di render ini),
+    // dipakai untuk childCount langsung lewat childIds — dulu childrenOf(...)
+    // dipanggil per node di dalam .map(), O(N) per panggilan × N node.
+    const idx = getStructureIndex(nodes, edges);
     return nodes
       .filter(n => visible.has(n.id))
       .map(n => ({
@@ -106,7 +110,7 @@ const InnerCanvas: React.FC = () => {
             n.type === 'unit'
               ? recap?.subtreeTotals.get(n.id) ?? subtreeTotals(nodes, edges, n.id)
               : null,
-          childCount: childrenOf(nodes, edges, n.id).length,
+          childCount: idx.childIds.get(n.id)?.length ?? 0,
           hasFindings: false,
           showJenjang: showJenjangOnCard,
           locked: isLocked(nodes, edges, n.id),
@@ -115,6 +119,18 @@ const InnerCanvas: React.FC = () => {
         selected: selectedNodeIds.includes(n.id),
       }));
   }, [nodes, edges, visible, selectedNodeIds, showJenjangOnCard, liveLayout, recap, instanceMarkers]);
+
+  // Fase 1.4: warna MiniMap per node dihitung SEKALI di sini (useMemo), bukan
+  // di dalam callback nodeColor React Flow — callback itu dipanggil per node
+  // per frame minimap, dan dulu isinya nodes.find(...) per panggilan, jadi
+  // O(N) per frame × N node = O(N²) tiap kali minimap redraw.
+  const nodeColorById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const n of nodes) {
+      map.set(n.id, kategoriWarna(n));
+    }
+    return map;
+  }, [nodes]);
 
   // Project store edges -> React Flow edges
   const rfEdges: RfEdge[] = useMemo(() => {
@@ -182,10 +198,7 @@ const InnerCanvas: React.FC = () => {
         <Background variant="dots" gap={16} color="#334155" />
         <Controls showInteractive={false} />
         <MiniMap
-          nodeColor={n => {
-            const orgNode = nodes.find(x => x.id === n.id);
-            return kategoriWarna(orgNode);
-          }}
+          nodeColor={n => nodeColorById.get(n.id) ?? kategoriWarna(undefined)}
           maskColor="rgba(15, 23, 42, 0.7)"
           style={{ backgroundColor: '#0f172a' }}
           pannable

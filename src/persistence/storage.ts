@@ -4,6 +4,14 @@ import { ProjectIndex, ProjectIndexEntry } from './types';
 import { hierarchyEdges } from '@/utils/edges';
 import { compareNomor } from '@/utils/numbering';
 import { mergeStrukturalHeadsIntoUnits } from '@/utils/structuralMerge';
+// Fase 2.1 — import statis kembali. Siklus lama (storage.ts -> selectors/
+// validation,recap -> linkResolver.ts -> store/projectStore.ts ->
+// store/projectIndexStore.ts -> balik ke getProjectIndex di modul ini) sudah
+// putus: linkResolver.ts tidak lagi mengimpor store (lihat
+// setLiveResolveHandler di selectors/linkResolver.ts & store/linkCacheRefresh.ts).
+import { getCachedValidation } from '@/selectors/validation';
+import { getCachedRecap } from '@/selectors/recap';
+import { taxonomy } from '@/config/taxonomy';
 
 // Exported supaya modul persistence lain (mis. persistence/customOpd.ts) bisa
 // simpan state kecil di database/objectStore yang sama tanpa membuka handle baru.
@@ -53,16 +61,39 @@ export async function getProject(id: string): Promise<Project | null> {
 }
 
 /**
+ * Sama seperti getProject, tapi juga melaporkan apakah body dimigrasi (order
+ * backfill dan/atau merge kepala struktural) selama pemuatan — dipakai
+ * bootstrap.ts (Fase 1.1) supaya body yang berubah karena migrasi tetap
+ * ditulis sekali, sementara body yang TIDAK berubah tidak memicu autosave
+ * saat project cuma dibuka/dibaca.
+ */
+export async function getProjectWithMigrationFlag(
+  id: string
+): Promise<{ project: Project; migrated: boolean } | null> {
+  const key = getProjectKey(id);
+  const raw = await get<Project>(key, customStore);
+  if (!raw) return null;
+  return normalizeProjectDetailed(raw);
+}
+
+/**
  * Proyek lama tersimpan tanpa field `order` pada node (urutan sibling dulu
  * disimpulkan dari `position.x`). Migrasi sekali jalan: turunkan `order`
  * dari urutan lama supaya tampilan outline tidak berubah setelah upgrade.
  */
 export function normalizeProject(project: Project): Project {
-  project = normalizeStrukturalHeads(project);
+  return normalizeProjectDetailed(project).project;
+}
+
+function normalizeProjectDetailed(project: Project): { project: Project; migrated: boolean } {
+  const headsResult = normalizeStrukturalHeads(project);
+  project = headsResult.project;
+  let migrated = headsResult.migrated;
 
   if (project.nodes.every(n => typeof n.order === 'number')) {
-    return project;
+    return { project, migrated };
   }
+  migrated = true;
 
   const parentIdByChild = new Map<string, string>();
   for (const e of hierarchyEdges(project.edges)) {
@@ -92,7 +123,7 @@ export function normalizeProject(project: Project): Project {
     });
   }
 
-  return project;
+  return { project, migrated };
 }
 
 /**
@@ -100,10 +131,10 @@ export function normalizeProject(project: Project): Project {
  * bawah unitnya. Migrasi sekali jalan (idempotent, no-op setelah proyek
  * sudah bermigrasi): lipat ke `unit.kepalaUnit`. Lihat utils/structuralMerge.ts.
  */
-function normalizeStrukturalHeads(project: Project): Project {
+function normalizeStrukturalHeads(project: Project): { project: Project; migrated: boolean } {
   const result = mergeStrukturalHeadsIntoUnits(project.nodes, project.edges);
-  if (result.mergedCount === 0) return project;
-  return { ...project, nodes: result.nodes, edges: result.edges };
+  if (result.mergedCount === 0) return { project, migrated: false };
+  return { project: { ...project, nodes: result.nodes, edges: result.edges }, migrated: true };
 }
 
 export async function saveProject(project: Project): Promise<void> {
@@ -145,16 +176,12 @@ export async function buildIndexEntry(
 ): Promise<ProjectIndexEntry> {
   const posCount = project.nodes.filter(n => n.type === 'jabatan').length;
 
-  // Import dinamis, bukan statis: selectors/validation.ts & selectors/recap.ts
-  // -> (linkResolver.ts ->) store/projectStore.ts -> store/projectIndexStore.ts
-  // -> balik ke modul ini (getProjectIndex). Import statis akan bikin siklus;
-  // import dinamis aman karena baru di-resolve saat fungsi ini benar-benar
-  // dipanggil.
-  const { validateProject } = await import('@/selectors/validation');
-  const { computeRecap } = await import('@/selectors/recap');
-  const { taxonomy } = await import('@/config/taxonomy');
-
-  const findings = validateProject(project);
+  // Fase 1.2: pakai varian ter-memo (WeakMap keyed di identitas `project`) —
+  // autosave (updateIndexForProject) memanggil buildIndexEntry atas project
+  // yang BARU SAJA divalidasi/direkap Toolbar/ReadinessDialog/Canvas dalam
+  // render yang sama; getCachedValidation/getCachedRecap membaca hasil itu
+  // dari cache alih-alih menghitung ulang dari nol.
+  const findings = getCachedValidation(project);
   const findingCounts = {
     errors: findings.filter(f => f.severity === 'error').length,
     warnings: findings.filter(f => f.severity === 'warning').length,
@@ -163,7 +190,7 @@ export async function buildIndexEntry(
   // total dari computeRecap (bukan projectTotals) supaya link node ikut
   // teragregasi (docs/13-link-nodes.md §3) — tanpa ini, total project yang
   // punya tautan akan tampak lebih kecil dari kenyataan di dashboard.
-  const totals = computeRecap(project, taxonomy, index).total;
+  const totals = getCachedRecap(project, taxonomy, index).total;
 
   return {
     id: project.id,
@@ -208,26 +235,47 @@ export async function updateIndexForProject(project: Project): Promise<void> {
   await saveProjectIndex(index);
 }
 
+/**
+ * Fase 2.3 — memori terbatas: SEBELUMNYA fungsi ini menahan seluruh isi
+ * `bodies: Project[]` di memori sepanjang eksekusi (ratusan OPD × body
+ * penuh, sekaligus). Sekarang tiap pass membaca satu body dari IndexedDB,
+ * memakainya untuk `buildIndexEntry`, lalu MELEPASNYA (tidak disimpan ke
+ * array) sebelum lanjut ke key berikutnya — jejak memori tambahan ~O(1
+ * body) alih-alih O(N body), dengan harga N key dibaca dua kali (sekali per
+ * pass). idb-keyval tidak mengekspos cursor sungguhan (`keys()`/`entries()`
+ * sudah membuffer semuanya), jadi "cursor-based" di sini berarti iterasi
+ * key-demi-key lewat `get()`, bukan cursor IDB literal — cukup untuk tujuan
+ * yang sama: tidak pernah menahan N body sekaligus.
+ */
 export async function rebuildIndexFromStorage(): Promise<ProjectIndex> {
   const allKeys = (await keys(customStore)) as string[];
   const projectKeys = allKeys.filter(k => typeof k === 'string' && k.startsWith(PROJECT_PREFIX));
 
-  const bodies: Project[] = [];
+  // Pass 1: bangun entry tanpa index (linkedCodes-nya sendiri sudah benar,
+  // tapi resolusi link ANTAR-project dalam batch ini belum bisa) — dipakai
+  // sebagai `index` pass 2. Body project TIDAK disimpan di antara iterasi.
+  const pass1: ProjectIndexEntry[] = [];
   for (const pk of projectKeys) {
     try {
       const p = await get<Project>(pk, customStore);
-      if (p && p.id && p.meta) bodies.push(p);
+      if (p && p.id && p.meta) pass1.push(await buildIndexEntry(p));
     } catch (err) {
       console.warn(`Failed reading project key ${pk}:`, err);
     }
   }
-
-  // Two-pass: pass 1 tanpa index (linked-nya sendiri belum bisa diresolusi,
-  // tapi linkedCodes-nya sudah benar) supaya pass 2 punya index lengkap untuk
-  // resolusi link antar-project dalam batch yang sama.
-  const pass1 = await Promise.all(bodies.map(p => buildIndexEntry(p)));
   const pass1Index: ProjectIndex = { version: 1, activeId: null, entries: pass1 };
-  const entries = await Promise.all(bodies.map(p => buildIndexEntry(p, undefined, pass1Index)));
+
+  // Pass 2: baca ulang tiap body (sekali lagi, satu per satu) supaya
+  // resolusi link antar-project punya index lengkap dari pass 1.
+  const entries: ProjectIndexEntry[] = [];
+  for (const pk of projectKeys) {
+    try {
+      const p = await get<Project>(pk, customStore);
+      if (p && p.id && p.meta) entries.push(await buildIndexEntry(p, undefined, pass1Index));
+    } catch (err) {
+      console.warn(`Failed reading project key ${pk}:`, err);
+    }
+  }
 
   entries.sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
   const activeId = entries[0]?.id ?? null;

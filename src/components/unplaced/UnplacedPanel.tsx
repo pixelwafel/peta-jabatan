@@ -4,7 +4,7 @@ import { useUiStore } from '@/store/uiStore';
 import { getStructureIndex } from '@/selectors/structureIndex';
 import { designatedRoot, ancestorsOf } from '@/selectors/navigation';
 import { ParentSelect } from '../property/ParentSelect';
-import { NODE_W, nodeHeight } from '@/utils/layout';
+import { NODE_W, nodeHeight, computeLayoutCached } from '@/utils/layout';
 import { useReactFlow } from '@xyflow/react';
 import { AlertCircle, FileText, Folder, CheckCircle2 } from 'lucide-react';
 
@@ -37,8 +37,21 @@ export const UnplacedPanel: React.FC = () => {
 
     const target = project.nodes.find(n => n.id === nodeId);
     if (target) {
+      // Fase 1.6: pakai posisi Dagre yang sama dengan yang benar-benar
+      // dirender Canvas (bukan project.nodes[].position mentah — field itu
+      // sebagian besar warisan lama, canvas mode preview selalu memakai
+      // layout live). Dulu klik fokus di sini bisa center ke titik yang
+      // beda dari posisi kartu yang sebenarnya tampil, KHUSUSNYA untuk node
+      // unplaced yang posisi Dagre-nya (kolom di kanan) sengaja berbeda dari
+      // position tersimpannya.
+      const layout = computeLayoutCached(project.nodes, project.edges, {
+        direction: 'TB',
+        scope: 'all',
+        showJenjang: showJenjangOnCard,
+      });
+      const pos = layout.get(nodeId) ?? target.position;
       const h = nodeHeight(target, showJenjangOnCard);
-      setCenter(target.position.x + NODE_W / 2, target.position.y + h / 2, {
+      setCenter(pos.x + NODE_W / 2, pos.y + h / 2, {
         zoom: 1.2,
         duration: 300,
       });

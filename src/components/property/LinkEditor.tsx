@@ -5,6 +5,7 @@ import { useProjectIndexStore } from '@/store/projectIndexStore';
 import { useUiStore } from '@/store/uiStore';
 import { resolveLink } from '@/selectors/linkResolver';
 import { getProject } from '@/persistence/storage';
+import { flushSave } from '@/persistence/autosave';
 import { ProjectIndex } from '@/persistence/types';
 import { Link2, ExternalLink, Unlink } from 'lucide-react';
 
@@ -59,6 +60,7 @@ export const LinkEditor: React.FC<LinkEditorProps> = ({ node, hasChildren }) => 
 
     const handleOpen = async () => {
       if (!resolved.targetProjectId) return;
+      await flushSave();
       const target = await getProject(resolved.targetProjectId);
       if (target) setProject(target);
     };

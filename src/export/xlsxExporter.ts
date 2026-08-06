@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import type * as XLSX from 'xlsx';
 import { Project } from '@/models/project';
 import { Recap } from '@/models/derived';
 import { taxonomy } from '@/config/taxonomy';
@@ -6,12 +6,22 @@ import { COLUMNS, getCustomColumns } from './columnSpec';
 import { buildExportRows } from './rowGenerator';
 import { buildMatrixSheets } from './matrixExporter';
 
-function forceTextFormat(ws: XLSX.WorkSheet, colIndex: number): void {
+// Fase 1.8 — `xlsx` (SheetJS) di-dynamic-import, bukan static import. Library
+// ini salah satu kontributor terbesar ke bundle 1,6MB sebelumnya; import
+// TYPE saja (import type * as XLSX) tidak membawa runtime code apa pun, jadi
+// semua anotasi tipe di bawah (XLSX.WorkSheet dst) tetap type-check normal.
+// Nilai RUNTIME (xlsx.utils, xlsx.write) di-load sekali di exportXlsx/
+// exportXlsxTemplate lalu dioper sebagai parameter ke helper privat di bawah
+// — helper-nya sendiri tetap sinkron (kerjanya memang sinkron begitu modul
+// termuat), cuma titik masuknya yang async.
+type XlsxModule = typeof XLSX;
+
+function forceTextFormat(xlsx: XlsxModule, ws: XLSX.WorkSheet, colIndex: number): void {
   if (colIndex < 0) return;
-  const range = XLSX.utils.decode_range(ws['!ref'] ?? 'A1');
+  const range = xlsx.utils.decode_range(ws['!ref'] ?? 'A1');
 
   for (let r = range.s.r + 1; r <= range.e.r; ++r) {
-    const cellRef = XLSX.utils.encode_cell({ r, c: colIndex });
+    const cellRef = xlsx.utils.encode_cell({ r, c: colIndex });
     const cell = ws[cellRef];
     if (cell) {
       cell.t = 's';
@@ -23,7 +33,7 @@ function forceTextFormat(ws: XLSX.WorkSheet, colIndex: number): void {
   }
 }
 
-function buildReferensiSheet(): XLSX.WorkSheet {
+function buildReferensiSheet(xlsx: XlsxModule): XLSX.WorkSheet {
   const rows: (string | number)[][] = [
     ['Kategori', 'ID Kategori', 'Jenjang', 'ID Jenjang', 'Singkatan'],
   ];
@@ -47,12 +57,12 @@ function buildReferensiSheet(): XLSX.WorkSheet {
     }
   }
 
-  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const ws = xlsx.utils.aoa_to_sheet(rows);
   ws['!cols'] = [{ wch: 22 }, { wch: 14 }, { wch: 20 }, { wch: 16 }, { wch: 10 }];
   return ws;
 }
 
-function buildRekapSheet(recap: Recap): XLSX.WorkSheet {
+function buildRekapSheet(xlsx: XlsxModule, recap: Recap): XLSX.WorkSheet {
   const rows: (string | number)[][] = [
     ['REKAPITULASI PETA JABATAN'],
     [''],
@@ -91,12 +101,12 @@ function buildRekapSheet(recap: Recap): XLSX.WorkSheet {
     rows.push([j.label, j.kebutuhan, j.eksisting, j.selisih, j.nodeCount]);
   }
 
-  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const ws = xlsx.utils.aoa_to_sheet(rows);
   ws['!cols'] = [{ wch: 30 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 16 }];
   return ws;
 }
 
-function buildMetaSheet(project: Project): XLSX.WorkSheet {
+function buildMetaSheet(xlsx: XlsxModule, project: Project): XLSX.WorkSheet {
   const rows = [
     ['Informasi Metadata Berkas Peta Jabatan'],
     ['Nama OPD', project.meta.namaOPD],
@@ -110,12 +120,12 @@ function buildMetaSheet(project: Project): XLSX.WorkSheet {
     ['Tanggal Ekspor', new Date().toISOString()],
   ];
 
-  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const ws = xlsx.utils.aoa_to_sheet(rows);
   ws['!cols'] = [{ wch: 20 }, { wch: 40 }];
   return ws;
 }
 
-function buildPetunjukSheet(): XLSX.WorkSheet {
+function buildPetunjukSheet(xlsx: XlsxModule): XLSX.WorkSheet {
   const rows: (string | number)[][] = [
     ['Petunjuk Pengisian Template Peta Jabatan'],
     [''],
@@ -146,7 +156,7 @@ function buildPetunjukSheet(): XLSX.WorkSheet {
     ['12. Setelah selesai, simpan berkas ini dan impor lewat Kelola Proyek → Impor Berkas.'],
   ];
 
-  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const ws = xlsx.utils.aoa_to_sheet(rows);
   ws['!cols'] = [{ wch: 100 }];
   return ws;
 }
@@ -155,8 +165,9 @@ function buildPetunjukSheet(): XLSX.WorkSheet {
  * Template kosong (berisi contoh singkat) untuk diisi manual lalu diimpor
  * lewat ImportDialog — bukan turunan dari proyek tertentu.
  */
-export function exportXlsxTemplate(): Blob {
-  const wb = XLSX.utils.book_new();
+export async function exportXlsxTemplate(): Promise<Blob> {
+  const xlsx = await import('xlsx');
+  const wb = xlsx.utils.book_new();
   const importableCols = COLUMNS.filter(c => c.importable);
 
   const headerRow = importableCols.map(c => c.header);
@@ -184,27 +195,28 @@ export function exportXlsxTemplate(): Blob {
   ];
 
   const aoa = [headerRow, ...sampleRows];
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  const ws = xlsx.utils.aoa_to_sheet(aoa);
   ws['!cols'] = importableCols.map(c => ({ wch: c.width }));
   ws['!freeze'] = { xSplit: 0, ySplit: 1 };
 
   const nomorColIdx = importableCols.findIndex(c => c.key === 'nomor');
   const kodeColIdx = importableCols.findIndex(c => c.key === 'kode');
-  if (nomorColIdx >= 0) forceTextFormat(ws, nomorColIdx);
-  if (kodeColIdx >= 0) forceTextFormat(ws, kodeColIdx);
+  if (nomorColIdx >= 0) forceTextFormat(xlsx, ws, nomorColIdx);
+  if (kodeColIdx >= 0) forceTextFormat(xlsx, ws, kodeColIdx);
 
-  XLSX.utils.book_append_sheet(wb, buildPetunjukSheet(), 'Petunjuk');
-  XLSX.utils.book_append_sheet(wb, ws, 'Struktur');
-  XLSX.utils.book_append_sheet(wb, buildReferensiSheet(), 'Referensi');
+  xlsx.utils.book_append_sheet(wb, buildPetunjukSheet(xlsx), 'Petunjuk');
+  xlsx.utils.book_append_sheet(wb, ws, 'Struktur');
+  xlsx.utils.book_append_sheet(wb, buildReferensiSheet(xlsx), 'Referensi');
 
-  const arrayBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const arrayBuffer = xlsx.write(wb, { bookType: 'xlsx', type: 'array' });
   return new Blob([arrayBuffer], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });
 }
 
-export function exportXlsx(project: Project, recap: Recap): Blob {
-  const wb = XLSX.utils.book_new();
+export async function exportXlsx(project: Project, recap: Recap): Promise<Blob> {
+  const xlsx = await import('xlsx');
+  const wb = xlsx.utils.book_new();
   const cols = [...COLUMNS, ...getCustomColumns(project.attributeSchema)];
   const rows = buildExportRows(project, recap, taxonomy);
 
@@ -213,7 +225,7 @@ export function exportXlsx(project: Project, recap: Recap): Blob {
   const dataRows = rows.map(r => cols.map(c => c.get(r)));
   const aoa = [headerRow, ...dataRows];
 
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  const ws = xlsx.utils.aoa_to_sheet(aoa);
   ws['!cols'] = cols.map(c => ({ wch: c.width }));
   ws['!freeze'] = { xSplit: 0, ySplit: 1 };
 
@@ -221,28 +233,28 @@ export function exportXlsx(project: Project, recap: Recap): Blob {
   const nomorColIdx = cols.findIndex(c => c.key === 'nomor');
   const kodeColIdx = cols.findIndex(c => c.key === 'kode');
 
-  if (nomorColIdx >= 0) forceTextFormat(ws, nomorColIdx);
-  if (kodeColIdx >= 0) forceTextFormat(ws, kodeColIdx);
+  if (nomorColIdx >= 0) forceTextFormat(xlsx, ws, nomorColIdx);
+  if (kodeColIdx >= 0) forceTextFormat(xlsx, ws, kodeColIdx);
 
-  XLSX.utils.book_append_sheet(wb, ws, 'Struktur');
+  xlsx.utils.book_append_sheet(wb, ws, 'Struktur');
 
   // Sheet 2: Referensi
-  XLSX.utils.book_append_sheet(wb, buildReferensiSheet(), 'Referensi');
+  xlsx.utils.book_append_sheet(wb, buildReferensiSheet(xlsx), 'Referensi');
 
   // Sheet 3: Rekap
-  XLSX.utils.book_append_sheet(wb, buildRekapSheet(recap), 'Rekap');
+  xlsx.utils.book_append_sheet(wb, buildRekapSheet(xlsx, recap), 'Rekap');
 
   // Sheet 4: Info
-  XLSX.utils.book_append_sheet(wb, buildMetaSheet(project), 'Info');
+  xlsx.utils.book_append_sheet(wb, buildMetaSheet(xlsx, project), 'Info');
 
   // Sheet 5+: Satuan_<nomor> per template unit (docs/15-template-instance.md §4)
   // — struktur (kolom kosong, tipe 'template') sudah ada di sheet Struktur;
   // angka sebenarnya per satuan hidup di sini.
-  for (const { name, sheet } of buildMatrixSheets(project)) {
-    XLSX.utils.book_append_sheet(wb, sheet, name);
+  for (const { name, sheet } of buildMatrixSheets(xlsx, project)) {
+    xlsx.utils.book_append_sheet(wb, sheet, name);
   }
 
-  const arrayBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const arrayBuffer = xlsx.write(wb, { bookType: 'xlsx', type: 'array' });
   return new Blob([arrayBuffer], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });

@@ -1,5 +1,6 @@
 import { ProjectIndexEntry } from './types';
 import { deleteProjectData } from './storage';
+import { discardPendingSaveFor } from './autosave';
 
 interface ConfirmOpts {
   title: string;
@@ -29,6 +30,10 @@ export function requestDeleteProject(
     confirmLabel: 'Hapus Proyek',
     danger: true,
     onConfirm: async () => {
+      // Buang (bukan flush) save yang tertunda untuk project ini — kalau di-
+      // flush, autosave 500ms yang belum sempat jalan akan menulis ulang body
+      // yang baru saja dihapus dan menghidupkannya kembali di IndexedDB.
+      discardPendingSaveFor(entry.id);
       await deleteProjectData(entry.id);
       await onDeleted();
     },
