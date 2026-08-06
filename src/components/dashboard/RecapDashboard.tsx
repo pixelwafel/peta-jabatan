@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ProjectIndex } from '@/persistence/types';
 import { getProjectIndex, getProject } from '@/persistence/storage';
-import { getCustomOpdList } from '@/persistence/customOpd';
+import { getCustomOpdList, addCustomOpdEntry } from '@/persistence/customOpd';
 import { buildOpdIndex, daftarOpdBawaan } from '@/config/daftarOpd';
 import {
   computeTopLevel,
@@ -27,6 +27,9 @@ import {
   Link2,
   ArrowUpDown,
   Loader2,
+  BadgeCheck,
+  Settings,
+  Plus,
 } from 'lucide-react';
 
 interface RecapDashboardProps {
@@ -44,7 +47,8 @@ const CardView: React.FC<{
   card: DashboardCard;
   onOpen: (id: string) => void;
   onImportHere: () => void;
-}> = ({ card, onOpen, onImportHere }) => {
+  onRegisterOpd: (kodeOPD: string, namaOPD: string) => void;
+}> = ({ card, onOpen, onImportHere, onRegisterOpd }) => {
   const { entry } = card;
 
   if (!entry) {
@@ -77,18 +81,30 @@ const CardView: React.FC<{
   const selisih = entry.totalEksisting - entry.totalKebutuhan;
 
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={() => onOpen(entry.id)}
-      className="text-left border rounded-lg p-3 bg-slate-950/40 border-slate-800 hover:border-slate-600 transition-colors min-h-[104px] flex flex-col justify-between"
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') onOpen(entry.id);
+      }}
+      className="text-left border rounded-lg p-3 bg-slate-950/40 border-slate-800 hover:border-slate-600 transition-colors min-h-[104px] flex flex-col justify-between cursor-pointer"
     >
       <div>
         <div className="flex items-center justify-between">
           <span className="font-mono text-[10px] text-slate-500">{card.kodeOPD}</span>
           <div className="flex items-center space-x-1">
             {card.isUnregistered && (
-              <span title="Kode tidak ada di daftar OPD">
-                <AlertTriangle className="w-3 h-3 text-blue-400" />
-              </span>
+              <button
+                title="Daftarkan sebagai OPD Resmi (docs/14 §1.1)"
+                onClick={e => {
+                  e.stopPropagation();
+                  onRegisterOpd(card.kodeOPD, card.namaOPD);
+                }}
+                className="text-blue-400 hover:text-blue-300"
+              >
+                <BadgeCheck className="w-3 h-3" />
+              </button>
             )}
             {hasFindings && (
               <span title={`${errors} error, ${warnings} peringatan`}>
@@ -124,7 +140,7 @@ const CardView: React.FC<{
           )}
         </div>
       </div>
-    </button>
+    </div>
   );
 };
 
@@ -137,6 +153,10 @@ export const RecapDashboard: React.FC<RecapDashboardProps> = ({ onClose }) => {
   const [breakdown, setBreakdown] = useState<RecapBucket[] | null>(null);
   const [breakdownProgress, setBreakdownProgress] = useState<{ done: number; total: number } | null>(null);
   const [isExportingConsolidated, setIsExportingConsolidated] = useState(false);
+  const [showAddOpd, setShowAddOpd] = useState(false);
+  const [newOpdKode, setNewOpdKode] = useState('');
+  const [newOpdNama, setNewOpdNama] = useState('');
+  const [newOpdKelompok, setNewOpdKelompok] = useState('Lainnya');
 
   const setProject = useProjectStore(s => s.setProject);
 
@@ -240,6 +260,27 @@ export const RecapDashboard: React.FC<RecapDashboardProps> = ({ onClose }) => {
     }
   };
 
+  /** "Daftarkan sebagai OPD Resmi" (docs/14-recap-dashboard.md §1.1) — kartu
+   * "Lainnya" yang isUnregistered dapat aksi cepat langsung dari kartunya. */
+  const handleRegisterOpd = async (kodeOPD: string, namaOPD: string) => {
+    await addCustomOpdEntry({ kode: kodeOPD, nama: namaOPD, kelompok: LAINNYA_KELOMPOK });
+    const customList = await getCustomOpdList();
+    setOpdIdx(buildOpdIndex(customList));
+  };
+
+  const handleAddCustomOpd = async () => {
+    const kode = newOpdKode.trim();
+    const nama = newOpdNama.trim();
+    if (!kode || !nama) return;
+    await addCustomOpdEntry({ kode, nama, kelompok: newOpdKelompok.trim() || LAINNYA_KELOMPOK });
+    const customList = await getCustomOpdList();
+    setOpdIdx(buildOpdIndex(customList));
+    setNewOpdKode('');
+    setNewOpdNama('');
+    setNewOpdKelompok('Lainnya');
+    setShowAddOpd(false);
+  };
+
   const handleOpen = async (id: string) => {
     const p = await getProject(id);
     if (p) {
@@ -263,6 +304,14 @@ export const RecapDashboard: React.FC<RecapDashboardProps> = ({ onClose }) => {
             <span>Dashboard Rekap Pemerintah</span>
           </div>
           <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setShowAddOpd(v => !v)}
+              title="Pengaturan Dashboard — Tambah OPD Khusus (docs/14 §1.1)"
+              className="flex items-center space-x-1.5 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs font-medium border border-slate-700"
+            >
+              <Settings className="w-3.5 h-3.5 text-blue-400" />
+              <span>Tambah OPD Khusus</span>
+            </button>
             <button
               onClick={handleExportConsolidated}
               disabled={!index || topLevel.length === 0 || isExportingConsolidated}
@@ -319,6 +368,54 @@ export const RecapDashboard: React.FC<RecapDashboardProps> = ({ onClose }) => {
             </div>
           </div>
 
+          {/* Tambah OPD Khusus (docs/14 §1.1) */}
+          {showAddOpd && (
+            <div className="p-3 rounded-lg border border-slate-700 bg-slate-950/60 space-y-2">
+              <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                Tambah OPD Khusus
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <input
+                  type="text"
+                  placeholder="Kode, mis. PKM-KTIM"
+                  value={newOpdKode}
+                  onChange={e => setNewOpdKode(e.target.value)}
+                  className="bg-slate-800 border border-slate-700 text-slate-100 rounded px-2 py-1 text-xs outline-none focus:border-blue-500 font-mono"
+                />
+                <input
+                  type="text"
+                  placeholder="Nama OPD"
+                  value={newOpdNama}
+                  onChange={e => setNewOpdNama(e.target.value)}
+                  className="bg-slate-800 border border-slate-700 text-slate-100 rounded px-2 py-1 text-xs outline-none focus:border-blue-500"
+                />
+                <input
+                  type="text"
+                  placeholder="Kelompok, mis. Puskesmas"
+                  value={newOpdKelompok}
+                  onChange={e => setNewOpdKelompok(e.target.value)}
+                  className="bg-slate-800 border border-slate-700 text-slate-100 rounded px-2 py-1 text-xs outline-none focus:border-blue-500"
+                />
+              </div>
+              <div className="flex items-center justify-end space-x-1.5">
+                <button
+                  onClick={() => setShowAddOpd(false)}
+                  className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-[11px] font-medium"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleAddCustomOpd}
+                  disabled={!newOpdKode.trim() || !newOpdNama.trim()}
+                  className="flex items-center space-x-1 px-2.5 py-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white rounded text-[11px] font-medium"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>Tambah</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Card groups */}
           {sortedGroupKeys.map(kelompok => (
             <div key={kelompok} className="space-y-1.5">
@@ -332,6 +429,7 @@ export const RecapDashboard: React.FC<RecapDashboardProps> = ({ onClose }) => {
                     card={card}
                     onOpen={handleOpen}
                     onImportHere={() => setShowImport(true)}
+                    onRegisterOpd={handleRegisterOpd}
                   />
                 ))}
               </div>
