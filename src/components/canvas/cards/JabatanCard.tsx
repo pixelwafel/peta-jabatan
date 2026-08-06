@@ -1,13 +1,13 @@
 import React, { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { AlertTriangle, UserCheck, Lock } from 'lucide-react';
+import { AlertTriangle, UserCheck, Lock, LayoutGrid } from 'lucide-react';
 import { NodeCardProps } from './CardTypes';
 import { kategoriWarna, jenjangLabel, jenjangSingkatan, getKategori } from '@/config/resolver';
 import { NODE_W } from '@/utils/layout';
 
 export const JabatanCard: React.FC<NodeCardProps> = memo(
   function JabatanCard({ data, selected }) {
-    const { node, totals, hasFindings, showJenjang, locked } = data;
+    const { node, totals, hasFindings, showJenjang, locked, instanceMarker } = data;
 
     const accentColor = kategoriWarna(node);
     const kategori = getKategori(node.kategoriId);
@@ -92,8 +92,22 @@ export const JabatanCard: React.FC<NodeCardProps> = memo(
             </span>
           </div>
 
-          {/* Compact Per-Level Breakdown */}
-          {showJenjang && node.rincian.length > 1 && (
+          {/* Marker "Σ N satuan" (docs/15-template-instance.md §3) — posisi
+              ini ada di dalam subtree template; angka di atas adalah SUM
+              lintas satuan, bukan milik satu sekolah, read-only by definition. */}
+          {instanceMarker !== undefined && (
+            <div className="text-[11px] text-teal-400 font-mono flex items-center space-x-1">
+              <LayoutGrid className="w-3 h-3" />
+              <span>Σ {instanceMarker} satuan</span>
+            </div>
+          )}
+
+          {/* Compact Per-Level Breakdown — disembunyikan di dalam template:
+              node.rincian selalu nol di sana (invariant), breakdown per-baris
+              di bawah akan salah/menyesatkan; angka benarnya cuma ada agregat
+              lewat marker "Σ N satuan" di atas, rincian per-level ada di grid
+              instance (M12.7), bukan di kartu canvas. */}
+          {showJenjang && node.rincian.length > 1 && instanceMarker === undefined && (
             <div className="pt-1 border-t border-slate-800/60 flex flex-wrap gap-x-2 gap-y-0.5 text-[11px] font-mono text-slate-400">
               {node.rincian.map(r => (
                 <span key={r.id}>
@@ -113,5 +127,6 @@ export const JabatanCard: React.FC<NodeCardProps> = memo(
     prev.data.hasFindings === next.data.hasFindings &&
     prev.data.showJenjang === next.data.showJenjang &&
     prev.data.locked === next.data.locked &&
+    prev.data.instanceMarker === next.data.instanceMarker &&
     prev.selected === next.selected
 );

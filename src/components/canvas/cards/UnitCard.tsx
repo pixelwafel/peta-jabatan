@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { ChevronRight, ChevronDown, Folder, AlertTriangle, UserCog, Lock } from 'lucide-react';
+import { ChevronRight, ChevronDown, Folder, AlertTriangle, UserCog, Lock, LayoutGrid } from 'lucide-react';
 import { NodeCardProps } from './CardTypes';
 import { useProjectStore } from '@/store/projectStore';
 import { NODE_W } from '@/utils/layout';
@@ -8,7 +8,7 @@ import { jenjangLabel } from '@/config/resolver';
 
 export const UnitCard: React.FC<NodeCardProps> = memo(
   function UnitCard({ data, selected }) {
-    const { node, subtotals, childCount, hasFindings, locked } = data;
+    const { node, subtotals, childCount, hasFindings, locked, instanceMarker } = data;
     const updateNode = useProjectStore(s => s.updateNode);
 
     const handleToggleCollapse = (e: React.MouseEvent) => {
@@ -30,6 +30,8 @@ export const UnitCard: React.FC<NodeCardProps> = memo(
         className={`bg-slate-900 border rounded-lg shadow-md select-none transition-all ${
           selected
             ? 'border-blue-500 ring-2 ring-blue-500/30'
+            : node.isTemplate
+            ? 'border-teal-700/70 hover:border-teal-600'
             : 'border-slate-700 hover:border-slate-600'
         }`}
       >
@@ -47,7 +49,7 @@ export const UnitCard: React.FC<NodeCardProps> = memo(
         />
 
         {/* Accent bar */}
-        <div className="h-1 bg-slate-500 rounded-t-lg" />
+        <div className={`h-1 rounded-t-lg ${node.isTemplate ? 'bg-teal-500' : 'bg-slate-500'}`} />
 
         <div className="p-2.5 space-y-1.5">
           {/* Header row */}
@@ -66,7 +68,11 @@ export const UnitCard: React.FC<NodeCardProps> = memo(
                   )}
                 </button>
               )}
-              <Folder className="w-4 h-4 text-slate-400 flex-shrink-0" />
+              {node.isTemplate ? (
+                <LayoutGrid className="w-4 h-4 text-teal-400 flex-shrink-0" />
+              ) : (
+                <Folder className="w-4 h-4 text-slate-400 flex-shrink-0" />
+              )}
               <span
                 className="font-bold text-sm text-slate-200 tracking-tight uppercase truncate"
                 title={node.nama}
@@ -76,6 +82,14 @@ export const UnitCard: React.FC<NodeCardProps> = memo(
             </div>
 
             <div className="flex items-center space-x-1 flex-shrink-0">
+              {node.isTemplate && (
+                <span
+                  title="Unit template (docs/15-template-instance.md)"
+                  className="text-[9px] font-semibold text-teal-400 bg-teal-950/50 border border-teal-800/60 rounded px-1 py-0.5 uppercase tracking-wider"
+                >
+                  Template
+                </span>
+              )}
               {locked && (
                 <span title="Terkunci">
                   <Lock className="w-3.5 h-3.5 text-amber-400" />
@@ -108,6 +122,16 @@ export const UnitCard: React.FC<NodeCardProps> = memo(
             </span>
           </div>
 
+          {/* Marker "Σ N satuan" (docs/15-template-instance.md §3) — tampil di
+              unit template itu sendiri MAUPUN sub-unit di dalam subtree-nya;
+              angka di kartu ini adalah SUM lintas satuan, read-only. */}
+          {instanceMarker !== undefined && (
+            <div className="text-[11px] text-teal-400 font-mono flex items-center space-x-1">
+              <LayoutGrid className="w-3 h-3" />
+              <span>Σ {instanceMarker} satuan</span>
+            </div>
+          )}
+
           {/* Collapsed badge */}
           {node.collapsed && childCount > 0 && (
             <div className="mt-1 bg-slate-800/80 text-slate-300 rounded px-1.5 py-0.5 text-[11px] flex items-center justify-between font-mono">
@@ -128,5 +152,6 @@ export const UnitCard: React.FC<NodeCardProps> = memo(
     prev.data.childCount === next.data.childCount &&
     prev.data.showJenjang === next.data.showJenjang &&
     prev.data.locked === next.data.locked &&
+    prev.data.instanceMarker === next.data.instanceMarker &&
     prev.selected === next.selected
 );

@@ -23,6 +23,9 @@ import { childrenOf } from '@/selectors/navigation';
 import { isLocked } from '@/selectors/guards';
 import { kategoriWarna } from '@/config/resolver';
 import { useLiveLayout } from '@/hooks/useLiveLayout';
+import { useRecap } from '@/selectors/recap';
+import { getStructureIndex } from '@/selectors/structureIndex';
+import { buildTemplateUnitIds, containingTemplateUnitId, countInstancesFor } from '@/selectors/templateInstance';
 
 const nodeTypes = {
   unit: UnitCard,
@@ -50,6 +53,29 @@ const InnerCanvas: React.FC = () => {
   const nodes = project?.nodes ?? [];
   const edges = project?.edges ?? [];
 
+  // Rekap sudah instance-aware (docs/15-template-instance.md §3) & link-aware
+  // (docs/13-link-nodes.md §3) — kartu canvas pakai peta yang sama supaya
+  // angkanya konsisten dengan panel rekap, bukan kalkulasi terpisah yang
+  // tidak tahu-menahu soal template/tautan.
+  const recap = useRecap();
+
+  // Marker "Σ N satuan" (doc 15 §3): jumlah instance milik template yang
+  // menaungi tiap node (dirinya sendiri kalau dia unit template-nya).
+  const instanceMarkers = useMemo(() => {
+    const map = new Map<string, number>();
+    if (nodes.length === 0) return map;
+    const idx = getStructureIndex(nodes, edges);
+    const templateUnitIds = buildTemplateUnitIds(nodes);
+    if (templateUnitIds.size === 0) return map;
+    for (const n of nodes) {
+      const templateId = containingTemplateUnitId(n.id, idx, templateUnitIds);
+      if (templateId) {
+        map.set(n.id, countInstancesFor(project?.instances ?? [], templateId));
+      }
+    }
+    return map;
+  }, [nodes, edges, project?.instances]);
+
   // Posisi mode preview: dihitung otomatis dari struktur (Dagre), tidak ada
   // drag manual — murni derived, tidak masuk riwayat undo.
   const liveLayout = useLiveLayout(nodes, edges, {
@@ -73,16 +99,22 @@ const InnerCanvas: React.FC = () => {
         position: liveLayout.get(n.id) ?? n.position,
         data: {
           node: n,
-          totals: nodeTotals(n),
-          subtotals: n.type === 'unit' ? subtreeTotals(nodes, edges, n.id) : null,
+          // Fallback ke kalkulasi lokal (naif, tidak instance/link-aware)
+          // cuma untuk jaga-jaga saat recap belum siap (project baru di-set).
+          totals: recap?.nodeTotals.get(n.id) ?? nodeTotals(n),
+          subtotals:
+            n.type === 'unit'
+              ? recap?.subtreeTotals.get(n.id) ?? subtreeTotals(nodes, edges, n.id)
+              : null,
           childCount: childrenOf(nodes, edges, n.id).length,
           hasFindings: false,
           showJenjang: showJenjangOnCard,
           locked: isLocked(nodes, edges, n.id),
+          instanceMarker: instanceMarkers.get(n.id),
         },
         selected: selectedNodeIds.includes(n.id),
       }));
-  }, [nodes, edges, visible, selectedNodeIds, showJenjangOnCard, liveLayout]);
+  }, [nodes, edges, visible, selectedNodeIds, showJenjangOnCard, liveLayout, recap, instanceMarkers]);
 
   // Project store edges -> React Flow edges
   const rfEdges: RfEdge[] = useMemo(() => {
