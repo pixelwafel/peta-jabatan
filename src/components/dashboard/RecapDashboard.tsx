@@ -12,13 +12,16 @@ import {
   LAINNYA_KELOMPOK,
 } from '@/selectors/dashboard';
 import { computeGlobalBreakdown } from '@/selectors/globalBreakdown';
+import { buildConsolidatedWorkbook } from '@/export/consolidatedExporter';
 import { RecapBucket } from '@/models/derived';
 import { useProjectStore } from '@/store/projectStore';
 import { ImportDialog } from '../dialogs/ImportDialog';
+import { downloadBlob } from '@/utils/download';
 import {
   LayoutDashboard,
   X,
   Upload,
+  Download,
   AlertTriangle,
   Clock,
   Link2,
@@ -133,6 +136,7 @@ export const RecapDashboard: React.FC<RecapDashboardProps> = ({ onClose }) => {
   const [showImport, setShowImport] = useState(false);
   const [breakdown, setBreakdown] = useState<RecapBucket[] | null>(null);
   const [breakdownProgress, setBreakdownProgress] = useState<{ done: number; total: number } | null>(null);
+  const [isExportingConsolidated, setIsExportingConsolidated] = useState(false);
 
   const setProject = useProjectStore(s => s.setProject);
 
@@ -224,6 +228,18 @@ export const RecapDashboard: React.FC<RecapDashboardProps> = ({ onClose }) => {
     }
   };
 
+  const handleExportConsolidated = async () => {
+    if (!index || isExportingConsolidated) return;
+    setIsExportingConsolidated(true);
+    try {
+      const blob = await buildConsolidatedWorkbook(index, getProject);
+      const date = new Date().toISOString().slice(0, 10);
+      downloadBlob(blob, `peta-jabatan_konsolidasi_${date}.xlsx`);
+    } finally {
+      setIsExportingConsolidated(false);
+    }
+  };
+
   const handleOpen = async (id: string) => {
     const p = await getProject(id);
     if (p) {
@@ -246,9 +262,24 @@ export const RecapDashboard: React.FC<RecapDashboardProps> = ({ onClose }) => {
             <LayoutDashboard className="w-4 h-4 text-blue-400" />
             <span>Dashboard Rekap Pemerintah</span>
           </div>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded">
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={handleExportConsolidated}
+              disabled={!index || topLevel.length === 0 || isExportingConsolidated}
+              title="Satu workbook: sheet rekap pemerintah + satu sheet per OPD top-level + sheet tautan (doc 14 §5)"
+              className="flex items-center space-x-1.5 px-2.5 py-1 bg-emerald-700/80 hover:bg-emerald-600 disabled:opacity-40 text-white rounded text-xs font-medium"
+            >
+              {isExportingConsolidated ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Download className="w-3.5 h-3.5" />
+              )}
+              <span>Ekspor Konsolidasi</span>
+            </button>
+            <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
