@@ -26,10 +26,19 @@ export interface Viewport {
   zoom: number;
 }
 
+/**
+ * Satu baris "satuan" (docs/15-template-instance.md §1) — SDN 01, SDN 02, dst
+ * — di bawah SATU unit template. `templateNodeId` wajib ada supaya sebuah
+ * project bisa punya lebih dari satu template unit (SD & SMP berdampingan,
+ * doc 15 §6) tanpa instance-nya tercampur.
+ */
 export interface UnitInstance {
-  instanceId: string;
-  instanceName: string;
-  figures: Record<string, { kebutuhan: number; eksisting: number }>;
+  id: string; // uuid
+  templateNodeId: string; // OrgNode.id milik unit ber-isTemplate:true
+  nama: string; // 'SDN 01 Kota Timur'
+  kode?: string; // NPSN atau kode lokal lain
+  figures: Record<string /* rincianId */, { kebutuhan: number; eksisting: number }>;
+  keterangan?: string;
 }
 
 export interface Project {

@@ -67,6 +67,12 @@ export interface OrgNode {
   // Link dan children/kepalaUnit saling eksklusif — lihat store/projectStore.ts
   // makeLink()/unlinkNode() dan selectors/validation.ts LINK_HAS_CHILDREN.
   link?: LinkRef;
+  // Template-instance (docs/15-template-instance.md): unit ini jadi struktur
+  // bersama untuk banyak "satuan" (Project.instances, keyed templateNodeId).
+  // isTemplate & link saling eksklusif (TEMPLATE_LINK_CONFLICT), dan tidak
+  // boleh nested — template unit tidak boleh ada di dalam subtree template
+  // lain (TEMPLATE_NESTED). Ditegakkan di store/projectStore.ts makeTemplate()
+  // dan selectors/validation.ts.
   isTemplate?: boolean;
 
   // presentation

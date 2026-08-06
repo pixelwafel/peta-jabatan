@@ -18,14 +18,17 @@ export const zViewport = z.object({
 });
 
 export const zUnitInstance = z.object({
-  instanceId: z.string(),
-  instanceName: z.string(),
+  id: z.string(),
+  templateNodeId: z.string(),
+  nama: z.string(),
+  kode: z.string().optional(),
   figures: z.record(
     z.object({
       kebutuhan: z.number().int().min(0),
       eksisting: z.number().int().min(0),
     })
   ),
+  keterangan: z.string().optional(),
 });
 
 export const zProject = z
