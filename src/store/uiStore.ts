@@ -12,7 +12,27 @@ export interface ConfirmDialogState {
   onConfirm: () => void;
 }
 
-export type DialogState = ConfirmDialogState | null;
+/**
+ * Dialog khusus hapus node yang punya anak — beda dari ConfirmDialogState
+ * biasa karena butuh 2 aksi destruktif berdampingan (bukan cuma 1 "Lanjutkan"),
+ * supaya operator sadar ada 2 pilihan yang konsekuensinya sangat beda:
+ * "node ini saja" (anak naik satu tingkat / bisa jadi node terpisah tanpa
+ * induk kalau node yang dihapus sendiri tidak berinduk) vs "seluruh isinya"
+ * (semua turunan ikut lenyap).
+ */
+export interface DeleteNodeDialogState {
+  kind: 'delete-node';
+  nodeName: string;
+  directChildCount: number;
+  subtreeCount: number; // jumlah turunan (tidak termasuk node itu sendiri)
+  /** true kalau node yang dihapus TIDAK berinduk — mode "node ini saja" akan
+   * membuat anak-anaknya jadi node terpisah tanpa induk sama sekali. */
+  orphanWarning: boolean;
+  onDeleteNodeOnly: () => void;
+  onDeleteSubtree: () => void;
+}
+
+export type DialogState = ConfirmDialogState | DeleteNodeDialogState | null;
 
 export interface ToastState {
   id: string;
@@ -37,6 +57,7 @@ export interface UiState {
   setLeftPanel: (panel: LeftPanelTab) => void;
   setDialog: (dialog: DialogState) => void;
   openConfirm: (opts: Omit<ConfirmDialogState, 'kind'>) => void;
+  openDeleteNodeDialog: (opts: Omit<DeleteNodeDialogState, 'kind'>) => void;
   closeDialog: () => void;
   showToast: (message: string, tone?: 'success' | 'error') => void;
   clearToast: () => void;
@@ -71,6 +92,8 @@ export const useUiStore = create<UiState>(set => ({
   setDialog: (dialog: DialogState) => set({ dialog }),
   openConfirm: (opts: Omit<ConfirmDialogState, 'kind'>) =>
     set({ dialog: { kind: 'confirm', ...opts } }),
+  openDeleteNodeDialog: (opts: Omit<DeleteNodeDialogState, 'kind'>) =>
+    set({ dialog: { kind: 'delete-node', ...opts } }),
   closeDialog: () => set({ dialog: null }),
   showToast: (message: string, tone: 'success' | 'error' = 'success') =>
     set({ toast: { id: `${Date.now()}-${Math.random()}`, message, tone } }),

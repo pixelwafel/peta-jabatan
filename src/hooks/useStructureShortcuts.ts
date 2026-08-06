@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
 import { hierarchyEdges } from '@/utils/edges';
+import { useDeleteNodeRequest } from './useDeleteNodeRequest';
 
 /**
  * Keyboard shortcuts for editing struktur (add/duplicate/delete/undo/redo).
@@ -13,7 +14,7 @@ export function useStructureShortcuts(): void {
   const edges = project?.edges ?? [];
   const addNode = useProjectStore(s => s.addNode);
   const duplicateNode = useProjectStore(s => s.duplicateNode);
-  const deleteNode = useProjectStore(s => s.deleteNode);
+  const requestDelete = useDeleteNodeRequest();
   const undo = useProjectStore(s => s.undo);
   const redo = useProjectStore(s => s.redo);
   const selectedNodeIds = useUiStore(s => s.selectedNodeIds);
@@ -75,7 +76,7 @@ export function useStructureShortcuts(): void {
         // Delete / Backspace
         if (e.key === 'Delete' || e.key === 'Backspace') {
           e.preventDefault();
-          deleteNode(primarySelected, 'node-only');
+          requestDelete(primarySelected);
           return;
         }
       }
@@ -83,5 +84,5 @@ export function useStructureShortcuts(): void {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedNodeIds, edges, addNode, duplicateNode, deleteNode, undo, redo]);
+  }, [selectedNodeIds, edges, addNode, duplicateNode, requestDelete, undo, redo]);
 }

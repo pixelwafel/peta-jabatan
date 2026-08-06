@@ -22,7 +22,7 @@ export const MultiSelectionPanel: React.FC = () => {
   const handleDeleteSelected = () => {
     openConfirm({
       title: `Hapus ${selectedNodes.length} node terpilih?`,
-      body: `Penghapusan akan menghapus ${selectedNodes.length} node dari struktur beserta hubungan atasannya.`,
+      body: `${selectedNodes.length} node ini akan dihapus. Anak dari tiap node yang dihapus TIDAK ikut terhapus — mereka dipindah ke induk dari node yang dihapus (atau jadi node terpisah tanpa induk kalau node yang dihapus sendiri tidak berinduk).`,
       confirmLabel: 'Hapus Semua',
       danger: true,
       onConfirm: () => {

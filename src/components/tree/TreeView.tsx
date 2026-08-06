@@ -11,6 +11,7 @@ import { hierarchyEdges } from '@/utils/edges';
 import { NODE_W, nodeHeight } from '@/utils/layout';
 import { useReactFlow } from '@xyflow/react';
 import { useStructureShortcuts } from '@/hooks/useStructureShortcuts';
+import { useDeleteNodeRequest } from '@/hooks/useDeleteNodeRequest';
 import { useLiveLayout } from '@/hooks/useLiveLayout';
 import {
   ChevronDown,
@@ -405,7 +406,7 @@ export const TreeView: React.FC = () => {
   const updateNode = useProjectStore(s => s.updateNode);
   const addNode = useProjectStore(s => s.addNode);
   const duplicateNode = useProjectStore(s => s.duplicateNode);
-  const deleteNode = useProjectStore(s => s.deleteNode);
+  const requestDelete = useDeleteNodeRequest();
   const moveNode = useProjectStore(s => s.moveNode);
   const setLocked = useProjectStore(s => s.setLocked);
   const selectedNodeIds = useUiStore(s => s.selectedNodeIds);
@@ -571,7 +572,7 @@ export const TreeView: React.FC = () => {
           onToggleAddMenu={handleToggleAddMenu}
           onConfirmAdd={handleConfirmAdd}
           onDuplicate={id => duplicateNode(id, 'node-only')}
-          onDelete={id => deleteNode(id, 'node-only')}
+          onDelete={id => requestDelete(id)}
           onToggleLock={handleToggleLock}
           onDragStartRow={setDraggedId}
           onDragOverRow={(id, position) => setDropIndicator({ id, position })}
