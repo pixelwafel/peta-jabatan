@@ -11,6 +11,8 @@ import {
   DashboardCard,
   LAINNYA_KELOMPOK,
 } from '@/selectors/dashboard';
+import { computeGlobalBreakdown } from '@/selectors/globalBreakdown';
+import { RecapBucket } from '@/models/derived';
 import { useProjectStore } from '@/store/projectStore';
 import { ImportDialog } from '../dialogs/ImportDialog';
 import {
@@ -21,6 +23,7 @@ import {
   Clock,
   Link2,
   ArrowUpDown,
+  Loader2,
 } from 'lucide-react';
 
 interface RecapDashboardProps {
@@ -128,6 +131,8 @@ export const RecapDashboard: React.FC<RecapDashboardProps> = ({ onClose }) => {
   const [sortKey, setSortKey] = useState<SortKey>('nama');
   const [sortDir, setSortDir] = useState<1 | -1>(1);
   const [showImport, setShowImport] = useState(false);
+  const [breakdown, setBreakdown] = useState<RecapBucket[] | null>(null);
+  const [breakdownProgress, setBreakdownProgress] = useState<{ done: number; total: number } | null>(null);
 
   const setProject = useProjectStore(s => s.setProject);
 
@@ -152,6 +157,31 @@ export const RecapDashboard: React.FC<RecapDashboardProps> = ({ onClose }) => {
   }, [topLevel, linkedUnder, opdIdx]);
 
   const headline = useMemo(() => sumTopLevelTotals(topLevel), [topLevel]);
+
+  // Breakdown per-kategori (doc 14 §5) — satu-satunya bagian yang buka body
+  // project, jadi dimuat progresif SETELAH kartu (dari index) tampil, dan
+  // dibatalkan lewat AbortController saat dialog ditutup/topLevel berubah
+  // ("aborts cleanly on navigation", exit criteria doc 14 §7).
+  useEffect(() => {
+    if (topLevel.length === 0) {
+      setBreakdown([]);
+      return;
+    }
+
+    const controller = new AbortController();
+    setBreakdown(null);
+    setBreakdownProgress({ done: 0, total: topLevel.length });
+
+    computeGlobalBreakdown(topLevel, getProject, {
+      signal: controller.signal,
+      onProgress: (done, total) => setBreakdownProgress({ done, total }),
+    }).then(buckets => {
+      if (!controller.signal.aborted) setBreakdown(buckets);
+    });
+
+    return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [topLevel]);
   const staleCount = topLevel.filter(isEntryStale).length;
   const problemCount = topLevel.filter(e => (e.findingCounts?.errors ?? 0) > 0).length;
   const expectedCount = opdIdx ? new Set(Array.from(opdIdx.values()).map(o => o.kode)).size : 0;
@@ -276,6 +306,40 @@ export const RecapDashboard: React.FC<RecapDashboardProps> = ({ onClose }) => {
               </div>
             </div>
           ))}
+
+          {/* Per-kategori se-pemda — progresif (doc 14 §5) */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-1">
+              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                Per Kategori (Se-Pemda)
+              </span>
+              {breakdown === null && breakdownProgress && (
+                <span className="flex items-center space-x-1.5 text-[11px] text-slate-500">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  <span>
+                    Memuat {breakdownProgress.done}/{breakdownProgress.total}...
+                  </span>
+                </span>
+              )}
+            </div>
+            {breakdown === null ? (
+              <div className="text-slate-500 italic py-2">Menghitung rekap per kategori...</div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 font-mono">
+                {breakdown.map(b => (
+                  <div key={b.key} className="border border-slate-800 rounded p-2 bg-slate-950/40">
+                    <div className="text-[10px] text-slate-500 uppercase truncate">{b.label}</div>
+                    <div className="text-slate-200">
+                      Keb {b.kebutuhan} · Eks {b.eksisting}
+                    </div>
+                    <div className={b.selisih < 0 ? 'text-red-400' : b.selisih > 0 ? 'text-amber-400' : 'text-slate-500'}>
+                      {b.selisih > 0 ? `+${b.selisih}` : b.selisih}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Comparison table */}
           <div className="space-y-1.5">
