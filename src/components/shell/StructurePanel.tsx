@@ -1,14 +1,31 @@
-import React, { useState } from 'react';
-import { FolderTree, Eye, AlertCircle, BarChart3 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { FolderTree, Eye, AlertCircle, BarChart3, LayoutGrid } from 'lucide-react';
 import { RecapPanel } from '../recap/RecapPanel';
 import { UnplacedPanel } from '../unplaced/UnplacedPanel';
 import { TreeView } from '../tree/TreeView';
 import { Canvas } from '../canvas/Canvas';
+import { InstanceGrid } from '../instance/InstanceGrid';
+import { useProjectStore } from '@/store/projectStore';
 
-type StructureTab = 'outline' | 'preview' | 'unplaced' | 'recap';
+type StructureTab = 'outline' | 'preview' | 'unplaced' | 'recap' | 'satuan';
 
 export const StructurePanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState<StructureTab>('outline');
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const project = useProjectStore(s => s.project);
+
+  // Unit template (docs/15-template-instance.md) — tab "Satuan" cuma tampil
+  // kalau project punya minimal satu, konsisten dengan tab lain yang sudah
+  // ada (tidak menambah tab kosong tanpa isi).
+  const templateUnits = useMemo(
+    () => (project?.nodes ?? []).filter(n => n.isTemplate),
+    [project?.nodes]
+  );
+
+  const effectiveTemplateId =
+    (selectedTemplateId && templateUnits.some(n => n.id === selectedTemplateId) ? selectedTemplateId : null) ??
+    templateUnits[0]?.id ??
+    null;
 
   return (
     <div className="bg-slate-950 border-r border-slate-700 flex flex-col h-full min-h-0 select-none text-slate-300 min-w-0">
@@ -50,6 +67,18 @@ export const StructurePanel: React.FC = () => {
           <BarChart3 className="w-3.5 h-3.5" />
           <span>Rekap</span>
         </button>
+        {templateUnits.length > 0 && (
+          <button
+            onClick={() => setActiveTab('satuan')}
+            className={`flex items-center space-x-1.5 px-2.5 py-1 rounded font-medium ${
+              activeTab === 'satuan' ? 'bg-teal-600 text-white' : 'hover:bg-slate-800 text-teal-400'
+            }`}
+            title="Grid instance template (docs/15-template-instance.md §2)"
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+            <span>Satuan</span>
+          </button>
+        )}
       </div>
 
       {/* Tab Panel Content */}
@@ -71,6 +100,29 @@ export const StructurePanel: React.FC = () => {
       {activeTab === 'recap' && (
         <div className="flex-1 min-h-0 overflow-y-auto p-3 text-xs">
           <RecapPanel />
+        </div>
+      )}
+      {activeTab === 'satuan' && (
+        <div className="flex-1 min-h-0 flex flex-col">
+          {templateUnits.length > 1 && (
+            <div className="flex items-center space-x-2 px-3 py-1.5 border-b border-slate-800 bg-slate-950/30 flex-shrink-0">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider">Template</span>
+              <select
+                value={effectiveTemplateId ?? ''}
+                onChange={e => setSelectedTemplateId(e.target.value)}
+                className="bg-slate-800 border border-slate-700 text-slate-100 rounded px-2 py-1 text-xs outline-none focus:border-blue-500"
+              >
+                {templateUnits.map(n => (
+                  <option key={n.id} value={n.id}>
+                    {n.nama}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          <div className="flex-1 min-h-0">
+            {effectiveTemplateId && <InstanceGrid templateNodeId={effectiveTemplateId} />}
+          </div>
         </div>
       )}
     </div>
