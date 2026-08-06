@@ -1,5 +1,13 @@
 # 10 — Persistence & Projects
 
+> **See also**: [doc 20](./20-skalabilitas-worker-virtualisasi.md) plans a
+> further persistence rewrite (Fase 3, not yet implemented as of this note) —
+> precomputed `ProjectSummary` records alongside each body, and a real `idb`
+> schema (multiple object stores + indexes) behind a formal `ProjectRepository`
+> interface, replacing the flat `idb-keyval` store described below. Read this
+> document for the current implementation; read doc 20 for where persistence is
+> headed next.
+
 > ## Amendment (v2): the backend is IndexedDB
 >
 > Moving the dashboard and delegated-operator volumes into MVP breaks the
