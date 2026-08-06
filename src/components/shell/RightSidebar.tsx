@@ -7,13 +7,21 @@ import { ProjectMetaForm } from '../property/ProjectMetaForm';
 import { SingleNodeForm } from '../property/SingleNodeForm';
 import { MultiSelectionPanel } from '../property/MultiSelectionPanel';
 import { ConfirmModal } from '../common/ConfirmModal';
+import { ResizeHandle } from './ResizeHandle';
 
 interface RightSidebarProps {
   collapsed: boolean;
   onToggleCollapse: () => void;
+  width: number;
+  onResizeDrag: (clientX: number) => void;
 }
 
-export const RightSidebar: React.FC<RightSidebarProps> = ({ collapsed, onToggleCollapse }) => {
+export const RightSidebar: React.FC<RightSidebarProps> = ({
+  collapsed,
+  onToggleCollapse,
+  width,
+  onResizeDrag,
+}) => {
   const selectedNodeIds = useUiStore(s => s.selectedNodeIds);
 
   // Selector subscription discipline: lookup selected node by id
@@ -50,7 +58,11 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({ collapsed, onToggleC
 
   return (
     <>
-      <aside className="w-[380px] min-h-0 bg-slate-900 border-l border-slate-700 flex flex-col h-full select-none text-slate-300">
+      <aside
+        className="relative min-h-0 bg-slate-900 border-l border-slate-700 flex flex-col h-full select-none text-slate-300"
+        style={{ width: `${width}px` }}
+      >
+        <ResizeHandle side="left" onDrag={onResizeDrag} />
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-800 px-3 py-2 flex-shrink-0">
           <div className="flex items-center space-x-2 font-medium text-sm text-slate-200">

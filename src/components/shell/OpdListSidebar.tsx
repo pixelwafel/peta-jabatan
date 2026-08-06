@@ -9,6 +9,12 @@ import { Folder, Search, Settings, Plus, Upload, Trash2, LayoutDashboard } from 
 import { ProjectManagerDialog } from '../dialogs/ProjectManagerDialog';
 import { ImportDialog } from '../dialogs/ImportDialog';
 import { RecapDashboard } from '../dashboard/RecapDashboard';
+import { ResizeHandle } from './ResizeHandle';
+
+interface OpdListSidebarProps {
+  width: number;
+  onResizeDrag: (clientX: number) => void;
+}
 
 /**
  * Kolom 1: daftar OPD. Versi inline dari ProjectManagerDialog.tsx (buka/pindah
@@ -17,7 +23,7 @@ import { RecapDashboard } from '../dashboard/RecapDashboard';
  * lewat dialog "Kelola..." dulu setiap kali. Aksi lanjutan (duplikat/hapus/
  * ekspor massal/cari) tetap lewat "Kelola...".
  */
-export const OpdListSidebar: React.FC = () => {
+export const OpdListSidebar: React.FC<OpdListSidebarProps> = ({ width, onResizeDrag }) => {
   const [index, setIndex] = useState<ProjectIndex | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showManager, setShowManager] = useState(false);
@@ -71,7 +77,11 @@ export const OpdListSidebar: React.FC = () => {
   };
 
   return (
-    <aside className="w-[260px] min-h-0 bg-slate-900 border-r border-slate-700 flex flex-col h-full select-none text-slate-300">
+    <aside
+      className="relative min-h-0 bg-slate-900 border-r border-slate-700 flex flex-col h-full select-none text-slate-300"
+      style={{ width: `${width}px` }}
+    >
+      <ResizeHandle side="right" onDrag={onResizeDrag} />
       <div className="flex items-center justify-between border-b border-slate-800 px-3 py-2 flex-shrink-0">
         <div className="flex items-center space-x-2 font-medium text-sm text-slate-200">
           <Folder className="w-4 h-4 text-blue-400" />
