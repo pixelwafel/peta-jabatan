@@ -134,7 +134,16 @@ function buildPetunjukSheet(): XLSX.WorkSheet {
     ['   Baris Unit tidak boleh diisi kolom ini — angka unit dihitung otomatis dari kepala unit + total jabatan di bawahnya.'],
     ['8. Kolom "kode", "unit_kerja", dan "keterangan" bersifat opsional, bebas diisi teks apa saja.'],
     ['9. Baris contoh di sheet "Struktur" boleh dihapus/ditimpa — hanya sebagai contoh format, bukan data wajib.'],
-    ['10. Setelah selesai, simpan berkas ini dan impor lewat Kelola Proyek → Impor Berkas.'],
+    ['10. Kolom "kode_tautan" khusus baris bertipe "Tautan" (docs/13-link-nodes.md) — diisi kode OPD proyek yang'],
+    ['    ingin ditautkan (mis. proyek Puskesmas ditautkan dari struktur Dinas Kesehatan). Baris Tautan tidak'],
+    ['    boleh punya anak; kolom kebutuhan/eksisting-nya dikosongkan karena angkanya diambil otomatis dari'],
+    ['    proyek tujuan saat kode_tautan cocok dengan proyek yang tersimpan di aplikasi.'],
+    ['11. Kolom "template" khusus baris bertipe Unit yang ingin dijadikan template (docs/15-template-instance.md,'],
+    ['    contoh kasus: satu struktur sekolah dipakai berulang oleh banyak sekolah). Isi dengan nomor unit itu'],
+    ['    sendiri (sama seperti kolom "nomor" di baris yang sama) untuk menandainya sebagai template. Baris Unit/'],
+    ['    Jabatan di BAWAH unit template wajib kebutuhan/eksisting/kepala_kebutuhan/kepala_eksisting = 0 — angka'],
+    ['    sesungguhnya per sekolah/instance diisi lewat tab "Satuan" di aplikasi setelah diimpor, bukan di sini.'],
+    ['12. Setelah selesai, simpan berkas ini dan impor lewat Kelola Proyek → Impor Berkas.'],
   ];
 
   const ws = XLSX.utils.aoa_to_sheet(rows);
@@ -154,17 +163,24 @@ export function exportXlsxTemplate(): Blob {
   // Urutan kolom mengikuti COLUMNS (importable saja): nomor, nama, tipe,
   // kategori, rumpun, jenjang, kebutuhan, eksisting, kode, unit_kerja,
   // keterangan, kepala_nama, kepala_kode, kepala_jenjang, kepala_kebutuhan,
-  // kepala_eksisting.
+  // kepala_eksisting, kode_tautan, template.
   //
   // Kepala unit (struktural) DIISI LANGSUNG di baris Unit lewat kolom
   // kepala_* — TIDAK dibuat sebagai baris Jabatan terpisah. Baris Jabatan
   // hanya untuk Fungsional & Pelaksana.
+  //
+  // Baris 6 (Tautan) & baris 7-9 (template + subtree-nya) adalah contoh
+  // untuk fitur docs/13-link-nodes.md & docs/15-template-instance.md — lihat
+  // poin 10 & 11 sheet "Petunjuk". Boleh dihapus kalau tidak dipakai.
   const sampleRows: (string | number)[][] = [
-    ['1', 'Dinas Contoh', 'Unit', '', '', '', '', '', 'DIS.01', '', '', 'Kepala Dinas Contoh', 'KADIS.01', 'JPT Pratama', 1, 1],
-    ['1.1', 'Sekretariat', 'Unit', '', '', '', '', '', '', '', '', 'Sekretaris', 'SEK.01', 'Administrator', 1, 1],
-    ['1.2', 'Bidang Contoh', 'Unit', '', '', '', '', '', '', '', '', '', 'KAB.01', 'Pengawas', 1, 1],
-    ['1.2.1', 'Analis Kebijakan', 'Jabatan', 'Fungsional', 'Keahlian', 'Ahli Muda', 2, 1, '', '', '', '', '', '', '', ''],
-    ['1.2.2', 'Pengadministrasi Umum', 'Jabatan', 'Pelaksana', '', '', 1, 0, '', '', '', '', '', '', '', ''],
+    ['1', 'Dinas Contoh', 'Unit', '', '', '', '', '', 'DIS.01', '', '', 'Kepala Dinas Contoh', 'KADIS.01', 'JPT Pratama', 1, 1, '', ''],
+    ['1.1', 'Sekretariat', 'Unit', '', '', '', '', '', '', '', '', 'Sekretaris', 'SEK.01', 'Administrator', 1, 1, '', ''],
+    ['1.2', 'Bidang Contoh', 'Unit', '', '', '', '', '', '', '', '', '', 'KAB.01', 'Pengawas', 1, 1, '', ''],
+    ['1.2.1', 'Analis Kebijakan', 'Jabatan', 'Fungsional', 'Keahlian', 'Ahli Muda', 2, 1, '', '', '', '', '', '', '', '', '', ''],
+    ['1.2.2', 'Pengadministrasi Umum', 'Jabatan', 'Pelaksana', '', '', 1, 0, '', '', '', '', '', '', '', '', '', ''],
+    ['1.3', 'Puskesmas Kota Timur', 'Tautan', '', '', '', '', '', '', '', '', '', '', '', '', '', 'PKM-KTIM', ''],
+    ['1.4', 'SD Contoh (Template)', 'Unit', '', '', '', '', '', '', '', '', '', '', '', 0, 0, '', '1.4'],
+    ['1.4.1', 'Guru Kelas', 'Jabatan', 'Fungsional', 'Keahlian', 'Ahli Pertama', 0, 0, '', '', '', '', '', '', '', '', '', ''],
   ];
 
   const aoa = [headerRow, ...sampleRows];
