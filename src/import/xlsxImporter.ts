@@ -27,6 +27,14 @@ export interface ImportPreview {
     nodes: OrgNode[];
     edges: OrgEdge[];
   };
+  /**
+   * Metadata asli dari berkas sumber (docs/14-recap-dashboard.md §4 —
+   * staging new/replace/older butuh kodeOPD & updatedAt yang SEBENARNYA,
+   * bukan turunan nama file). Cuma terisi untuk impor JSON (yang membawa
+   * `Project` lengkap) — impor XLSX tidak membawa kodeOPD di sheet
+   * Struktur, jadi tetap memakai turunan nama file seperti sebelumnya.
+   */
+  sourceMeta?: { namaOPD: string; kodeOPD: string; updatedAt: string };
 }
 
 export async function processXlsxImport(file: File): Promise<ImportPreview> {

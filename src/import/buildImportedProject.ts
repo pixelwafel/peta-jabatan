@@ -11,14 +11,15 @@ import { slug } from '@/export/filename';
  * tempat walau dipanggil berkali-kali untuk banyak berkas sekaligus.
  */
 export function buildImportedProject(preview: ImportPreview, fileName: string): Project {
-  const namaOPD = fileName || 'Proyek Impor';
+  // JSON membawa Project lengkap -> kodeOPD/namaOPD/updatedAt ASLI dipakai
+  // (docs/14-recap-dashboard.md §4 staging butuh angka sebenarnya, bukan
+  // turunan nama file). XLSX tidak membawa kodeOPD di sheet Struktur, jadi
+  // tetap fallback ke turunan nama file seperti sebelumnya.
+  const namaOPD = preview.sourceMeta?.namaOPD || fileName || 'Proyek Impor';
 
-  // kodeOPD placeholder diturunkan dari nama file (bukan literal tetap
-  // 'OPD.IMP' untuk semua impor) — supaya kalau beberapa berkas diimpor
-  // sekaligus dalam satu sesi, tiap proyek tidak berakhir dengan kode yang
-  // sama persis dan sulit dibedakan di daftar OPD.
   const kodeSlug = slug(namaOPD).slice(0, 24).toUpperCase();
-  const kodeOPD = kodeSlug || 'OPD.IMP';
+  const kodeOPD = preview.sourceMeta?.kodeOPD || kodeSlug || 'OPD.IMP';
+  const updatedAt = preview.sourceMeta?.updatedAt || new Date().toISOString();
 
   const project: Project = {
     id: uuid(),
@@ -35,7 +36,7 @@ export function buildImportedProject(preview: ImportPreview, fileName: string): 
     edges: preview.built.edges,
     viewport: { x: 0, y: 0, zoom: 1 },
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    updatedAt,
   };
 
   // Layout Dagre otomatis untuk impor XLSX (posisi awal semua 0,0). Untuk

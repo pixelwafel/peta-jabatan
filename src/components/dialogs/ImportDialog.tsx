@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { processXlsxImport, ImportPreview } from '@/import/xlsxImporter';
 import { importJsonFile, JsonImportResult } from '@/import/jsonImporter';
 import { buildImportedProject } from '@/import/buildImportedProject';
+import { classifyBatch, ParsedFile, StagedEntry, StagingStatus } from '@/import/bulkStaging';
+import { commitBulkImport, rollbackBulkImport, archiveProject, BulkCommitItem } from '@/persistence/bulkImport';
 import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
 import { uuid } from '@/utils/uuid';
-import { saveProject } from '@/persistence/storage';
+import { saveProject, getProjectIndex } from '@/persistence/storage';
+import { ProjectIndex } from '@/persistence/types';
+import { Project } from '@/models/project';
 import { exportXlsxTemplate } from '@/export/xlsxExporter';
 import { Finding } from '@/models/derived';
 import {
@@ -24,6 +28,7 @@ import {
   ChevronDown,
   ChevronRight,
   RefreshCw,
+  RotateCcw,
 } from 'lucide-react';
 
 interface ImportDialogProps {
@@ -112,6 +117,13 @@ function jsonResultToPreview(jsonRes: JsonImportResult): ImportPreview {
     })),
     canCommit: true,
     built: { nodes, edges },
+    // JSON membawa Project lengkap — kodeOPD/updatedAt ASLI dipakai buat
+    // staging bulk import (doc 14 §4), bukan turunan nama file.
+    sourceMeta: {
+      namaOPD: jsonRes.project.meta.namaOPD,
+      kodeOPD: jsonRes.project.meta.kodeOPD,
+      updatedAt: jsonRes.project.updatedAt,
+    },
   };
 }
 
@@ -242,10 +254,18 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({ onClose, onImported,
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isCommitting, setIsCommitting] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [batchResult, setBatchResult] = useState<{ committed: number; failed: number } | null>(null);
+  const [batchResult, setBatchResult] = useState<{ committed: number; skipped: number } | null>(null);
+  const [rollbackKeys, setRollbackKeys] = useState<string[] | null>(null);
+  const [storedIndex, setStoredIndex] = useState<ProjectIndex | null>(null);
 
   const setProject = useProjectStore(s => s.setProject);
   const showToast = useUiStore(s => s.showToast);
+
+  // Snapshot index sekali saat dialog dibuka — dipakai staging batch (doc 14
+  // §4: new/replace/older diputuskan lewat kodeOPD terhadap yang tersimpan).
+  useEffect(() => {
+    getProjectIndex().then(setStoredIndex);
+  }, []);
 
   const parseEntry = async (clientId: string, file: File) => {
     try {
@@ -303,6 +323,16 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({ onClose, onImported,
     if (!entry.preview || !entry.preview.canCommit) return null;
     const fileName = entry.file.name.replace(/\.[^/.]+$/, '');
     const project = buildImportedProject(entry.preview, fileName);
+
+    // Baris "Impor" per-item di antrian multi-berkas ikut hormati staging
+    // (doc 14 §4): kalau statusnya 'replace', timpa project yang sudah ada
+    // (dengan arsip satu generasi), bukan bikin project baru terpisah.
+    const staged = stagedByClientId.get(entry.clientId);
+    if (staged?.status === 'replace' && staged.existingId) {
+      project.id = staged.existingId;
+      await archiveProject(staged.existingId);
+    }
+
     await saveProject(project);
     setQueue(prev =>
       prev.map(q => (q.clientId === entry.clientId ? { ...q, status: 'committed' } : q))
@@ -321,6 +351,37 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({ onClose, onImported,
 
   const commitableEntries = queue.filter(q => q.status === 'ready' && q.preview?.canCommit);
 
+  // Staging (docs/14-recap-dashboard.md §4) — cuma relevan untuk antrian
+  // multi-berkas; antrian 1 berkas tetap pakai jalur lama tanpa staging.
+  const stagedByClientId = useMemo(() => {
+    const map = new Map<string, StagedEntry>();
+    if (queue.length <= 1 || !storedIndex) return map;
+
+    const parsedFiles: ParsedFile[] = queue
+      .filter(q => q.status === 'ready')
+      .map(q => ({
+        clientId: q.clientId,
+        fileName: q.file.name,
+        project: q.preview?.canCommit
+          ? buildImportedProject(q.preview, q.file.name.replace(/\.[^/.]+$/, ''))
+          : null,
+        parseFailed: !q.preview?.canCommit,
+      }));
+
+    for (const s of classifyBatch(parsedFiles, storedIndex)) {
+      map.set(s.clientId, s);
+    }
+    return map;
+  }, [queue, storedIndex]);
+
+  const stagingLabel: Record<StagingStatus, string> = {
+    new: 'Baru',
+    replace: 'Ganti (versi lama diarsipkan)',
+    older: 'Lebih lama — dilewati',
+    'duplicate-in-batch': 'Duplikat di batch — dilewati',
+    invalid: 'Tidak valid',
+  };
+
   const handleCommitAll = async () => {
     if (commitableEntries.length === 0) return;
     setIsCommitting(true);
@@ -338,16 +399,52 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({ onClose, onImported,
         return;
       }
 
-      // Multi-berkas: commit semua yang valid, tidak ada yang auto-aktif.
-      let committed = 0;
-      for (const entry of commitableEntries) {
-        const project = await commitOne(entry);
-        if (project) committed++;
+      // Multi-berkas: two-phase commit (doc 14 §4.1) — cuma status
+      // 'new'/'replace' yang benar-benar ditulis; 'older'/'duplicate-in-batch'/
+      // 'invalid' dilewati (tetap kelihatan statusnya di baris masing-masing).
+      const items: BulkCommitItem[] = [];
+      const projectRefToClientId = new Map<Project, string>();
+
+      for (const [clientId, staged] of stagedByClientId.entries()) {
+        if (!staged.project) continue;
+        if (staged.status === 'new') {
+          items.push({ project: staged.project, isReplace: false });
+          projectRefToClientId.set(staged.project, clientId);
+        } else if (staged.status === 'replace' && staged.existingId) {
+          const replaced = { ...staged.project, id: staged.existingId };
+          items.push({ project: replaced, isReplace: true });
+          projectRefToClientId.set(replaced, clientId);
+        }
       }
-      setBatchResult({ committed, failed: queue.length - committed });
+
+      const result = await commitBulkImport(items);
+      const skipped = queue.length - result.committedProjects.length;
+
+      if (result.failed.length > 0) {
+        // Sebagian gagal di Fase 1 — beri opsi rollback (doc 14 §4.1 poin 2)
+        // alih-alih diam-diam meninggalkan index & body tidak sinkron.
+        setRollbackKeys(result.writtenKeys);
+      }
+
+      setBatchResult({ committed: result.committedProjects.length, skipped });
+
+      const committedClientIds = new Set(
+        result.committedProjects.map(p => projectRefToClientId.get(p)).filter(Boolean)
+      );
+      setQueue(prev =>
+        prev.map(q => (committedClientIds.has(q.clientId) ? { ...q, status: 'committed' } : q))
+      );
     } finally {
       setIsCommitting(false);
     }
+  };
+
+  const handleRollback = async () => {
+    if (!rollbackKeys) return;
+    await rollbackBulkImport(rollbackKeys);
+    setRollbackKeys(null);
+    setBatchResult(null);
+    showToast('Batch dibatalkan — berkas yang sempat tertulis sudah dihapus.', 'error');
   };
 
   const handleDownloadTemplate = () => {
@@ -409,17 +506,33 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({ onClose, onImported,
         >
           {batchResult && (
             <div
-              className={`p-3 rounded-lg border flex items-center space-x-2 ${
-                batchResult.failed === 0
+              className={`p-3 rounded-lg border flex items-center justify-between space-x-2 ${
+                rollbackKeys
+                  ? 'bg-rose-950/30 border-rose-900/60 text-rose-300'
+                  : batchResult.skipped === 0
                   ? 'bg-emerald-950/30 border-emerald-900/60 text-emerald-300'
                   : 'bg-amber-950/30 border-amber-900/60 text-amber-300'
               }`}
             >
-              <CheckCircle className="w-4 h-4 flex-shrink-0" />
-              <span>
-                {batchResult.committed} proyek berhasil diimpor
-                {batchResult.failed > 0 ? `, ${batchResult.failed} belum (lihat status per berkas di bawah)` : '.'}
+              <span className="flex items-center space-x-2">
+                <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                <span>
+                  {batchResult.committed} proyek berhasil ditulis
+                  {batchResult.skipped > 0
+                    ? `, ${batchResult.skipped} dilewati (lihat status per berkas di bawah)`
+                    : '.'}
+                  {rollbackKeys && ' — sebagian gagal ditulis ke penyimpanan.'}
+                </span>
               </span>
+              {rollbackKeys && (
+                <button
+                  onClick={handleRollback}
+                  className="flex items-center space-x-1 px-2.5 py-1 bg-rose-800 hover:bg-rose-700 text-white rounded text-[11px] font-medium flex-shrink-0"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Batalkan Semua (Rollback)</span>
+                </button>
+              )}
             </div>
           )}
 
@@ -573,6 +686,23 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({ onClose, onImported,
                           </button>
 
                           <div className="flex items-center space-x-3 flex-shrink-0 pl-2">
+                            {(() => {
+                              const staged = stagedByClientId.get(entry.clientId);
+                              if (!staged || entry.status !== 'ready') return null;
+                              const colorClass =
+                                staged.status === 'invalid' || staged.status === 'duplicate-in-batch'
+                                  ? 'text-rose-400'
+                                  : staged.status === 'older'
+                                  ? 'text-amber-400'
+                                  : staged.status === 'replace'
+                                  ? 'text-blue-400'
+                                  : 'text-emerald-400';
+                              return (
+                                <span className={`text-[10px] font-medium ${colorClass}`} title={staged.message}>
+                                  {stagingLabel[staged.status]}
+                                </span>
+                              );
+                            })()}
                             <span
                               className={`text-[11px] ${
                                 hasError
