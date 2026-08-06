@@ -5,6 +5,7 @@ import { buildColumnGroups, TemplateColumnGroup } from '@/selectors/templateInst
 import { UnitInstance } from '@/models/project';
 import { computeVisibleRange } from '@/utils/virtualization';
 import { Plus, Trash2, Copy, LayoutGrid } from 'lucide-react';
+import { NumberInput } from '../property/NumberInput';
 
 type ColumnGroup = TemplateColumnGroup;
 
@@ -189,35 +190,31 @@ export const InstanceGrid: React.FC<{ templateNodeId: string }> = ({ templateNod
                       return (
                         <React.Fragment key={c.key}>
                           <td className={i === 0 ? 'border-l border-slate-800/60 p-0' : 'p-0'}>
-                            <input
-                              type="number"
-                              min={0}
+                            <NumberInput
                               value={fig.kebutuhan}
-                              onChange={e =>
+                              onChange={v =>
                                 updateInstanceFigure(
                                   inst.id,
                                   c.key,
-                                  { kebutuhan: Math.max(0, Number(e.target.value) || 0) },
+                                  { kebutuhan: v },
                                   `inst:${inst.id}:${c.key}:keb`
                                 )
                               }
-                              className="w-full bg-transparent text-center text-slate-200 outline-none focus:bg-slate-800 py-1"
+                              className="!bg-transparent !border-transparent focus:!bg-slate-800 !rounded-none"
                             />
                           </td>
                           <td className="p-0">
-                            <input
-                              type="number"
-                              min={0}
+                            <NumberInput
                               value={fig.eksisting}
-                              onChange={e =>
+                              onChange={v =>
                                 updateInstanceFigure(
                                   inst.id,
                                   c.key,
-                                  { eksisting: Math.max(0, Number(e.target.value) || 0) },
+                                  { eksisting: v },
                                   `inst:${inst.id}:${c.key}:eks`
                                 )
                               }
-                              className="w-full bg-transparent text-center text-slate-200 outline-none focus:bg-slate-800 py-1"
+                              className="!bg-transparent !border-transparent focus:!bg-slate-800 !rounded-none"
                             />
                           </td>
                         </React.Fragment>
