@@ -7,9 +7,7 @@ import { OrgNode, NodeType } from '@/models/node';
 import { ancestorsOf, childrenOf, parentOf, rootNodes } from '@/selectors/navigation';
 import { isLocked } from '@/selectors/guards';
 import { hierarchyEdges } from '@/utils/edges';
-import { NODE_W, nodeHeight, computeLayoutCached } from '@/utils/layout';
 import { computeVisibleRange } from '@/utils/virtualization';
-import { useReactFlow } from '@xyflow/react';
 import { useStructureShortcuts } from '@/hooks/useStructureShortcuts';
 import { useDeleteNodeRequest } from '@/hooks/useDeleteNodeRequest';
 import {
@@ -400,8 +398,7 @@ export const TreeView: React.FC = () => {
   const setLocked = useProjectStore(s => s.setLocked);
   const selectedNodeIds = useUiStore(s => s.selectedNodeIds);
   const selectNodes = useUiStore(s => s.selectNodes);
-  const showJenjangOnCard = useUiStore(s => s.showJenjangOnCard);
-  const { setCenter } = useReactFlow();
+  const requestFocusNode = useUiStore(s => s.requestFocusNode);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dropIndicator, setDropIndicator] = useState<DropIndicator | null>(null);
@@ -475,13 +472,14 @@ export const TreeView: React.FC = () => {
     return map;
   }, [edges, lockedMap]);
 
-  // Fase 1.6: TIDAK lagi useLiveLayout() di sini — liveLayout di tab Outline
-  // dulu HANYA dipakai handleFocus (klik baris -> center kanvas), tapi karena
-  // ia hook di top-level, Dagre lengkap jalan ulang tiap keystroke walau tab
-  // Preview tidak sedang aktif/mounted. computeLayoutCached() dipanggil
-  // langsung di dalam handler saat klik — 30-100ms saat itu wajar, dan kalau
-  // geometri tak berubah sejak Canvas terakhir render (cache dibagi lewat
-  // utils/layout.ts), panggilan ini malah gratis (cache hit).
+  // Fase 1.6/1.7: TIDAK lagi useLiveLayout() di sini — liveLayout di tab
+  // Outline dulu HANYA dipakai handleFocus (klik baris -> center kanvas),
+  // tapi karena ia hook di top-level, Dagre lengkap jalan ulang tiap
+  // keystroke walau tab Preview tidak sedang aktif/mounted. Sejak Fase 1.7,
+  // handleFocus malah TIDAK menghitung layout/posisi sama sekali di sini —
+  // ia cuma menyimpan permintaan (useUiStore.requestFocusNode) yang
+  // dikonsumsi Canvas.tsx sendiri (yang sudah punya liveLayout) begitu tab
+  // Preview benar-benar mounted. Baca komentar FocusRequest di uiStore.ts.
 
   // Fase 1.5: semua handler di bawah dibungkus useCallback dengan dependency
   // MINIMAL (action ref Zustand yang stabil + state UI lokal), BUKAN `nodes`/
@@ -506,20 +504,13 @@ export const TreeView: React.FC = () => {
 
       const target = liveNodes.find(n => n.id === nodeId);
       if (!target) return;
-      const layout = computeLayoutCached(liveNodes, liveEdges, {
-        direction: 'TB',
-        scope: 'all',
-        showJenjang: showJenjangOnCard,
-      });
-      const pos = layout.get(nodeId) ?? target.position;
-      const h = nodeHeight(target, showJenjangOnCard);
-      setCenter(pos.x + NODE_W / 2, pos.y + h / 2, {
-        zoom: 1.2,
-        duration: 300,
-      });
       selectNodes([nodeId]);
+      // Centering-nya sendiri ditunda ke Canvas (tab Preview) — lihat komentar
+      // FocusRequest di uiStore.ts. Preview belum tentu mounted saat baris
+      // Outline ini diklik.
+      requestFocusNode(nodeId);
     },
-    [updateNode, showJenjangOnCard, setCenter, selectNodes]
+    [updateNode, selectNodes, requestFocusNode]
   );
 
   const handleToggleCollapse = useCallback(

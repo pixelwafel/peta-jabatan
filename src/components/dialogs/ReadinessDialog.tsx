@@ -3,8 +3,6 @@ import { useProjectStore } from '@/store/projectStore';
 import { getCachedValidation, buildReadinessReport } from '@/selectors/validation';
 import { useUiStore } from '@/store/uiStore';
 import { ancestorsOf } from '@/selectors/navigation';
-import { NODE_W, nodeHeight } from '@/utils/layout';
-import { useReactFlow } from '@xyflow/react';
 import {
   ShieldCheck,
   ShieldAlert,
@@ -29,8 +27,7 @@ export const ReadinessDialog: React.FC<ReadinessDialogProps> = ({
   const project = useProjectStore(s => s.project);
   const updateNode = useProjectStore(s => s.updateNode);
   const selectNodes = useUiStore(s => s.selectNodes);
-  const showJenjangOnCard = useUiStore(s => s.showJenjangOnCard);
-  const { setCenter } = useReactFlow();
+  const requestFocusNode = useUiStore(s => s.requestFocusNode);
 
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
@@ -60,12 +57,10 @@ export const ReadinessDialog: React.FC<ReadinessDialogProps> = ({
 
     const target = project.nodes.find(n => n.id === nodeId);
     if (target) {
-      const h = nodeHeight(target, showJenjangOnCard);
-      setCenter(target.position.x + NODE_W / 2, target.position.y + h / 2, {
-        zoom: 1.2,
-        duration: 300,
-      });
       selectNodes([nodeId]);
+      // Centering ditunda ke Canvas.tsx (tab Preview belum tentu mounted
+      // saat dialog ini terbuka) — lihat komentar FocusRequest di uiStore.ts.
+      requestFocusNode(nodeId);
       onClose();
     }
   };

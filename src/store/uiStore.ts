@@ -40,11 +40,30 @@ export interface ToastState {
   tone: 'success' | 'error';
 }
 
+/**
+ * Permintaan "fokus ke node ini" dari panel manapun (Outline/Unplaced/Rekap/
+ * ReadinessDialog) — TIDAK memanggil setCenter() langsung di panel asal,
+ * karena <ReactFlow> cuma benar-benar mounted saat tab Preview aktif
+ * (StructurePanel.tsx). Memanggil aksi viewport (setCenter dengan durasi
+ * animasi) lewat useReactFlow() saat <ReactFlow>-nya sendiri belum/tidak
+ * mounted membuat transisi d3-zoom internal xyflow nyangkut; begitu Preview
+ * akhirnya dibuka, StoreUpdater ikut memicu "Maximum update depth exceeded"
+ * (loop setNodes tanpa henti). Canvas.tsx (satu-satunya tempat <ReactFlow>
+ * benar-benar dirender) yang mengonsumsi permintaan ini lewat efek, setelah
+ * dirinya sendiri pasti sudah mounted. `nonce` supaya klik node yang SAMA dua
+ * kali berturut-turut tetap memicu efek (nodeId saja tidak berubah referensi).
+ */
+export interface FocusRequest {
+  nodeId: string;
+  nonce: number;
+}
+
 export interface UiState {
   selectedNodeIds: string[];
   showJenjangOnCard: boolean;
   /** Tab aktif di panel tengah (Outline/Preview/Unplaced/Rekap/Satuan). */
   structureTab: StructureTab;
+  focusRequest: FocusRequest | null;
   /** Template unit yang sedang dipilih di tab Satuan (kalau project punya >1 template). */
   selectedTemplateId: string | null;
   dialog: DialogState;
@@ -59,6 +78,13 @@ export interface UiState {
   setShowJenjangOnCard: (show: boolean) => void;
   setStructureTab: (tab: StructureTab) => void;
   setSelectedTemplateId: (id: string | null) => void;
+  /** Minta Canvas men-setCenter node ini begitu Canvas (tab Preview) benar-
+   * benar mounted — TIDAK memaksa pindah tab. Kalau operator sudah di
+   * Preview, efeknya langsung terlihat; kalau belum, permintaan menunggu
+   * sampai operator membuka tab Preview sendiri. Lihat komentar FocusRequest
+   * di atas untuk alasan kenapa TIDAK boleh setCenter langsung dari sini. */
+  requestFocusNode: (nodeId: string) => void;
+  clearFocusRequest: () => void;
   /** Dipanggil dari panel properti (TemplateEditor) — pindah ke tab Satuan
    * langsung menunjuk template yang bersangkutan, tanpa operator harus
    * mencari-cari tab lalu memilih ulang dari dropdown. */
@@ -76,6 +102,7 @@ export const useUiStore = create<UiState>(set => ({
   selectedNodeIds: [],
   showJenjangOnCard: false,
   structureTab: 'outline',
+  focusRequest: null,
   selectedTemplateId: null,
   dialog: null,
   toast: null,
@@ -99,6 +126,11 @@ export const useUiStore = create<UiState>(set => ({
   setShowJenjangOnCard: (show: boolean) => set({ showJenjangOnCard: show }),
   setStructureTab: (tab: StructureTab) => set({ structureTab: tab }),
   setSelectedTemplateId: (id: string | null) => set({ selectedTemplateId: id }),
+  requestFocusNode: (nodeId: string) =>
+    set(state => ({
+      focusRequest: { nodeId, nonce: (state.focusRequest?.nonce ?? 0) + 1 },
+    })),
+  clearFocusRequest: () => set({ focusRequest: null }),
   openSatuanTab: (templateNodeId: string) =>
     set({ structureTab: 'satuan', selectedTemplateId: templateNodeId }),
   setDialog: (dialog: DialogState) => set({ dialog }),
