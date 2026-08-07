@@ -1,15 +1,17 @@
 # 20 — Skalabilitas: Worker, Virtualisasi, dan Rencana Persistensi Lanjutan
 
-> **Status dokumen ini**: Fase 0–2 dan **Fase 3.1** (di bawah) **sudah selesai
-> diimplementasikan dan di-commit** (Fase 0–2: branch `feat/skalabilitas-fase-0-2`,
-> commit `2015a7b`/`d1d668f`, di-merge ke `master`; Fase 3.1: langsung di
-> `master`, lihat §3.1 untuk detail deviasi dari rencana asli). **Fase 3.2–4
-> belum dikerjakan** — bagian itu ditulis sedetail rencana yang sudah dieksekusi
-> supaya sesi berikutnya bisa langsung mulai tanpa riset ulang. Dokumen sumber
-> asli (rencana lengkap 5 fase, dibuat di awal) ada di luar repo
-> (`~/.claude/plans/asumsikan-app-ini-akan-compressed-blanket.md`, tidak
-> ter-version) — dokumen ini adalah versi yang **disalin & diperbarui ke kondisi
-> kode sungguhan**, supaya jadi rujukan tunggal yang bisa diandalkan.
+> **Status dokumen ini**: Fase 0–2, **Fase 3.1**, dan **Fase 3.2** (di bawah)
+> **sudah selesai diimplementasikan**. Fase 0–2: branch `feat/skalabilitas-fase-0-2`,
+> commit `2015a7b`/`d1d668f`, di-merge ke `master`. Fase 3.1–3.2: lihat §3.1/§3.2
+> untuk detail lengkap + deviasi dari rencana asli (masing-masing punya
+> beberapa penyesuaian nyata yang ditemukan saat implementasi, bukan cuma
+> rencana yang dieksekusi apa adanya). **Fase 3.3 (sengaja ditunda, lihat
+> trigger di §3.3) dan Fase 4 belum dikerjakan** — bagian itu ditulis sedetail
+> rencana yang sudah dieksekusi supaya sesi berikutnya bisa langsung mulai
+> tanpa riset ulang. Dokumen sumber asli (rencana lengkap 5 fase, dibuat di
+> awal) ada di luar repo (`~/.claude/plans/asumsikan-app-ini-akan-compressed-blanket.md`,
+> tidak ter-version) — dokumen ini adalah versi yang **disalin & diperbarui ke
+> kondisi kode sungguhan**, supaya jadi rujukan tunggal yang bisa diandalkan.
 
 ## Context
 
@@ -169,7 +171,7 @@ besar terasa macet — bukan asumsi. Kalau trigger itu muncul:
 
 ---
 
-## Fase 3 — Perombakan persistensi (3.1 SELESAI, 3.2–3.3 BELUM)
+## Fase 3 — Perombakan persistensi (3.1 & 3.2 SELESAI, 3.3 SENGAJA DITUNDA)
 
 **Tujuan**: bikin biaya dashboard/autosave se-pemda O(jumlah OPD), bukan
 O(total node se-pemda). Ini fix definitif untuk keluhan #2 (Fase 2 cuma
@@ -282,80 +284,139 @@ kelalaian. Kalau nanti fungsi IDB-touching butuh ditest langsung (mis. sebagai
 bagian §3.2 migrasi), itu keputusan yang layak didiskusikan eksplisit dulu
 (nambah `fake-indexeddb` sebagai dev dependency) — jangan diam-diam ditambah.
 
-### 3.2 — Skema IndexedDB sungguhan (`idb`, bukan `idb-keyval`)
+### 3.2 — Skema IndexedDB sungguhan (`idb`, bukan `idb-keyval`) — SELESAI
 
 **Kenapa**: `idb-keyval` cuma kasih satu object store key-value flat. Dua
 masalah struktural yang tidak bisa diperbaiki tanpa ganti:
-1. Enumerasi project butuh `keys()` (buffer SEMUA key) + filter prefix string
-   — lihat `rebuildIndexFromStorage` di `persistence/storage.ts` (sudah
-   diperbaiki jadi baca-lepas per Fase 2.3, tapi `keys()`-nya sendiri masih
-   membuffer seluruh daftar key sekaligus — itu jauh lebih murah dari body
-   penuh, jadi bukan prioritas, tapi tetap bukan solusi struktural).
+1. Enumerasi project butuh `keys()` (buffer SEMUA key) + filter prefix string.
 2. Update SATU project butuh **read-modify-write SELURUH blob `ProjectIndex`**
-   (`saveProjectIndex` menulis ulang array `entries` lengkap tiap kali) — di
-   300 OPD, tiap save menyentuh 300 entri untuk mengubah 1.
+   — di 300 OPD, tiap save menyentuh 300 entri untuk mengubah 1.
 
-**Pustaka pilihan**: `idb` (penulis sama dengan `idb-keyval`, ~1.5KB,
-memberi transaksi & index sungguhan) — **bukan** `dexie` (~25KB, API lebih luas
-dari kebutuhan).
+**Pustaka**: `idb@8` — dependency baru, dikonfirmasi eksplisit ke user
+sebelum ditambah (lihat AskUserQuestion sebelum sub-fase ini dimulai).
 
-**Object store yang direncanakan**:
-```
-projects   — key: id,           value: Project (body penuh)
-summaries  — key: id,           value: ProjectSummary (dari §3.1)
-entries    — key: id,           value: ProjectIndexEntry, index: kodeOPD, updatedAt
-archives   — key: generation id (dari persistence/archive.ts yang sudah ada)
-ui         — key kecil-kecil (dari persistence/customOpd.ts dkk)
-```
+**Yang dibangun** (semua file baru di `src/persistence/`):
+- [db.ts](../src/persistence/db.ts) — `getPjbV2Db()`, membuka database
+  **TERPISAH** `pjb_v2` (bukan `pjb_db` yang dipakai idb-keyval) lewat `idb`'s
+  `openDB` + `upgrade` callback. Object store: `projects` (keyPath `id`),
+  `entries` (keyPath `id`, index `by-kodeOPD` + `by-updatedAt`), `summaries`
+  (key eksternal — `ProjectSummary` sendiri tidak punya field `id`), `meta`
+  (satu record `activeId`).
+- [projectBuilders.ts](../src/persistence/projectBuilders.ts) — `buildIndexEntry`,
+  `buildProjectSummary`, `isProjectSummaryFresh` (semua dari Fase 3.1, dipindah
+  dari `storage.ts` ke sini — **murni, TANPA IndexedDB**), + migrasi
+  `normalizeProject`/`normalizeProjectDetailed`/`normalizeStrukturalHeads`
+  (juga dipindah dari `storage.ts`), + `pickMostRecentId` (baru, dipakai
+  `rebuildIndexFromStorage`). File ini dipisah dari `storage.ts`/`repository.ts`
+  KHUSUS untuk memutus siklus impor (`repository.ts` butuh fungsi-fungsi ini,
+  `storage.ts` re-export dari keduanya).
+- [repository.ts](../src/persistence/repository.ts) — interface
+  `ProjectRepository` + `class IdbRepository implements ProjectRepository`,
+  singleton `export const repository`.
+- [migrateV2.ts](../src/persistence/migrateV2.ts) — `migrateV2()`, dijaga flag
+  LocalStorage `pjb:v2:migrated`. Dipanggil sekali di awal `bootstrapPersistence()`
+  (`persistence/bootstrap.ts`), SEBELUM `getProjectIndex()` dipanggil.
+- `persistence/storage.ts` — permukaan publik **tidak berubah** dari sisi
+  pemanggil (nama & signature semua fungsi sama), isinya sekarang delegasi
+  tipis ke `repository`. `customStore` (idb-keyval, `pjb_db`) **tetap
+  diekspor** — masih dipakai (lihat "batas migrasi" di bawah).
 
-**Batas desain yang WAJIB dipegang** (dari rencana awal, ini yang membuat
-migrasi ini aman): permukaan publik
-[persistence/storage.ts](../src/persistence/storage.ts) — kira-kira 8 fungsi:
-`getProjectIndex`, `getProject`, `getProjectWithMigrationFlag`, `saveProject`,
-`deleteProjectData`, `saveProjectIndex`, `buildIndexEntry`,
-`rebuildIndexFromStorage`, `estimateStorageUsage` — **tidak berubah sama
-sekali** dari sisi pemanggil. Semua yang ada di atasnya (`bootstrap.ts`,
-`autosave.ts`, `projectStore.ts`, `projectIndexStore.ts`, semua komponen React,
-`analysis.worker.ts`) lewat fungsi-fungsi itu, tidak pernah `idb-keyval`/`idb`
-langsung. **Formalkan jadi interface eksplisit**:
-
+**`ProjectRepository` yang jadi** — **BUKAN** persis 8 fungsi dari rencana
+awal, ada **4 method tambahan**:
 ```ts
-// src/persistence/repository.ts (BARU)
 export interface ProjectRepository {
   getProjectIndex(): Promise<ProjectIndex>;
   getProject(id: string): Promise<Project | null>;
   getProjectWithMigrationFlag(id: string): Promise<{ project: Project; migrated: boolean } | null>;
-  saveProject(project: Project): Promise<void>;
+  getProjectSummary(id: string): Promise<ProjectSummary | null>; // Fase 3.1, tidak disebut rencana 3.2 asli
+  saveProject(project: Project): Promise<void>; // body+entry+summary+activeId, SATU transaksi
   deleteProjectData(id: string): Promise<void>;
-  saveProjectIndex(index: ProjectIndex): Promise<void>;
+  saveProjectIndex(index: ProjectIndex): Promise<void>; // bulk-replace, dipakai HANYA rebuildIndexFromStorage
   rebuildIndexFromStorage(): Promise<ProjectIndex>;
   estimateStorageUsage(): Promise<{ usedBytes: number; quotaBytes: number; percentUsed: number }>;
+  // BARU, tidak ada di rencana awal — lihat "kenapa 4 method tambahan" di bawah
+  putProjectBody(project: Project): Promise<void>;
+  deleteProjectBody(id: string): Promise<void>;
+  writeEntriesAndSummaries(items: Array<{ project: Project; carry: ... }>): Promise<ProjectIndexEntry[]>;
+  patchLastExportedAt(id: string, iso: string): Promise<void>;
 }
 ```
 
-`persistence/storage.ts` jadi `export const repository: ProjectRepository =
-new IdbRepository();` dan semua fungsi top-level yang ada sekarang jadi
-re-export tipis (`export const getProject = (id) => repository.getProject(id)`)
-supaya **nol** call site berubah. Interface ini juga sambungan langsung ke Fase
-4 (`HttpRepository` nanti implement interface yang sama).
+**Lima deviasi sengaja dari rencana awal** (dengan alasan):
 
-**Migrasi**: `src/persistence/migrateV2.ts` (baru) — dijaga flag
-`pjb:v2:migrated` (di LocalStorage, konsisten dengan `pjb:v1:ui`/`pjb:v1:acks`
-yang sudah di LocalStorage per catatan amandemen di
-[doc 10](./10-persistence-projects.md)), idempotent & resumable (baca semua key
-`pjb:v1:project:*` dari `idb-keyval`, tulis ke object store `projects` baru
-lewat `idb`, per-project — kalau proses terhenti di tengah, flag belum ke-set,
-resume dari awal aman karena `idb`-write bersifat overwrite bukan append), modal
-progress (`{done, total}`, pola sama seperti export/import dialog yang sudah
-ada). **Prasyarat keras**: Fase 1.9 (skema Zod lengkap) sudah selesai — migrasi
-memutar tiap body lewat `zProject.safeParse` sebelum ditulis ke skema baru;
-menjalankan itu atas project dengan skema Zod yang masih lossy tidak bisa
-dipulihkan. (1.9 **sudah selesai** — prasyarat ini sudah terpenuhi.)
+1. **Database TERPISAH (`pjb_v2`), bukan object store baru di `pjb_db`.**
+   Rencana awal menyebut `archives`/`ui` sebagai object store di database yang
+   sama dengan `projects`/`entries`/`summaries`. Ternyata tidak praktis:
+   `idb-keyval` membuka `pjb_db` tanpa mengekspos hook `upgrade` versi-nya
+   sendiri — menambah store lain ke situ butuh trik version-bump lintas-library
+   yang rapuh (dua library berbeda sama-sama "memiliki" skema db yang sama).
+   Dua database terpisah co-exist dengan aman di IndexedDB (fakta platform,
+   bukan trik) — jadi dipisah saja: `pjb_v2` (idb) untuk data yang jadi
+   masalah skala, `pjb_db` (idb-keyval) tetap untuk sisanya.
+2. **`archives` dan `ui` (customOpd) TIDAK dimigrasi — batas migrasi eksplisit.**
+   Keduanya BUKAN bagian dari masalah skala (satu generasi arsip per project,
+   segelintir entri OPD kustom — tidak tumbuh dengan jumlah OPD), jadi sengaja
+   dibiarkan di `pjb_db`/idb-keyval. `persistence/customOpd.ts` **tidak
+   disentuh sama sekali**. `persistence/bulkImport.ts`'s `archiveProject`/
+   `getArchivedProject` juga tetap menyimpan salinan arsip di `pjb_db` — cuma
+   SUMBER body-nya yang sekarang dibaca dari `repository` (database baru).
+3. **4 method tambahan di `ProjectRepository`, di luar rencana ~8 fungsi.**
+   Alasan konkret: `persistence/bulkImport.ts` dan `persistence/reminder.ts`
+   TERNYATA langsung menyentuh `idb-keyval`/`customStore` (bypass permukaan
+   8-fungsi `storage.ts` sepenuhnya) — ditemukan saat implementasi, bukan
+   sebelumnya. Kalau dibiarkan, project yang ditulis lewat bulk-import akan
+   masuk ke database LAMA sementara semua yang lain baca dari database BARU
+   — **korupsi-diam-diam, bukan cuma performa**. Jadi `bulkImport.ts` (two-phase
+   commit: `putProjectBody` fase 1, `writeEntriesAndSummaries` fase 2 — TIDAK
+   menyentuh `activeId`, persis perilaku lama) dan `reminder.ts`'s
+   `markProjectExported` (`patchLastExportedAt`, O(1) patch satu field
+   ketimbang RMW seluruh index — ini salah satu jalur tulis index PALING
+   SERING dipanggil, tiap export berhasil) ikut ditulis ulang memakai
+   `repository`, bukan cuma jalur `saveProject` interaktif.
+4. **`rebuildIndexFromStorage` pakai cursor `idb` SUNGGUHAN**, menggantikan
+   trik baca-dua-pass Fase 2.3 (yang cuma kompromi karena `idb-keyval` tidak
+   punya cursor). Satu body per waktu, satu pass, bukan dua.
+5. **`IdbRepository.getProjectSummary` mempertahankan try/catch dari Fase 3.1**
+   (kembalikan `null` pada KEGAGALAN APA PUN, bukan cuma "tidak ada") — ini
+   BUKAN keputusan desain di awal, tapi **regresi nyata yang ketahuan lewat
+   test** (`tests/worker-client.test.ts` gagal karena `openDB()` throw di
+   Vitest node environment tanpa `indexedDB`), diperbaiki sebelum lanjut.
+   Method `repository` LAIN (`getProject`, `saveProject`, dst.) **sengaja
+   TIDAK** diberi try/catch serupa — errornya harus tetap propagate (ditangkap
+   `bootstrapPersistence`'s try/catch di lapisan atas), karena getProjectSummary
+   punya kontrak "opsional/best-effort dengan fallback" yang eksplisit sejak
+   Fase 3.1 sementara baca/tulis project TIDAK boleh gagal diam-diam.
 
-**Test yang dibutuhkan**: `tests/migrate-v2.test.ts` (baru) — migrasi dari
-fixture `idb-keyval` lama ke `idb` baru, interrupted-and-resumed (jalankan
-separuh, "crash", jalankan lagi, hasil akhir harus identik dengan jalan mulus),
-dan idempotency (jalankan dua kali berturut-turut, hasil kedua = hasil pertama).
+**Nuansa perilaku yang berubah** (tidak berbahaya, tapi layak dicatat): urutan
+`ProjectIndex.entries` dari `getProjectIndex()` sekarang urutan KEY (`id`)
+lewat `getAll()`, bukan urutan insert/update-terakhir seperti array
+`idb-keyval` sebelumnya. Tidak ada consumer yang bergantung pada urutan ini
+(dashboard/daftar OPD semua sort ulang sendiri berdasarkan kriteria masing-
+masing) — dicek eksplisit sebelum dianggap aman.
+
+**Migrasi** — persis rencana awal: dijaga flag LocalStorage `pjb:v2:migrated`,
+idempotent (semua tulisan `put`/overwrite, bukan `add`/append) & resumable
+(TIDAK PERNAH menghapus `pjb_db` lama — salin-maju murni, aman diulang dari
+awal kalau terhenti). Dipanggil di awal `bootstrapPersistence()`. Menghormati
+`activeId` TERAKHIR dari index lama (bukan cuma "paling baru diubah" hasil
+`rebuildIndexFromStorage`).
+
+**Catatan strategi test (konsisten dengan Fase 3.1)**: `IdbRepository` dan
+`migrateV2()` sendiri **TIDAK** ditest langsung (butuh `indexedDB` sungguhan,
+repo ini tidak punya `fake-indexeddb` — keputusan sadar, bukan kelalaian, lihat
+catatan yang sama di §3.1). Yang ditest: fungsi MURNI di
+`projectBuilders.ts` (`buildIndexEntry`, `buildProjectSummary`,
+`pickMostRecentId` — `tests/persistence.test.ts`) dan `isV2Migrated()`'s
+jalur aman-tanpa-LocalStorage (`tests/migrate-v2.test.ts`). Verifikasi
+tambahan yang DIPAKAI sebagai pengganti test IDB langsung: `npx vite build`
+sungguhan (memastikan `idb` ter-bundle benar ke `analysis.worker.js`, tidak
+cuma lolos `tsc`) — dijalankan sebagai bagian verifikasi sub-fase ini, bukan
+cuma `tsc --noEmit`/`vitest run` seperti fase-fase lain.
+
+**Belum dikerjakan dari rencana awal**: tidak ada — §3.2 selesai sepenuhnya
+sesuai cakupan yang didefinisikan ulang di atas (termasuk perluasan cakupan ke
+`bulkImport.ts`/`reminder.ts` yang tidak disebut rencana awal tapi terbukti
+perlu untuk korektnes).
 
 ### 3.3 — Body ter-chunk (DESAIN SAJA, JANGAN BANGUN TANPA TRIGGER)
 
@@ -496,7 +557,7 @@ butuh data semua operator sekaligus.
 | Fase | Effort | Membuka |
 |---|---|---|
 | 3.1 Ringkasan | **SELESAI** | Dashboard jadi O(jumlah OPD); prasyarat 3.2 |
-| 3.2 Skema IndexedDB (`idb` + `ProjectRepository`) | 4–6 jam | Update-satu-project jadi O(1) record, bukan RMW seluruh index; sambungan ke Fase 4 |
+| 3.2 Skema IndexedDB (`idb` + `ProjectRepository`) | **SELESAI** | Update-satu-project jadi O(1) record, bukan RMW seluruh index; sambungan ke Fase 4 |
 | 3.3 Body ter-chunk | didesain saja, tidak dikerjakan | Hanya kalau trigger (§3.3) muncul |
 | 4 Backend | ≥3–4 minggu | Hanya atas trigger bernama (multi-user/durabilitas/link lintas-OPD/audit), TIDAK ADA yang soal performa |
 

@@ -472,7 +472,7 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({ onClose, onImported,
       if (result.failed.length > 0) {
         // Sebagian gagal di Fase 1 — beri opsi rollback (doc 14 §4.1 poin 2)
         // alih-alih diam-diam meninggalkan index & body tidak sinkron.
-        setRollbackKeys(result.writtenKeys);
+        setRollbackKeys(result.writtenIds);
       }
 
       setBatchResult({ committed: result.committedProjects.length, skipped });

@@ -4,6 +4,7 @@ import { ProjectIndexEntry } from '../src/persistence/types';
 import { shouldRemindExport } from '../src/persistence/reminder';
 import { migrateProject } from '../src/schema/migration';
 import { buildIndexEntry, buildProjectSummary, isProjectSummaryFresh } from '../src/persistence/storage';
+import { pickMostRecentId } from '../src/persistence/projectBuilders';
 import { computeRecap } from '../src/selectors/recap';
 import { validateProject } from '../src/selectors/validation';
 import { taxonomy } from '../src/config/taxonomy';
@@ -374,5 +375,37 @@ describe('isProjectSummaryFresh (Fase 3.1)', () => {
 
   it('null summary (never computed) is always stale', () => {
     expect(isProjectSummaryFresh(null, '2026-01-01T00:00:00.000Z')).toBe(false);
+  });
+});
+
+describe('pickMostRecentId (Fase 3.2, dipakai repository.ts rebuildIndexFromStorage)', () => {
+  function entry(id: string, updatedAt: string): ProjectIndexEntry {
+    return {
+      id,
+      namaOPD: id,
+      kodeOPD: id,
+      nodeCount: 0,
+      totalKebutuhan: 0,
+      totalEksisting: 0,
+      updatedAt,
+      lastExportedAt: null,
+    };
+  }
+
+  it('picks the id with the latest updatedAt', () => {
+    const entries = [
+      entry('a', '2026-01-01T00:00:00.000Z'),
+      entry('b', '2026-03-01T00:00:00.000Z'),
+      entry('c', '2026-02-01T00:00:00.000Z'),
+    ];
+    expect(pickMostRecentId(entries)).toBe('b');
+  });
+
+  it('returns null for an empty list', () => {
+    expect(pickMostRecentId([])).toBeNull();
+  });
+
+  it('a single entry is trivially the most recent', () => {
+    expect(pickMostRecentId([entry('solo', '2026-01-01T00:00:00.000Z')])).toBe('solo');
   });
 });
