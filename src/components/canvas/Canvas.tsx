@@ -26,6 +26,7 @@ import { useRecap } from '@/hooks/useRecap';
 import { getStructureIndex } from '@/selectors/structureIndex';
 import { allDepths } from '@/selectors/navigation';
 import { buildTemplateUnitIds, containingTemplateUnitId, countInstancesFor } from '@/selectors/templateInstance';
+import { NODE_W, nodeHeight } from '@/utils/layout';
 import { Layers } from 'lucide-react';
 
 // Fase 2.6 — di atas ini, React Flow membukukan (bukan cuma render) SETIAP
@@ -54,8 +55,10 @@ const InnerCanvas: React.FC = () => {
   const selectNodes = useUiStore(s => s.selectNodes);
   const clearSelection = useUiStore(s => s.clearSelection);
   const showJenjangOnCard = useUiStore(s => s.showJenjangOnCard);
+  const focusRequest = useUiStore(s => s.focusRequest);
+  const clearFocusRequest = useUiStore(s => s.clearFocusRequest);
 
-  const { fitView } = useReactFlow();
+  const { fitView, setCenter } = useReactFlow();
 
   const nodes = project?.nodes ?? [];
   const edges = project?.edges ?? [];
@@ -90,6 +93,39 @@ const InnerCanvas: React.FC = () => {
     scope: 'all',
     showJenjang: showJenjangOnCard,
   });
+
+  // Konsumsi permintaan fokus (dilempar TreeView/UnplacedPanel/RecapPanel/
+  // ReadinessDialog lewat useUiStore.requestFocusNode) — lihat komentar
+  // FocusRequest di uiStore.ts. Efek ini HANYA jalan setelah InnerCanvas
+  // (dan <ReactFlow> di bawahnya) benar-benar mounted, jadi setCenter aman
+  // dipanggil di sini, TIDAK di panel asal.
+  useEffect(() => {
+    if (!focusRequest) return;
+    const target = nodes.find(n => n.id === focusRequest.nodeId);
+    if (target) {
+      const pos = liveLayout.get(target.id) ?? target.position;
+      const h = nodeHeight(target, showJenjangOnCard);
+      setCenter(pos.x + NODE_W / 2, pos.y + h / 2, { zoom: 1.2, duration: 300 });
+    }
+    clearFocusRequest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusRequest]);
+
+  // Fase 1.7 — workaround bug @xyflow/react v12.4.2: kalau <ReactFlow> di-
+  // mount dengan sebuah node YANG SUDAH `selected: true` sejak render
+  // PERTAMA (mis. operator memilih baris di Outline lalu pindah ke tab
+  // Preview — selectedNodeIds sudah terisi sebelum Canvas ini pernah
+  // mounted), StoreUpdater masuk infinite-update-loop ("Maximum update depth
+  // exceeded"). Memilih node SETELAH mounted (klik kartu di kanvas) tidak
+  // bermasalah — cuma kombinasi mount+selected yang macet. `mounted` mulai
+  // false supaya render pertama SELALU mengirim `selected:false` ke setiap
+  // node; begitu efek di bawah jalan (browser sudah commit DOM pertama),
+  // render berikutnya baru membawa `selected` yang sebenarnya — closer ke
+  // "select setelah mount", bukan "select saat mount", jadi lolos dari bug.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Compute collapse-aware visible node IDs
   const visible = useMemo(() => {
@@ -141,9 +177,10 @@ const InnerCanvas: React.FC = () => {
           locked: isLocked(nodes, edges, n.id),
           instanceMarker: instanceMarkers.get(n.id),
         },
-        selected: selectedNodeIds.includes(n.id),
+        // `mounted` — lihat komentar workaround bug xyflow di atas.
+        selected: mounted && selectedNodeIds.includes(n.id),
       }));
-  }, [nodes, edges, guardedVisible, selectedNodeIds, showJenjangOnCard, liveLayout, recap, instanceMarkers]);
+  }, [nodes, edges, guardedVisible, selectedNodeIds, showJenjangOnCard, liveLayout, recap, instanceMarkers, mounted]);
 
   // Fase 1.4: warna MiniMap per node dihitung SEKALI di sini (useMemo), bukan
   // di dalam callback nodeColor React Flow — callback itu dipanggil per node

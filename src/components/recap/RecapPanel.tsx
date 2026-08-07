@@ -1,10 +1,8 @@
 import React from 'react';
 import { useRecap } from '@/hooks/useRecap';
-import { useReactFlow } from '@xyflow/react';
 import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
 import { ancestorsOf } from '@/selectors/navigation';
-import { NODE_W, nodeHeight } from '@/utils/layout';
 import { BarChart3, Building, Tag, Award } from 'lucide-react';
 
 export const RecapPanel: React.FC = () => {
@@ -12,8 +10,7 @@ export const RecapPanel: React.FC = () => {
   const project = useProjectStore(s => s.project);
   const updateNode = useProjectStore(s => s.updateNode);
   const selectNodes = useUiStore(s => s.selectNodes);
-  const showJenjangOnCard = useUiStore(s => s.showJenjangOnCard);
-  const { setCenter } = useReactFlow();
+  const requestFocusNode = useUiStore(s => s.requestFocusNode);
 
   if (!recap || !project) {
     return (
@@ -36,15 +33,12 @@ export const RecapPanel: React.FC = () => {
       }
     }
 
-    // 2. Center canvas & select node
+    // 2. Select node & minta Canvas men-center-nya begitu tab Preview
+    // mounted (lihat komentar FocusRequest di uiStore.ts).
     const targetNode = project.nodes.find(n => n.id === nodeId);
     if (targetNode) {
-      const h = nodeHeight(targetNode, showJenjangOnCard);
-      setCenter(targetNode.position.x + NODE_W / 2, targetNode.position.y + h / 2, {
-        zoom: 1.2,
-        duration: 300,
-      });
       selectNodes([nodeId]);
+      requestFocusNode(nodeId);
     }
   };
 
