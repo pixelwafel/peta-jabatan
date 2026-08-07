@@ -56,8 +56,10 @@ function createInlineClient(): AnalysisWorkerClient {
     },
     async globalBreakdown(topLevel, opts) {
       const { computeGlobalBreakdown } = await import('@/selectors/globalBreakdown');
-      const { getProject } = await import('@/persistence/storage');
-      return computeGlobalBreakdown(topLevel, getProject, opts);
+      const { getProject, getProjectSummary } = await import('@/persistence/storage');
+      // Fase 3.1 — sama seperti analysis.worker.ts: readSummary dicoba lebih
+      // dulu, getProject cuma fallback untuk summary yang hilang/basi.
+      return computeGlobalBreakdown(topLevel, getProject, { ...opts, readSummary: getProjectSummary });
     },
     terminate() {
       // no-op — tidak ada worker untuk dihentikan.

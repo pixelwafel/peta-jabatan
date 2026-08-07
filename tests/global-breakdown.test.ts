@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { computeGlobalBreakdown } from '../src/selectors/globalBreakdown';
 import { Project } from '../src/models/project';
 import { OrgNode } from '../src/models/node';
-import { ProjectIndexEntry } from '../src/persistence/types';
+import { ProjectIndexEntry, ProjectSummary } from '../src/persistence/types';
 
 function makeProject(id: string, kategoriId: string, kebutuhan: number, eksisting: number): Project {
   const nodes: OrgNode[] = [
@@ -134,5 +134,96 @@ describe('computeGlobalBreakdown (M11.5, docs/14-recap-dashboard.md §5)', () =>
     const struktural = buckets.find(b => b.key === 'struktural')!;
     expect(struktural.kebutuhan).toBe(3);
     expect(struktural.eksisting).toBe(2);
+  });
+});
+
+function makeSummary(kategoriId: string, kebutuhan: number, eksisting: number, computedFrom: string): ProjectSummary {
+  return {
+    schemaVersion: 2,
+    computedFrom,
+    total: { key: 'total', label: 'Total', kebutuhan, eksisting, selisih: eksisting - kebutuhan, nodeCount: 1 },
+    perKategori: [
+      { key: kategoriId, label: kategoriId, kebutuhan, eksisting, selisih: eksisting - kebutuhan, nodeCount: 1 },
+    ],
+    perJenjang: [],
+    unplaced: { key: 'unplaced', label: 'Unplaced', kebutuhan: 0, eksisting: 0, selisih: 0, nodeCount: 0 },
+    nodeCount: 1,
+    findingCounts: { errors: 0, warnings: 0 },
+    linkedCodes: [],
+  };
+}
+
+describe('computeGlobalBreakdown — readSummary fast path (Fase 3.1, docs/20 §3.1)', () => {
+  it('uses summary.perKategori directly when fresh, never calling readProject for that entry', async () => {
+    const entry = indexEntry('a'); // updatedAt di-generate sekali, dipakai sebagai computedFrom di bawah
+    const summaries = new Map<string, ProjectSummary>([['a', makeSummary('pelaksana', 10, 8, entry.updatedAt)]]);
+    const readSummary = vi.fn(async (id: string) => summaries.get(id) ?? null);
+    const readProject = vi.fn(async () => null);
+
+    const buckets = await computeGlobalBreakdown([entry], readProject, { readSummary });
+
+    expect(readProject).not.toHaveBeenCalled();
+    expect(readSummary).toHaveBeenCalledWith('a');
+    const pelaksana = buckets.find(b => b.key === 'pelaksana')!;
+    expect(pelaksana.kebutuhan).toBe(10);
+    expect(pelaksana.eksisting).toBe(8);
+  });
+
+  it('falls back to readProject when the summary is stale (computedFrom !== entry.updatedAt)', async () => {
+    const entry = indexEntry('a');
+    const project = makeProject('a', 'pelaksana', 99, 99);
+    const summaries = new Map<string, ProjectSummary>([['a', makeSummary('pelaksana', 1, 1, 'some-old-timestamp')]]);
+    const readSummary = async (id: string) => summaries.get(id) ?? null;
+    const readProject = vi.fn(async (id: string) => (id === 'a' ? project : null));
+
+    const buckets = await computeGlobalBreakdown([entry], readProject, { readSummary });
+
+    expect(readProject).toHaveBeenCalledWith('a');
+    const pelaksana = buckets.find(b => b.key === 'pelaksana')!;
+    expect(pelaksana.kebutuhan).toBe(99); // dari body (readProject), bukan summary basi (1)
+  });
+
+  it('falls back to readProject when the summary is missing entirely', async () => {
+    const entry = indexEntry('a');
+    const project = makeProject('a', 'fungsional', 7, 7);
+    const readSummary = async () => null;
+    const readProject = vi.fn(async (id: string) => (id === 'a' ? project : null));
+
+    const buckets = await computeGlobalBreakdown([entry], readProject, { readSummary });
+
+    expect(readProject).toHaveBeenCalledWith('a');
+    const fungsional = buckets.find(b => b.key === 'fungsional')!;
+    expect(fungsional.kebutuhan).toBe(7);
+  });
+
+  it('omitting readSummary entirely preserves the pre-Fase-3.1 behaviour (always readProject)', async () => {
+    const entry = indexEntry('a');
+    const project = makeProject('a', 'pelaksana', 4, 4);
+    const readProject = vi.fn(async (id: string) => (id === 'a' ? project : null));
+
+    const buckets = await computeGlobalBreakdown([entry], readProject);
+
+    expect(readProject).toHaveBeenCalledWith('a');
+    expect(buckets.find(b => b.key === 'pelaksana')!.kebutuhan).toBe(4);
+  });
+
+  it('mixed batch: fresh summary for one entry, stale/missing fallback for another, folds correctly', async () => {
+    const freshEntry = indexEntry('fresh');
+    const staleEntry = indexEntry('stale');
+    const summaries = new Map<string, ProjectSummary>([
+      ['fresh', makeSummary('pelaksana', 10, 10, freshEntry.updatedAt)],
+      ['stale', makeSummary('pelaksana', 1, 1, 'old')],
+    ]);
+    const bodies = new Map<string, Project>([['stale', makeProject('stale', 'pelaksana', 5, 5)]]);
+    const readSummary = async (id: string) => summaries.get(id) ?? null;
+    const readProject = vi.fn(async (id: string) => bodies.get(id) ?? null);
+
+    const buckets = await computeGlobalBreakdown([freshEntry, staleEntry], readProject, { readSummary });
+
+    // fresh -> dari summary (10), stale -> dari body (5) -> total 15, bukan
+    // 10+1=11 (summary basi) atau 10+5 dihitung ulang keduanya.
+    expect(readProject).toHaveBeenCalledTimes(1);
+    expect(readProject).toHaveBeenCalledWith('stale');
+    expect(buckets.find(b => b.key === 'pelaksana')!.kebutuhan).toBe(15);
   });
 });

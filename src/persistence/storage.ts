@@ -1,9 +1,10 @@
 import { get, set, del, keys, createStore } from 'idb-keyval';
 import { Project } from '@/models/project';
-import { ProjectIndex, ProjectIndexEntry } from './types';
+import { ProjectIndex, ProjectIndexEntry, ProjectSummary } from './types';
 import { hierarchyEdges } from '@/utils/edges';
 import { compareNomor } from '@/utils/numbering';
 import { mergeStrukturalHeadsIntoUnits } from '@/utils/structuralMerge';
+import { Taxonomy } from '@/config/taxonomy';
 // Fase 2.1 — import statis kembali. Siklus lama (storage.ts -> selectors/
 // validation,recap -> linkResolver.ts -> store/projectStore.ts ->
 // store/projectIndexStore.ts -> balik ke getProjectIndex di modul ini) sudah
@@ -19,9 +20,18 @@ export const customStore = createStore('pjb_db', 'pjb_store');
 
 const INDEX_KEY = 'pjb:v1:index';
 const PROJECT_PREFIX = 'pjb:v1:project:';
+// Fase 3.1 — prefiks terpisah, sengaja "v2" (bukan v1) supaya iterasi
+// `keys()` yang memfilter PROJECT_PREFIX (mis. rebuildIndexFromStorage,
+// deleteProjectData) tidak pernah salah mengira record ringkasan ini sebagai
+// body project.
+const SUMMARY_PREFIX = 'pjb:v2:summary:';
 
 export function getProjectKey(id: string): string {
   return `${PROJECT_PREFIX}${id}`;
+}
+
+export function getProjectSummaryKey(id: string): string {
+  return `${SUMMARY_PREFIX}${id}`;
 }
 
 export async function isIndexedDbAvailable(): Promise<boolean> {
@@ -58,6 +68,40 @@ export async function getProject(id: string): Promise<Project | null> {
   const raw = await get<Project>(key, customStore);
   if (!raw) return null;
   return normalizeProject(raw);
+}
+
+/**
+ * Fase 3.1 — baca ringkasan tersimpan. `null` kalau belum pernah ditulis
+ * (project lama dari sebelum Fase 3.1) ATAU rusak/tidak terbaca — caller
+ * SELALU harus punya jalur fallback (baca body + hitung langsung), lihat
+ * `isProjectSummaryFresh` dan pemakainya di selectors/globalBreakdown.ts.
+ */
+export async function getProjectSummary(id: string): Promise<ProjectSummary | null> {
+  try {
+    const raw = await get<ProjectSummary>(getProjectSummaryKey(id), customStore);
+    if (raw && raw.schemaVersion === 2) return raw;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function saveProjectSummary(id: string, summary: ProjectSummary): Promise<void> {
+  await set(getProjectSummaryKey(id), summary, customStore);
+}
+
+/**
+ * Fase 3.1 — `summary.computedFrom` harus SAMA PERSIS dengan `updatedAt`
+ * project saat ini. `updatedAt` di sini datang dari `ProjectIndexEntry` yang
+ * SUDAH ada di memori (bagian dari index yang sudah dimuat) — caller tidak
+ * pernah perlu membuka body project cuma untuk mengecek kesegaran, itu akan
+ * meniadakan tujuan summary ini.
+ */
+export function isProjectSummaryFresh(
+  summary: ProjectSummary | null,
+  currentUpdatedAt: string
+): summary is ProjectSummary {
+  return summary !== null && summary.computedFrom === currentUpdatedAt;
 }
 
 /**
@@ -146,6 +190,9 @@ export async function saveProject(project: Project): Promise<void> {
 export async function deleteProjectData(id: string): Promise<void> {
   const key = getProjectKey(id);
   await del(key, customStore);
+  // Fase 3.1 — hindari record ringkasan yatim (project dihapus, summary-nya
+  // tertinggal). `del` pada key yang tidak ada adalah no-op aman di idb-keyval.
+  await del(getProjectSummaryKey(id), customStore);
 
   const index = await getProjectIndex();
   index.entries = index.entries.filter(e => e.id !== id);
@@ -158,6 +205,42 @@ export async function deleteProjectData(id: string): Promise<void> {
 const EMPTY_PROJECT_INDEX: ProjectIndex = { version: 1, activeId: null, entries: [] };
 
 /**
+ * Fase 3.1 (docs/20-skalabilitas-worker-virtualisasi.md §3.1) — satu tempat
+ * yang menjalankan validate+recap atas sebuah Project dan membentuknya jadi
+ * `ProjectSummary`. `buildIndexEntry` (di bawah) dan `saveProject` sama-sama
+ * bersumber dari sini alih-alih menghitung validate/recap sendiri-sendiri —
+ * WeakMap memo (Fase 1.2) di getCachedValidation/getCachedRecap membuat
+ * pemanggilan berulang atas `project` yang sama (dalam window commit yang
+ * sama) tetap murah, tapi tetap SATU sumber kebenaran lebih baik daripada dua
+ * fungsi yang bisa diam-diam melenceng.
+ */
+export function buildProjectSummary(
+  project: Project,
+  cfg: Taxonomy = taxonomy,
+  index: ProjectIndex = EMPTY_PROJECT_INDEX
+): ProjectSummary {
+  const findings = getCachedValidation(project, cfg, index);
+  const findingCounts = {
+    errors: findings.filter(f => f.severity === 'error').length,
+    warnings: findings.filter(f => f.severity === 'warning').length,
+  };
+
+  const recap = getCachedRecap(project, cfg, index);
+
+  return {
+    schemaVersion: 2,
+    computedFrom: project.updatedAt || new Date().toISOString(),
+    total: recap.total,
+    perKategori: recap.perKategori,
+    perJenjang: recap.perJenjang,
+    unplaced: recap.unplaced,
+    nodeCount: project.nodes.filter(n => n.type === 'jabatan').length,
+    findingCounts,
+    linkedCodes: project.nodes.filter(n => n.link).map(n => n.link!.kodeOPD),
+  };
+}
+
+/**
  * Bangun ProjectIndexEntry dari sebuah Project — dipakai baik oleh
  * `updateIndexForProject` (satu project, incremental) maupun
  * `rebuildIndexFromStorage` (semua project, dari nol). Diekstrak jadi fungsi
@@ -168,46 +251,34 @@ const EMPTY_PROJECT_INDEX: ProjectIndex = { version: 1, activeId: null, entries:
  * project ini SUDAH menyertakan kontribusi link-nya — inilah yang membuat
  * "government total = jumlah topLevel entries" di dashboard (doc 14 §2)
  * valid tanpa perlu membuka body project lain lagi di sana.
+ *
+ * Fase 3.1: sekarang tinggal memetik field dari `buildProjectSummary` —
+ * `ProjectIndexEntry` adalah "irisan tipis" dari `ProjectSummary` ditambah
+ * beberapa field yang tidak dihitung (nama/kode/carry).
  */
 export async function buildIndexEntry(
   project: Project,
   carry: Pick<ProjectIndexEntry, 'lastExportedAt' | 'origin'> = { lastExportedAt: null, origin: 'created' },
   index: ProjectIndex = EMPTY_PROJECT_INDEX
 ): Promise<ProjectIndexEntry> {
-  const posCount = project.nodes.filter(n => n.type === 'jabatan').length;
-
-  // Fase 1.2: pakai varian ter-memo (WeakMap keyed di identitas `project`) —
-  // autosave (updateIndexForProject) memanggil buildIndexEntry atas project
-  // yang BARU SAJA divalidasi/direkap Toolbar/ReadinessDialog/Canvas dalam
-  // render yang sama; getCachedValidation/getCachedRecap membaca hasil itu
-  // dari cache alih-alih menghitung ulang dari nol.
-  const findings = getCachedValidation(project);
-  const findingCounts = {
-    errors: findings.filter(f => f.severity === 'error').length,
-    warnings: findings.filter(f => f.severity === 'warning').length,
-  };
-
-  // total dari computeRecap (bukan projectTotals) supaya link node ikut
-  // teragregasi (docs/13-link-nodes.md §3) — tanpa ini, total project yang
-  // punya tautan akan tampak lebih kecil dari kenyataan di dashboard.
-  const totals = getCachedRecap(project, taxonomy, index).total;
+  const summary = buildProjectSummary(project, taxonomy, index);
 
   return {
     id: project.id,
     namaOPD: project.meta.namaOPD || 'Tanpa Nama',
     kodeOPD: project.meta.kodeOPD || 'KODE',
-    nodeCount: posCount,
-    totalKebutuhan: totals.kebutuhan,
-    totalEksisting: totals.eksisting,
-    updatedAt: project.updatedAt || new Date().toISOString(),
+    nodeCount: summary.nodeCount,
+    totalKebutuhan: summary.total.kebutuhan,
+    totalEksisting: summary.total.eksisting,
+    updatedAt: summary.computedFrom,
     lastExportedAt: carry.lastExportedAt,
     origin: carry.origin,
     // Kode OPD dari tiap link node di project ini — dipakai cycle guard
     // (selectors/linkResolver.ts canCreateLink) buat walk rantai tautan tanpa
     // perlu buka body project lain. Lihat docs/13-link-nodes.md §2.
-    linkedCodes: project.nodes.filter(n => n.link).map(n => n.link!.kodeOPD),
+    linkedCodes: summary.linkedCodes,
     // Badge "N file bermasalah" di dashboard tanpa buka body (doc 14 §2).
-    findingCounts,
+    findingCounts: summary.findingCounts,
   };
 }
 
@@ -223,6 +294,12 @@ export async function updateIndexForProject(project: Project): Promise<void> {
     },
     index
   );
+
+  // Fase 3.1 — tulis ringkasan di samping index entry, dalam batch async yang
+  // sama. `getCachedRecap`/`getCachedValidation` yang dipakai `buildIndexEntry`
+  // di atas (lewat buildProjectSummary) sudah menghitungnya; panggilan kedua
+  // ini adalah cache-hit (WeakMap Fase 1.2), bukan komputasi ulang dari nol.
+  await saveProjectSummary(project.id, buildProjectSummary(project, taxonomy, index));
 
   const entryIndex = index.entries.findIndex(e => e.id === project.id);
   if (entryIndex >= 0) {
@@ -266,12 +343,18 @@ export async function rebuildIndexFromStorage(): Promise<ProjectIndex> {
   const pass1Index: ProjectIndex = { version: 1, activeId: null, entries: pass1 };
 
   // Pass 2: baca ulang tiap body (sekali lagi, satu per satu) supaya
-  // resolusi link antar-project punya index lengkap dari pass 1.
+  // resolusi link antar-project punya index lengkap dari pass 1. Fase 3.1 —
+  // sekalian tulis ulang ProjectSummary di sini: body-nya SUDAH di tangan di
+  // pass ini (tidak ada baca tambahan), jadi rebuild penuh juga
+  // menyembuhkan summary yang hilang/rusak/basi untuk SEMUA project sekaligus.
   const entries: ProjectIndexEntry[] = [];
   for (const pk of projectKeys) {
     try {
       const p = await get<Project>(pk, customStore);
-      if (p && p.id && p.meta) entries.push(await buildIndexEntry(p, undefined, pass1Index));
+      if (p && p.id && p.meta) {
+        entries.push(await buildIndexEntry(p, undefined, pass1Index));
+        await saveProjectSummary(p.id, buildProjectSummary(p, taxonomy, pass1Index));
+      }
     } catch (err) {
       console.warn(`Failed reading project key ${pk}:`, err);
     }

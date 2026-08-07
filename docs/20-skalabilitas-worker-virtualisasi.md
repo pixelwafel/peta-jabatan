@@ -1,10 +1,12 @@
 # 20 — Skalabilitas: Worker, Virtualisasi, dan Rencana Persistensi Lanjutan
 
-> **Status dokumen ini**: Fase 0–2 (di bawah) **sudah selesai diimplementasikan dan
-> di-commit** (branch `feat/skalabilitas-fase-0-2`, commit `2015a7b` dan `d1d668f`).
-> Fase 3–4 **belum dikerjakan** — bagian itu ditulis sedetail rencana yang sudah
-> dieksekusi supaya sesi berikutnya bisa langsung mulai tanpa riset ulang.
-> Dokumen sumber asli (rencana lengkap 5 fase, dibuat di awal) ada di luar repo
+> **Status dokumen ini**: Fase 0–2 dan **Fase 3.1** (di bawah) **sudah selesai
+> diimplementasikan dan di-commit** (Fase 0–2: branch `feat/skalabilitas-fase-0-2`,
+> commit `2015a7b`/`d1d668f`, di-merge ke `master`; Fase 3.1: langsung di
+> `master`, lihat §3.1 untuk detail deviasi dari rencana asli). **Fase 3.2–4
+> belum dikerjakan** — bagian itu ditulis sedetail rencana yang sudah dieksekusi
+> supaya sesi berikutnya bisa langsung mulai tanpa riset ulang. Dokumen sumber
+> asli (rencana lengkap 5 fase, dibuat di awal) ada di luar repo
 > (`~/.claude/plans/asumsikan-app-ini-akan-compressed-blanket.md`, tidak
 > ter-version) — dokumen ini adalah versi yang **disalin & diperbarui ke kondisi
 > kode sungguhan**, supaya jadi rujukan tunggal yang bisa diandalkan.
@@ -167,7 +169,7 @@ besar terasa macet — bukan asumsi. Kalau trigger itu muncul:
 
 ---
 
-## Fase 3 — Perombakan persistensi (BELUM DIKERJAKAN)
+## Fase 3 — Perombakan persistensi (3.1 SELESAI, 3.2–3.3 BELUM)
 
 **Tujuan**: bikin biaya dashboard/autosave se-pemda O(jumlah OPD), bukan
 O(total node se-pemda). Ini fix definitif untuk keluhan #2 (Fase 2 cuma
@@ -177,85 +179,108 @@ memindahkan biayanya ke worker thread — jumlah kerjanya tetap O(total node)).
 (ringkasan) dan §3.2 (skema IndexedDB sungguhan) sekarang; §3.3 (body ter-chunk)
 didesain tapi ditunda di balik trigger eksplisit.
 
-### 3.1 — Ringkasan (summary) di samping body project
+### 3.1 — Ringkasan (summary) di samping body project — SELESAI
 
 **Kenapa ini dulu**: nilai tertinggi per baris kode, dan **tidak butuh** migrasi
-skema IndexedDB (§3.2) — bisa berdiri sendiri di atas `idb-keyval` yang ada
-sekarang. Ini juga prasyarat konseptual §3.2 (tahu dulu bentuk data yang mau
-disimpan, baru desain store-nya).
+skema IndexedDB (§3.2) — berdiri sendiri di atas `idb-keyval` yang sudah ada.
 
-**Bentuk record baru**, disimpan di key `pjb:v2:summary:<projectId>`:
+**Bentuk record**, disimpan di key `pjb:v2:summary:<projectId>` — persis seperti
+rencana, ditambahkan ke [persistence/types.ts](../src/persistence/types.ts):
+`ProjectSummary { schemaVersion: 2, computedFrom, total, perKategori,
+perJenjang, unplaced, nodeCount, findingCounts, linkedCodes }`.
 
-```ts
-// src/persistence/types.ts — tambahkan
-export interface ProjectSummary {
-  schemaVersion: 2;
-  computedFrom: string; // == project.updatedAt saat summary ini dihitung
-  total: RecapBucket;
-  perKategori: RecapBucket[];
-  perJenjang: RecapBucket[];
-  unplaced: RecapBucket;
-  nodeCount: number;
-  findingCounts: { errors: number; warnings: number };
-  linkedCodes: string[];
-}
-```
+**Yang dibangun** (semua di [persistence/storage.ts](../src/persistence/storage.ts)
+kecuali disebutkan lain):
+- `buildProjectSummary(project, cfg?, index?): ProjectSummary` — fungsi murni,
+  memanggil `getCachedValidation`/`getCachedRecap` (WeakMap-memo Fase 1.2) sekali,
+  membentuk `ProjectSummary`.
+- `buildIndexEntry` **ditulis ulang** untuk memetik field dari
+  `buildProjectSummary` alih-alih menghitung validate/recap sendiri —
+  `ProjectIndexEntry` sekarang benar-benar "irisan tipis" dari `ProjectSummary`.
+  Satu sumber kebenaran, bukan dua fungsi yang bisa melenceng.
+- `getProjectSummary(id): Promise<ProjectSummary | null>` (export) dan
+  `saveProjectSummary(id, summary)` (privat ke modul) — baca/tulis IDB langsung.
+- `isProjectSummaryFresh(summary, currentUpdatedAt): summary is ProjectSummary`
+  — type guard murni, `summary !== null && summary.computedFrom === currentUpdatedAt`.
+- `updateIndexForProject` (dipanggil `saveProject` tiap kali project disimpan)
+  sekarang **juga** memanggil `saveProjectSummary` — jadi summary selalu ditulis
+  ulang tepat saat `ProjectIndexEntry`-nya ditulis ulang, tidak pernah terpisah.
+- `deleteProjectData` juga menghapus record summary (cegah record yatim).
+- `rebuildIndexFromStorage` (jalur pemulihan index korup, Fase 2.3) sekalian
+  menulis ulang summary tiap project — body sudah ada di tangan di pass itu,
+  tidak ada baca tambahan, jadi rebuild penuh juga "menyembuhkan" summary yang
+  hilang/rusak untuk SEMUA project sekaligus.
+- `computeGlobalBreakdown` (`selectors/globalBreakdown.ts`) dapat parameter
+  opsional baru `opts.readSummary?: (id) => Promise<ProjectSummary|null>` di
+  `GlobalBreakdownOptions`. Kalau disediakan DAN `summary.computedFrom ===
+  entry.updatedAt` (freshness dicek terhadap `ProjectIndexEntry.updatedAt` yang
+  SUDAH ada di `topLevel`, tidak pernah baca body project untuk cek ini),
+  `summary.perKategori` dipakai langsung — `readProject` untuk entry itu **sama
+  sekali tidak dipanggil**. Summary hilang/basi → fallback ke `readProject` +
+  `computeRecap` (jalur lama, selalu benar). **Backward compatible**: parameter
+  opsional, caller lama yang tidak pernah tahu summary ada (atau sengaja tidak
+  memberinya, mis. test) tetap dapat perilaku persis sebelum Fase 3.1.
+- Kedua consumer worker sudah di-wire: `analysis.worker.ts`'s case
+  `'globalBreakdown'` dan `client.ts`'s `createInlineClient().globalBreakdown`
+  sama-sama mengoper `readSummary: getProjectSummary`. `RecapDashboard.tsx`
+  TIDAK perlu tahu summary ada sama sekali — optimasi ini sepenuhnya
+  tersembunyi di balik `AnalysisWorkerClient.globalBreakdown()`.
+  `laporanExporter.ts`'s `buildLaporanPemerintahWorkbook` juga menerima
+  `readSummary` lewat `LaporanPemerintahOptions extends GlobalBreakdownOptions`
+  (dioper `RecapDashboard.tsx`'s `handleExportLaporan` untuk jalur fallback
+  langka saat `precomputedBreakdown` belum siap).
 
-**Siapa yang menulis**: worker `analysis.worker.ts` yang sama yang sudah dipicu
-autosave (lewat operasi `indexEntry` yang sudah ada — perluas jadi juga menulis
-summary di operasi yang sama, atau tambah operasi `writeSummary` terpisah kalau
-mau tetap murni/testable tanpa IDB — **pilih pola yang sama dengan
-`buildIndexEntry`**: fungsi murni `buildProjectSummary(project, cfg, index):
-ProjectSummary` di `selectors/` atau `persistence/storage.ts`, dipanggil oleh
-worker, hasilnya ditulis lewat `idb-keyval`'s `set()` di dalam
-`analysis.worker.ts` (worker sudah punya handle `customStore` lewat
-`persistence/storage.ts`, lihat §"Bentuk src/workers/ sekarang" di atas).
+**Tiga deviasi sengaja dari rencana awal** (dengan alasan):
+1. **Summary ditulis di main thread (`updateIndexForProject`), BUKAN lewat
+   worker.** Rencana awal menyarankan worker sebagai penulis. Setelah
+   diimplementasikan, ternyata tidak perlu: `getCachedValidation`/`getCachedRecap`
+   yang dipanggil `buildProjectSummary` SUDAH berjalan di main thread pada
+   setiap `saveProject` sejak Fase 1.2 (untuk mengisi `ProjectIndexEntry`) —
+   menambahkan `saveProjectSummary` di titik yang sama itu bukan komputasi
+   baru, cuma menyimpan hasil yang sudah dihitung. Worker cuma relevan untuk
+   sisi BACA (dashboard membaca N summary tanpa buka N body) — dan itu **sudah**
+   terjadi di dalam worker (`analysis.worker.ts`'s `globalBreakdown` case
+   memanggil `getProjectSummary` di context worker-nya sendiri).
+2. **Tidak butuh `scheduleSummaryRefresh` background debounce.** Rencana awal
+   menduga perlu mekanisme "tulis ulang summary basi di background" terpisah
+   dari alur save biasa. Ternyata tidak perlu: karena summary SELALU ditulis
+   sinkron di `updateIndexForProject` (dipanggil setiap `saveProject`), sebuah
+   project yang disimpan lewat jalur normal TIDAK PERNAH punya summary basi.
+   Staleness cuma terjadi untuk dua kasus pathological yang sudah tertangani
+   lewat fallback biasa: project yang tersimpan SEBELUM Fase 3.1 ini ada (summary
+   `null` — fallback "hilang"), atau (secara teori) body yang ditulis di luar
+   `saveProject` (tidak ada jalur begitu di kode saat ini).
+3. **Tidak reuse `isEntryStale`.** Fungsi itu (di `selectors/dashboard.ts`)
+   membandingkan `updatedAt` terhadap 30 hari (staleness LINK, docs/13) —
+   konsepnya beda dari freshness summary (`computedFrom === updatedAt`, exact
+   match, bukan threshold waktu). Dibuat helper terpisah (`isProjectSummaryFresh`)
+   alih-alih memaksakan reuse yang semantiknya tidak cocok.
 
-**Siapa yang membaca**:
-- `buildIndexEntry` (`persistence/storage.ts`) — **berhenti** memanggil
-  `getCachedValidation`/`getCachedRecap` langsung; baca `ProjectSummary`
-  tersimpan dulu. Kalau `summary.computedFrom !== project.updatedAt` → **stale**,
-  fallback ke compute langsung (path lama, tetap benar tapi lebih lambat) DAN
-  jadwalkan recompute di background lewat worker. Vocab "stale" sudah ada:
-  `isEntryStale` di [selectors/dashboard.ts](../src/selectors/dashboard.ts) —
-  pola serupa, cek dulu apakah bisa dipakai ulang langsung atau perlu varian baru
-  khusus summary (kemungkinan perlu — `isEntryStale` sekarang bandingkan
-  `updatedAt` terhadap 30 hari, bukan `computedFrom` terhadap `updatedAt`).
-- `computeGlobalBreakdown` (`selectors/globalBreakdown.ts`) — ganti total dari
-  "baca N body, `computeRecap` tiap satu" jadi **fold atas N record `ProjectSummary`
-  kecil** (300 OPD × ~1KB ≈ 300KB, bukan N × body penuh). Ini yang bikin dashboard
-  jadi O(jumlah OPD). **Perhatikan**: `computeGlobalBreakdown` sekarang menerima
-  `readProject: (id) => Promise<Project|null>` sebagai parameter (pola inject,
-  supaya testable tanpa IDB — lihat `tests/global-breakdown.test.ts`). Ganti jadi
-  menerima `readSummary: (id) => Promise<ProjectSummary|null>` dengan pola
-  parameter-injection yang SAMA — jangan import `idb-keyval` langsung di
-  selector, itu melanggar layering yang baru saja ditegakkan Fase 2.1b.
-  **Test yang harus di-update**: `tests/global-breakdown.test.ts` (5 test, semua
-  pakai `readProject` mock — perlu jadi `readSummary` mock, cek assertion apa
-  yang berubah).
+**Bonus correctness dari rencana awal (breakdown link node per-kategori) — BELUM
+dikerjakan.** Masih caveat terbuka di
+[globalBreakdown.ts](../src/selectors/globalBreakdown.ts) (angka project
+tertaut belum dipecah per kategori). Tidak blocking, layak diambil kalau ada
+waktu longgar.
 
-**Staleness saat menulis** (bukan cuma baca): kalau `buildIndexEntry` fallback ke
-compute-langsung karena summary stale, request "recompute + tulis ulang summary"
-seharusnya dikirim ke worker (fire-and-forget, tidak blocking save) — pola baru,
-belum ada contohnya di kode; paling dekat adalah `scheduleSave` di
-`persistence/autosave.ts` (debounce + fire-and-forget), tapi itu untuk `saveProject`
-bukan untuk worker call. Kemungkinan butuh `scheduleSummaryRefresh(projectId)`
-kecil di `persistence/` yang debounce mirip `scheduleSave`.
+**Test yang ditambahkan** (semua pure, tanpa IndexedDB — lihat catatan strategi
+test di bawah):
+- `tests/persistence.test.ts` — `buildProjectSummary` (computedFrom, round-trip
+  dengan computeRecap/validateProject, nodeCount, konsistensi dengan
+  buildIndexEntry) + `isProjectSummaryFresh` (fresh/stale/null).
+- `tests/global-breakdown.test.ts` — 5 test baru: fast-path (readProject SAMA
+  SEKALI TIDAK terpanggil saat summary fresh), fallback saat stale, fallback
+  saat hilang, `readSummary` diomit sepenuhnya (perilaku pra-3.1 utuh), dan
+  batch campuran (satu entry fresh + satu stale, dua-duanya kefold benar).
 
-**Bonus correctness yang hampir gratis di titik ini** (disebut di rencana awal,
-masih valid): simpan breakdown per-kategori dari kontribusi LINK di summary —
-memperbaiki caveat yang sudah terdokumentasi di
-[globalBreakdown.ts:20-28](../src/selectors/globalBreakdown.ts) (angka project
-tertaut belum dipecah per kategori hari ini). Opsional, kerjakan kalau sempat,
-bukan blocker.
-
-**Test baru yang dibutuhkan**:
-- `buildProjectSummary` murni — round-trip dengan `computeRecap`/`validateProject`
-  (angka summary === angka compute-langsung untuk project yang sama).
-- `buildIndexEntry` dengan summary fresh vs stale vs tidak ada (3 skenario).
-- `computeGlobalBreakdown` dengan `readSummary` mock, termasuk kasus campuran
-  (sebagian OPD summary-nya stale, harus tetap menghasilkan angka benar via
-  fallback).
+**Catatan strategi test — kenapa tidak ada test yang memanggil `getProjectSummary`/
+`saveProjectSummary`/`saveProject` langsung**: repo ini TIDAK punya
+`fake-indexeddb` atau polyfill IDB apa pun di suite test (`environment: 'node'`,
+lihat `vite.config.ts`) — pola yang SUDAH ada sebelum Fase 3.1 (`buildIndexEntry`
+selalu ditest lewat pemanggilan langsung fungsi murni, tidak pernah lewat
+`saveProject`). Fase 3.1 mengikuti pola yang sama secara konsisten, bukan
+kelalaian. Kalau nanti fungsi IDB-touching butuh ditest langsung (mis. sebagai
+bagian §3.2 migrasi), itu keputusan yang layak didiskusikan eksplisit dulu
+(nambah `fake-indexeddb` sebagai dev dependency) — jangan diam-diam ditambah.
 
 ### 3.2 — Skema IndexedDB sungguhan (`idb`, bukan `idb-keyval`)
 
@@ -470,7 +495,7 @@ butuh data semua operator sekaligus.
 
 | Fase | Effort | Membuka |
 |---|---|---|
-| 3.1 Ringkasan | 3–4 jam | Dashboard jadi O(jumlah OPD); prasyarat 3.2 |
+| 3.1 Ringkasan | **SELESAI** | Dashboard jadi O(jumlah OPD); prasyarat 3.2 |
 | 3.2 Skema IndexedDB (`idb` + `ProjectRepository`) | 4–6 jam | Update-satu-project jadi O(1) record, bukan RMW seluruh index; sambungan ke Fase 4 |
 | 3.3 Body ter-chunk | didesain saja, tidak dikerjakan | Hanya kalau trigger (§3.3) muncul |
 | 4 Backend | ≥3–4 minggu | Hanya atas trigger bernama (multi-user/durabilitas/link lintas-OPD/audit), TIDAK ADA yang soal performa |

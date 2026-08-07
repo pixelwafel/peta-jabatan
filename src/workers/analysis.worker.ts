@@ -14,7 +14,7 @@
 import { validateProject } from '@/selectors/validation';
 import { computeRecap } from '@/selectors/recap';
 import { computeGlobalBreakdown } from '@/selectors/globalBreakdown';
-import { buildIndexEntry, getProject } from '@/persistence/storage';
+import { buildIndexEntry, getProject, getProjectSummary } from '@/persistence/storage';
 import type { WorkerRequest, WorkerResponse } from './protocol';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -59,9 +59,13 @@ ctx.onmessage = async (ev: MessageEvent<WorkerRequest>) => {
         const controller = new AbortController();
         controllers.set(msg.id, controller);
         try {
+          // Fase 3.1 — readSummary dicoba lebih dulu per project (summary
+          // fresh -> body TIDAK pernah dibaca); getProject cuma jadi
+          // fallback untuk summary yang hilang/basi.
           const result = await computeGlobalBreakdown(msg.topLevel, getProject, {
             signal: controller.signal,
             onProgress: (done, total) => post({ id: msg.id, type: 'progress', done, total }),
+            readSummary: getProjectSummary,
           });
           post({ id: msg.id, type: 'result', result });
         } finally {
