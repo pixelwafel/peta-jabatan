@@ -1,5 +1,5 @@
 import { ProjectIndexEntry } from './types';
-import { getProjectIndex, saveProjectIndex } from './storage';
+import { repository } from './repository';
 
 export function shouldRemindExport(
   entry: ProjectIndexEntry | undefined,
@@ -16,11 +16,11 @@ export function shouldRemindExport(
   return hoursSince > 4 && Date.parse(entry.updatedAt) > Date.parse(entry.lastExportedAt);
 }
 
+/** Fase 3.2 — patch SATU field pada SATU entry (`repository.patchLastExportedAt`),
+ * bukan baca-ubah-tulis SELURUH index seperti sebelumnya. Ini jalur yang
+ * dipanggil tiap export berhasil — salah satu yang paling sering dipanggil
+ * dari semua tulisan index, jadi RMW-seluruh-blob di sini paling terasa di
+ * skala ratusan OPD. */
 export async function markProjectExported(projectId: string): Promise<void> {
-  const index = await getProjectIndex();
-  const entry = index.entries.find(e => e.id === projectId);
-  if (entry) {
-    entry.lastExportedAt = new Date().toISOString();
-    await saveProjectIndex(index);
-  }
+  await repository.patchLastExportedAt(projectId, new Date().toISOString());
 }

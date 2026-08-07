@@ -3,7 +3,11 @@ import { Project } from '../src/models/project';
 import { ProjectIndexEntry } from '../src/persistence/types';
 import { shouldRemindExport } from '../src/persistence/reminder';
 import { migrateProject } from '../src/schema/migration';
-import { buildIndexEntry } from '../src/persistence/storage';
+import { buildIndexEntry, buildProjectSummary, isProjectSummaryFresh } from '../src/persistence/storage';
+import { pickMostRecentId } from '../src/persistence/projectBuilders';
+import { computeRecap } from '../src/selectors/recap';
+import { validateProject } from '../src/selectors/validation';
+import { taxonomy } from '../src/config/taxonomy';
 
 describe('Persistence & Projects (Doc 10 Exit Criteria)', () => {
   const testProject: Project = {
@@ -264,5 +268,144 @@ describe('buildIndexEntry — linkedCodes population (M10.4, docs/13 §2 cycle g
     // dobel hitung dengan jumlah instance itu sendiri.
     expect(entry.totalKebutuhan).toBe(9);
     expect(entry.totalEksisting).toBe(8);
+  });
+});
+
+describe('buildProjectSummary (Fase 3.1, docs/20-skalabilitas-worker-virtualisasi.md §3.1)', () => {
+  const project: Project = {
+    id: 'proj-summary',
+    schemaVersion: '1.0.0',
+    configVersion: '2026.1',
+    meta: { namaOPD: 'Dinas Contoh', kodeOPD: 'DISCON', penyusun: 'Operator' },
+    attributeSchema: [],
+    nodes: [
+      {
+        id: 'root',
+        type: 'unit',
+        nama: 'Dinas Contoh',
+        nomor: '1',
+        rumpun: [],
+        rincian: [],
+        custom: {},
+        position: { x: 0, y: 0 },
+        collapsed: false,
+        order: 0,
+      },
+      {
+        id: 'j1',
+        type: 'jabatan',
+        nama: 'Analis',
+        nomor: '1.1',
+        kategoriId: 'pelaksana',
+        rumpun: [],
+        rincian: [{ id: 'r1', jenjangId: null, kebutuhan: 3, eksisting: 2 }],
+        custom: {},
+        position: { x: 0, y: 0 },
+        collapsed: false,
+        order: 0,
+      },
+    ],
+    edges: [{ id: 'e1', source: 'root', target: 'j1', kind: 'hirarki' }],
+    viewport: { x: 0, y: 0, zoom: 1 },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  it('computedFrom equals project.updatedAt', () => {
+    const summary = buildProjectSummary(project);
+    expect(summary.computedFrom).toBe(project.updatedAt);
+    expect(summary.schemaVersion).toBe(2);
+  });
+
+  it('round-trips with computeRecap/validateProject — same numbers as computing directly', () => {
+    const summary = buildProjectSummary(project);
+    const recap = computeRecap(project, taxonomy);
+    const findings = validateProject(project, taxonomy);
+
+    expect(summary.total).toEqual(recap.total);
+    expect(summary.perKategori).toEqual(recap.perKategori);
+    expect(summary.perJenjang).toEqual(recap.perJenjang);
+    expect(summary.unplaced).toEqual(recap.unplaced);
+    expect(summary.findingCounts.errors).toBe(findings.filter(f => f.severity === 'error').length);
+    expect(summary.findingCounts.warnings).toBe(findings.filter(f => f.severity === 'warning').length);
+  });
+
+  it('nodeCount counts jabatan positions only (matches buildIndexEntry.nodeCount)', async () => {
+    const summary = buildProjectSummary(project);
+    const entry = await buildIndexEntry(project);
+    expect(summary.nodeCount).toBe(1);
+    expect(summary.nodeCount).toBe(entry.nodeCount);
+  });
+
+  it('buildIndexEntry totals match buildProjectSummary totals (single source of truth)', async () => {
+    const summary = buildProjectSummary(project);
+    const entry = await buildIndexEntry(project);
+    expect(entry.totalKebutuhan).toBe(summary.total.kebutuhan);
+    expect(entry.totalEksisting).toBe(summary.total.eksisting);
+    expect(entry.linkedCodes).toEqual(summary.linkedCodes);
+    expect(entry.findingCounts).toEqual(summary.findingCounts);
+  });
+});
+
+describe('isProjectSummaryFresh (Fase 3.1)', () => {
+  const ZERO_BUCKET = { key: 'x', label: 'x', kebutuhan: 0, eksisting: 0, selisih: 0, nodeCount: 0 };
+  function makeMinimalSummary(computedFrom: string) {
+    return {
+      schemaVersion: 2 as const,
+      computedFrom,
+      total: ZERO_BUCKET,
+      perKategori: [],
+      perJenjang: [],
+      unplaced: ZERO_BUCKET,
+      nodeCount: 0,
+      findingCounts: { errors: 0, warnings: 0 },
+      linkedCodes: [],
+    };
+  }
+
+  it('is fresh when computedFrom matches the current updatedAt exactly', () => {
+    const summary = makeMinimalSummary('2026-01-01T00:00:00.000Z');
+    expect(isProjectSummaryFresh(summary, '2026-01-01T00:00:00.000Z')).toBe(true);
+  });
+
+  it('is stale when computedFrom differs', () => {
+    const summary = makeMinimalSummary('2026-01-01T00:00:00.000Z');
+    expect(isProjectSummaryFresh(summary, '2026-02-02T00:00:00.000Z')).toBe(false);
+  });
+
+  it('null summary (never computed) is always stale', () => {
+    expect(isProjectSummaryFresh(null, '2026-01-01T00:00:00.000Z')).toBe(false);
+  });
+});
+
+describe('pickMostRecentId (Fase 3.2, dipakai repository.ts rebuildIndexFromStorage)', () => {
+  function entry(id: string, updatedAt: string): ProjectIndexEntry {
+    return {
+      id,
+      namaOPD: id,
+      kodeOPD: id,
+      nodeCount: 0,
+      totalKebutuhan: 0,
+      totalEksisting: 0,
+      updatedAt,
+      lastExportedAt: null,
+    };
+  }
+
+  it('picks the id with the latest updatedAt', () => {
+    const entries = [
+      entry('a', '2026-01-01T00:00:00.000Z'),
+      entry('b', '2026-03-01T00:00:00.000Z'),
+      entry('c', '2026-02-01T00:00:00.000Z'),
+    ];
+    expect(pickMostRecentId(entries)).toBe('b');
+  });
+
+  it('returns null for an empty list', () => {
+    expect(pickMostRecentId([])).toBeNull();
+  });
+
+  it('a single entry is trivially the most recent', () => {
+    expect(pickMostRecentId([entry('solo', '2026-01-01T00:00:00.000Z')])).toBe('solo');
   });
 });

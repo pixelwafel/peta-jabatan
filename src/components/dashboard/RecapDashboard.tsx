@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ProjectIndex } from '@/persistence/types';
-import { getProjectIndex, getProject } from '@/persistence/storage';
+import { getProjectIndex, getProject, getProjectSummary } from '@/persistence/storage';
 import { flushSave } from '@/persistence/autosave';
 import { getCustomOpdList, addCustomOpdEntry } from '@/persistence/customOpd';
 import { buildOpdIndex, daftarOpdBawaan } from '@/config/daftarOpd';
@@ -289,6 +289,10 @@ export const RecapDashboard: React.FC<RecapDashboardProps> = ({ onClose }) => {
         precomputedBreakdown: breakdown ?? undefined,
         signal: controller.signal,
         onProgress: (done, total) => setLaporanProgress({ done, total }),
+        // Fase 3.1 — kalau precomputedBreakdown ternyata belum siap (jarang),
+        // jatuh balik computeGlobalBreakdown masih coba summary dulu sebelum
+        // membaca body — laporanExporter jalan di main thread, bukan worker.
+        readSummary: getProjectSummary,
       });
       if (controller.signal.aborted) return;
       downloadBlob(blob, laporanPemerintahFilename('xlsx'));

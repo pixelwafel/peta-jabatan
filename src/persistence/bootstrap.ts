@@ -1,4 +1,5 @@
 import { getProjectIndex, getProjectWithMigrationFlag } from './storage';
+import { migrateV2 } from './migrateV2';
 import { useProjectStore } from '@/store/projectStore';
 import { useProjectIndexStore } from '@/store/projectIndexStore';
 import { scheduleSave, initSaveListeners } from './autosave';
@@ -24,6 +25,13 @@ export async function bootstrapPersistence(): Promise<void> {
   initSaveListeners();
 
   try {
+    // Fase 3.2 — sekali per instalasi (dijaga flag LocalStorage, lihat
+    // migrateV2.ts): salin data dari skema lama (idb-keyval) ke skema idb
+    // baru SEBELUM getProjectIndex() di bawah membaca dari skema baru itu.
+    // No-op murah (0 iterasi) untuk instalasi yang sudah bermigrasi atau
+    // yang tidak pernah punya data lama sama sekali.
+    await migrateV2();
+
     const index = await getProjectIndex();
     useProjectIndexStore.setState({ index });
 
